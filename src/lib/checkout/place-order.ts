@@ -95,7 +95,12 @@ export async function placeOrder(req: OrderRequest): Promise<PlaceOrderResult> {
 
   let quote: Quote;
   try {
-    quote = await buildQuote(req);
+    quote = await buildQuote({
+      lines: req.lines,
+      couponCode: req.couponCode,
+      fulfillment: req.fulfillment,
+      provinceCode: req.fulfillment === "delivery" ? req.address?.provinceCode : null,
+    });
   } catch (e) {
     await releaseCheckout(req.checkoutId);
     throw e;

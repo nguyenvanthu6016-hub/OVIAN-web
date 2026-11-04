@@ -104,9 +104,9 @@ export function HeaderClient({ locale, spaces, dict }: { locale: Locale; spaces:
             hrefLang={other}
             lang={other}
             className="hidden h-11 items-center rounded-md px-2.5 text-caption font-semibold text-ink hover:bg-surface-alt hover:text-green sm:inline-flex"
-            aria-label={`${dict.common.language}: ${dict.common.switchTo}`}
           >
             {other.toUpperCase()}
+            <span className="sr-only">, {dict.common.switchTo}</span>
           </Link>
           <Link href={routes.wishlist(locale)} className={cx(iconBtn, "hidden sm:inline-flex")} aria-label={`${dict.common.wishlist}${wishlist.length ? ` (${wishlist.length})` : ""}`}>
             <IconHeart />

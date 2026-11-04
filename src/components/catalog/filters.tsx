@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import type { Facet } from "@/lib/commerce/types";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -16,17 +16,23 @@ type D = Pick<Dictionary, "catalog" | "common">;
 function useUrlState() {
   const router = useRouter();
   const pathname = usePathname();
-  const sp = useSearchParams();
+  const urlSp = useSearchParams();
   const [pending, start] = useTransition();
+  // Controls reflect the click immediately; the URL (source of truth) catches up after navigation.
+  const [optimistic, setOptimistic] = useOptimistic(urlSp.toString());
+  const sp = new URLSearchParams(optimistic);
   const update = (patch: Record<string, string | null>) => {
-    const u = new URLSearchParams(sp.toString());
+    const u = new URLSearchParams(optimistic);
     for (const [k, v] of Object.entries(patch)) {
       if (v === null || v === "") u.delete(k);
       else u.set(k, v);
     }
     u.delete("page"); // any filter change resets pagination
     const s = u.toString();
-    start(() => router.push(`${pathname}${s ? `?${s}` : ""}`, { scroll: false }));
+    start(() => {
+      setOptimistic(s);
+      router.push(`${pathname}${s ? `?${s}` : ""}`, { scroll: false });
+    });
   };
   return { sp, update, pending };
 }
