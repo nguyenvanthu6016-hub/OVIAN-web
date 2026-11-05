@@ -26,7 +26,17 @@ export function readSapoConfig(): SapoConfig {
   if (!accessToken && !(apiKey && apiSecret)) {
     throw new CommerceUnavailableError("Sapo credentials are not configured");
   }
-  return { domain, accessToken, apiKey, apiSecret, allowOrderWrites: process.env.SAPO_ALLOW_ORDER_WRITES === "true" };
+  // Preview of unpublished products never takes orders, whatever SAPO_ALLOW_ORDER_WRITES says.
+  const allowOrderWrites = process.env.SAPO_ALLOW_ORDER_WRITES === "true" && !previewUnpublished();
+  return { domain, accessToken, apiKey, apiSecret, allowOrderWrites };
+}
+
+/**
+ * Local preview only: list products that are not yet published to the Sapo web channel.
+ * Ignored in production builds so an unpublished catalogue can never go live by accident.
+ */
+export function previewUnpublished(): boolean {
+  return process.env.SAPO_PREVIEW_UNPUBLISHED === "true" && process.env.NODE_ENV !== "production";
 }
 
 function headers(cfg: SapoConfig): HeadersInit {
@@ -64,6 +74,7 @@ export async function sapoGet<T>(path: string, opts: SapoGetOptions = {}): Promi
         continue;
       }
       if (res.status === 404) throw new SapoNotFound();
+      if (res.status === 401 || res.status === 403) throw new SapoForbidden(res.status, path);
       if (!res.ok) throw new CommerceUnavailableError("Sapo request failed", `HTTP ${res.status} ${path}`);
       return (await res.json()) as T;
     } catch (e) {
@@ -73,6 +84,13 @@ export async function sapoGet<T>(path: string, opts: SapoGetOptions = {}): Promi
     }
   }
   throw new CommerceUnavailableError("Sapo unavailable", `${lastError} ${path}`);
+}
+
+/** The app's credentials lack the permission (or the endpoint is not open to this plan). */
+export class SapoForbidden extends CommerceUnavailableError {
+  constructor(status: number, path: string) {
+    super("Sapo permission denied", `HTTP ${status} ${path}`);
+  }
 }
 
 export class SapoNotFound extends Error {

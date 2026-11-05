@@ -12,7 +12,25 @@ import type { NavSpace } from "@/components/layout/header-client";
  */
 export function FloorPlan({ spaces, locale, dict }: { spaces: NavSpace[]; locale: Locale; dict: Pick<Dictionary, "home" | "common"> }) {
   const rooms = [...spaces].sort((a, b) => (b.areaM2 ?? 0) - (a.areaM2 ?? 0) || b.count - a.count);
-  if (!rooms.length) return null;
+  if (!rooms.length) {
+    // No room collections in the store yet: one open-plan tile leading to the full catalogue.
+    return (
+      <nav aria-label={dict.home.planAria}>
+        <div className="rounded-lg bg-green p-[2px]">
+          <Link
+            href={routes.products(locale)}
+            className="flex min-h-[17rem] flex-col justify-between rounded-[calc(var(--radius-lg)-2px)] bg-surface p-5 transition-colors duration-150 hover:bg-surface-alt focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ink md:p-6"
+          >
+            <span className="block text-heading font-semibold text-green">{dict.common.allProducts}</span>
+            <span className="flex items-end justify-between gap-4">
+              <span className="max-w-sm text-small text-ink-muted">{dict.home.noRooms}</span>
+              <DoorSwing index={0} />
+            </span>
+          </Link>
+        </div>
+      </nav>
+    );
+  }
   return (
     <nav aria-label={dict.home.planAria}>
       <ul className="floorplan">

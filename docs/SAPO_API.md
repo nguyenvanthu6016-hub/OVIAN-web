@@ -46,8 +46,11 @@ GET requests only, private app (API key + secret, HTTP Basic). No writes were ma
 | `GET /custom_collections.json`, `/smart_collections.json`, `/collects.json` | 200, **0 collections** | No categories exist yet |
 | `GET /orders/count.json?status=any`, `/orders.json` | 200, 0 orders | Order read permission OK; write permission **not tested** |
 | `GET /webhooks.json` | 200, 0 webhooks | |
-| `GET /price_rules.json` | **403** | App lacks discount/price-rule read permission → coupons cannot be validated |
+| `GET /price_rules.json` | 403 on 11-04, **200 on 11-05** after the owner added the permission | 0 price rules exist |
+| `GET /discount_codes/lookup.json` | **403** even with the permission | Adapter falls back to scanning `/price_rules.json` + `/price_rules/{id}/discount_codes.json` (the second call is untested: no rules exist yet) |
 | `GET /shop.json`, `/locations.json` | 403 | Not used by the storefront |
+
+Update 2026-11-05: owner created collection `phong-ngu` (34 products). The web channel is not on the owner's Sapo plan yet (upgrade in progress), so products cannot be published. For local preview only, `SAPO_PREVIEW_UNPUBLISHED=true` lists unpublished products; it is ignored in production builds and forces ordering off. Verified locally: listing (51), PDP with variants, cart, quote against real variant prices, unknown coupon → "invalid", checkout shows "ordering disabled".
 
 Data observations (blocking for go-live, owner side):
 - **All 51 products have `published_on = null`** (not published to the web channel). The adapter only lists published products, so the live site would show an empty catalogue. Owner must publish the products to the website channel in Sapo (we do not override this flag).

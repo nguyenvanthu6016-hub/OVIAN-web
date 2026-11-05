@@ -14,7 +14,7 @@ import type {
   Product,
   Variant,
 } from "../types";
-import { SapoNotFound, sapoGet, sapoPostOrder } from "./client";
+import { SapoForbidden, SapoNotFound, previewUnpublished, sapoGet, sapoPostOrder } from "./client";
 
 /* ---------- Raw Sapo shapes (only fields we read). Sapo uses name/alias/content; Shopify-style aliases kept defensively. ---------- */
 interface RawVariant {
@@ -83,8 +83,50 @@ interface RawOrder {
 
 const PRODUCTS_TTL = 300;
 const num = (v: string | number | null | undefined) => (v === null || v === undefined || v === "" ? null : Math.round(Number(v)));
-const stripHtml = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+/**
+ * Sapo product content is HTML. The storefront renders plain text only (no injected markup),
+ * so keep block boundaries as line breaks and decode the common entities.
+ */
+const ENTITIES: Record<string, string> = { nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'", apos: "'" };
+const stripHtml = (html: string) =>
+  html
+    .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6]|\/tr)\b[^>]*>/gi, "\n")
+    .replace(/<\s*li\b[^>]*>/gi, "• ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&(nbsp|amp|lt|gt|quot|#39|apos);/g, (_, e: string) => ENTITIES[e] ?? "")
+    .replace(/[ \t\f\v\u00a0]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 const lt = (value: string, lang: Locale): LocalizedText => ({ value, lang });
+
+/**
+ * Find a discount code. `/discount_codes/lookup.json` returned 403 on the OVIAN account (2026-11-04)
+ * even with price-rule read permission, so on 401/403 fall back to scanning price rules and their codes.
+ * Case-insensitive match, as customers type codes freely.
+ */
+async function lookupDiscountCode(code: string): Promise<{ price_rule_id: number; code: string } | null> {
+  try {
+    const { discount_code } = await sapoGet<{ discount_code: { price_rule_id: number; code: string } }>(
+      `/discount_codes/lookup.json?code=${encodeURIComponent(code)}`,
+    );
+    return discount_code;
+  } catch (e) {
+    if (e instanceof SapoNotFound) return null;
+    if (!(e instanceof SapoForbidden)) throw e;
+  }
+  const { price_rules } = await sapoGet<{ price_rules: { id: number }[] }>(`/price_rules.json?limit=250`, { revalidate: 60, tags: ["discounts"] });
+  const wanted = code.toUpperCase();
+  for (const rule of price_rules) {
+    const { discount_codes } = await sapoGet<{ discount_codes: { code: string }[] }>(`/price_rules/${rule.id}/discount_codes.json`, {
+      revalidate: 60,
+      tags: ["discounts"],
+    });
+    const hit = discount_codes.find((d) => d.code.toUpperCase() === wanted);
+    if (hit) return { price_rule_id: rule.id, code: hit.code };
+  }
+  return null;
+}
 
 /** Fetch every published product, paginated (limit 250). Cached + tagged for webhook revalidation. */
 async function fetchAllProducts(): Promise<RawProduct[]> {
@@ -98,7 +140,9 @@ async function fetchAllProducts(): Promise<RawProduct[]> {
     if (products.length < 250) break;
   }
   // Auto-publish rule: any product published in Sapo with at least one variant appears on the site.
+  const includeUnpublished = previewUnpublished();
   return out.filter((p) => {
+    if (includeUnpublished) return (p.variants?.length ?? 0) > 0;
     const published = "published_on" in p ? p.published_on : "published_at" in p ? p.published_at : "unknown";
     return published !== null && (p.variants?.length ?? 0) > 0;
   });
@@ -297,9 +341,8 @@ export const sapoProvider: CommerceProvider = {
     // Discount code lookup → price rule. Only simple percentage / fixed rules with an optional
     // minimum subtotal are honoured; anything more complex is rejected rather than guessed.
     try {
-      const { discount_code } = await sapoGet<{ discount_code: { price_rule_id: number; code: string } }>(
-        `/discount_codes/lookup.json?code=${encodeURIComponent(code.trim())}`,
-      );
+      const discount_code = await lookupDiscountCode(code.trim());
+      if (!discount_code) return null;
       const { price_rule: r } = await sapoGet<{
         price_rule: {
           value_type: "percentage" | "fixed_amount";

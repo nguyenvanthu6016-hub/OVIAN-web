@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/products
     const img = p.images[0];
     return {
       title: p.name.value,
-      description: (p.summary ?? p.description)?.value.slice(0, 160),
+      description: (p.summary ?? p.description)?.value.replace(/\s+/g, " ").slice(0, 160),
       // When English copy is only a Vietnamese fallback, the /en URL is noindexed and left out of hreflang.
       ...localizedAlternates(locale, `/products/${handle}`, { enAvailable: locale === "vi" ? true : !p.translationMissing }),
       openGraph: img ? { images: [{ url: img.url, width: img.width, height: img.height, alt: img.alt }] } : undefined,
@@ -123,7 +123,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
         <h2 id="details-title" className="text-heading lg:col-span-4">{d.product.details}</h2>
         <div className="lg:col-span-8">
           {p.translationMissing && locale === "en" ? <p className="mb-4 text-caption text-ink-muted">{d.product.viCopyNote}</p> : null}
-          {p.description ? <p lang={p.description.lang} className="max-w-prose text-body">{p.description.value}</p> : null}
+          {p.description ? <p lang={p.description.lang} className="max-w-prose whitespace-pre-line text-body">{p.description.value}</p> : null}
           <div className="mt-8 divide-y divide-line border-y border-line">
             {specs.length ? (
               <Disclosure title={d.product.specs} open>

@@ -24,6 +24,7 @@ export const vi = {
     item: "{count} sản phẩm",
     mockBadge: "Dữ liệu mẫu",
     mockNotice: "Bạn đang xem cửa hàng ở chế độ mẫu. Sản phẩm, giá và đơn hàng là dữ liệu mô phỏng.",
+    previewNotice: "Bản xem trước nội bộ: sản phẩm thật từ Sapo, gồm cả sản phẩm chưa mở bán trên website. Chưa nhận đặt hàng.",
     breadcrumb: "Đường dẫn",
     required: "bắt buộc",
     optional: "không bắt buộc",
@@ -42,6 +43,7 @@ export const vi = {
   },
   home: {
     planTitle: "Chọn một không gian trong nhà",
+    noRooms: "Các không gian đang được sắp xếp. Trong lúc chờ, bạn có thể xem toàn bộ sản phẩm.",
     planIntro: "Mỗi phòng một danh mục. Chạm vào phòng bạn đang muốn sắp xếp lại.",
     planAria: "Mặt bằng nhà: các không gian sống",
     area: "{area} m²",

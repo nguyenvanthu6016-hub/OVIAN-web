@@ -20,7 +20,9 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 
 ## Blockers (owner input needed)
 
-1. Sapo store domain + private app credentials, and a **test store** (or written approval) before any real order write.
+1. ~~Sapo store domain + credentials~~ — done 2026-11-04 (ovianshop.mysapo.net, read verified). Still needed: written approval (or a test store) before any real order write. **Rotate the API key/secret before go-live** (they were shared in chat).
+1a. Sapo plan upgrade with the web channel, then publish products to it (in progress by owner). Until then only the local preview flag shows products.
+1b. Room collections in Sapo: `phong-ngu` done; `phong-khach`, `bep`, `phong-tam`, `goc-lam-viec`, `ban-cong` pending.
 2. How pickup / cash-at-store orders should look in Sapo (tag, gateway, source) — current proposal in docs/OWNER_GUIDE.vi.md §5.
 3. Sanity project id (and who may edit shipping fees).
 4. Real store address, phone, opening hours; real shipping fees per region; return policy text.

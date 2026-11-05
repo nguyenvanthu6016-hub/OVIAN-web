@@ -26,6 +26,7 @@ export const en: typeof vi = {
     item: "{count} item",
     mockBadge: "Sample data",
     mockNotice: "You are viewing the store in sample mode. Products, prices and orders are simulated.",
+    previewNotice: "Internal preview: real Sapo products, including ones not yet on sale online. Ordering is off.",
     breadcrumb: "Breadcrumb",
     required: "required",
     optional: "optional",
@@ -44,6 +45,7 @@ export const en: typeof vi = {
   },
   home: {
     planTitle: "Choose a space in the home",
+    noRooms: "Rooms are being arranged. Meanwhile, browse every product.",
     planIntro: "Each room is a catalogue. Tap the room you want to sort out next.",
     planAria: "Floor plan: living spaces",
     area: "{area} m²",
