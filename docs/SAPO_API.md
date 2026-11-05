@@ -52,6 +52,8 @@ GET requests only, private app (API key + secret, HTTP Basic). No writes were ma
 
 Update 2026-11-05: owner created collection `phong-ngu` (34 products). The web channel is not on the owner's Sapo plan yet (upgrade in progress), so products cannot be published. For local preview only, `SAPO_PREVIEW_UNPUBLISHED=true` lists unpublished products; it is ignored in production builds and forces ordering off. Verified locally: listing (51), PDP with variants, cart, quote against real variant prices, unknown coupon → "invalid", checkout shows "ordering disabled".
 
+Update 2026-11-05 (promotions): owner reports a promotion created in Sapo, but the API shows **0 variants with `compare_at_price` and 0 `price_rules`**. `/discounts.json` and `/price_lists.json` answer `403 access_denied` (OAuth-style, unlike the generic 403 of non-existent paths), which suggests these endpoints exist but the private app lacks the scope. Likely the promotion lives in Sapo Omnichannel "Khuyến mãi" programmes or price lists, which the storefront does not read yet. Shape of those resources: unknown until readable.
+
 Data observations (blocking for go-live, owner side):
 - **All 51 products have `published_on = null`** (not published to the web channel). The adapter only lists published products, so the live site would show an empty catalogue. Owner must publish the products to the website channel in Sapo (we do not override this flag).
 - **No collections.** Every product carries the same tags `Shopee`, `OVIAN - Bedroom`, `Khởi tạo sản phẩm`, `product_type` is empty. Room categories (floor plan) need collections in Sapo, aliases matching the rooms (e.g. `phong-ngu`, `bep`, child `phong-ngu--den-ngu`).
