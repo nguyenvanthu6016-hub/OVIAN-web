@@ -93,7 +93,7 @@ export function ProductPurchase({ product, locale, dict }: { product: Product; l
 
       <div className="lg:col-span-5">
         <div className="lg:sticky lg:top-24">
-          <h1 lang={product.name.lang} className="text-heading md:text-display">{product.name.value}</h1>
+          <h1 lang={product.name.lang} className={product.name.value.length > 60 ? "text-subheading font-semibold md:text-heading" : "text-heading md:text-display"}>{product.name.value}</h1>
           {product.summary ? <p lang={product.summary.lang} className="mt-2 text-ink-muted">{product.summary.value}</p> : null}
 
           <div className="mt-5 flex flex-wrap items-center gap-3">

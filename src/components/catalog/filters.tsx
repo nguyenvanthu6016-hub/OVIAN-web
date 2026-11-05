@@ -146,13 +146,13 @@ export function FilterToolbar({
     <div className="mb-6 space-y-3" aria-busy={pending}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-small text-ink-muted" aria-live="polite">{t(dict.catalog.results, { count: total })}</p>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" size="md" className="lg:hidden" onClick={() => setOpen(true)} aria-controls="filter-drawer" aria-expanded={open}>
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <Button variant="secondary" size="md" className="shrink-0 whitespace-nowrap lg:hidden" onClick={() => setOpen(true)} aria-controls="filter-drawer" aria-expanded={open}>
             <IconFilter size={18} /> {dict.catalog.showFilters}
             {activeChips.length ? <span className="ml-1 inline-flex size-5 items-center justify-center rounded-full bg-green text-[11px] text-on-green">{activeChips.length}</span> : null}
           </Button>
           <label htmlFor="sort" className="sr-only">{dict.catalog.sort}</label>
-          <select id="sort" value={sort} onChange={(e) => update({ sort: e.target.value === "featured" ? null : e.target.value })} className={cx(inputClass, "h-11 w-auto pr-8 text-small")}>
+          <select id="sort" value={sort} onChange={(e) => update({ sort: e.target.value === "featured" ? null : e.target.value })} className={cx(inputClass, "h-11 min-w-0 flex-1 pr-8 text-small sm:w-auto sm:flex-none")}>
             <option value="featured">{dict.catalog.sortFeatured}</option>
             <option value="newest">{dict.catalog.sortNewest}</option>
             <option value="price-asc">{dict.catalog.sortPriceAsc}</option>

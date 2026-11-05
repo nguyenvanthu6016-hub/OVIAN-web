@@ -53,7 +53,7 @@ export function ProductCard({ product, locale, dict, priority }: { product: Prod
         </div>
       </div>
       <div className="mt-3 flex flex-col gap-0.5">
-        <h3 className="text-small font-semibold text-ink">
+        <h3 className="line-clamp-3 text-small font-semibold text-ink">
           <Link href={href} lang={product.name.lang} className="after:absolute after:inset-0 after:content-[''] hover:text-green focus-visible:outline-none">
             {product.name.value}
           </Link>
