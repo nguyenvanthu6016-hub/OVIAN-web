@@ -2,6 +2,21 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Re-run 2026-11-07
+
+| Check | Result |
+|---|---|
+| Typecheck, lint | Pass |
+| Vitest unit | 34 / 34 pass |
+| Playwright E2E + axe, Mock Mode (`npx playwright test`) | **35 / 35 pass** |
+| Playwright **live Sapo, read-only** (`npx playwright test -c playwright.live.config.ts`) | **18 / 18 pass**, twice in a row |
+
+Live suite (`tests/e2e-live/live.spec.ts`, desktop 1440 + Pixel 7) runs against ovianshop.mysapo.net with the local preview flag and order writes off. It never submits an order. Checks: real catalogue and preview notice on home, Sapo room collection on the floor plan, listing count and Sapo CDN images, sale price + struck original + "Giảm 30%" on a product, `?sale=1` filter, server quote uses the live Sapo price (ignores a browser-sent price), unknown coupon → "invalid", add to cart → checkout shows "ordering disabled" and the order button is disabled, 404 for unknown product, no horizontal overflow on mobile, axe WCAG 2.2 AA on home/listing/product with real data (0 violations).
+
+Note: run the two suites one at a time. Both start `npm run dev` on port 3000 and reuse a server that is already running, so a live-mode server would make the mock suite fail (and the reverse).
+
+Sapo data finding (bulk 30% price import by the owner): 140 / 161 variants updated correctly. 21 were skipped by Sapo: 12 variants with no SKU, and the 9 variants of "Mùng chụp tự bung", whose SKUs are duplicated across sizes (MCBFS-N/-V/-B each used for 1m2, 1m6 and 1m8).
+
 ## Summary
 
 | Check | Result |

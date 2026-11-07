@@ -3,6 +3,7 @@ node_modules/
 out/
 coverage/
 playwright-report/
+playwright-report-live/
 test-results/
 .data/
 *.tsbuildinfo
