@@ -2,6 +2,20 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Re-run 2026-11-10 (orders to Google Sheets)
+
+| Check | Result |
+|---|---|
+| Typecheck, lint, production build | Pass |
+| Vitest unit | **52 / 52 pass** (18 new) |
+| Playwright Mock Mode | 35 / 35 pass |
+| Playwright live Sapo, read-only | 18 / 18 pass |
+| Secrets / Sheet URL in client bundle | None found |
+
+New tests (`tests/unit/sheets-orders.test.ts`) run the real `integrations/google-sheets/Code.gs` in a VM with fake Apps Script services: header setup, one row per order with readable columns, sequential `OV00001` numbers, same checkoutId → same order and one row, formula-looking customer text stored as text, pickup row, staff status/paid edits visible in tracking, find by checkoutId, wrong secret and invalid data rejected without writing, owner email. Website client: timeout and HTML replies on create are "unknown outcome", a rejection is an outage, orders off unless enabled and configured. End to end `placeOrder` → script: parallel and repeated submits write one row; a timeout after the row was written is found by "check again" without a second row.
+
+Not tested yet: the real Google Apps Script deployment (owner has not deployed it). Needs one approved test order.
+
 ## Re-run 2026-11-07
 
 | Check | Result |

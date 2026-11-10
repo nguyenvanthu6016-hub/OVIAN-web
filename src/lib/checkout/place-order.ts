@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { getCommerce } from "@/lib/commerce";
+import { getOrderBackend, ordersEnabled } from "@/lib/orders";
 import { CommerceUnavailableError, OrderOutcomeUnknownError, type Order } from "@/lib/commerce/types";
 import { getContent } from "@/lib/cms";
 import { beginCheckout, finishCheckout, PENDING_STALE_MS, releaseCheckout } from "./idempotency";
@@ -61,15 +61,15 @@ export function fingerprint(req: OrderRequest): string {
 }
 
 async function reconcile(checkoutId: string, fp: string): Promise<PlaceOrderResult | null> {
-  const found = await getCommerce().findOrderByCheckoutId(checkoutId);
+  const found = await getOrderBackend().findOrderByCheckoutId(checkoutId);
   if (!found) return null;
   await finishCheckout(checkoutId, { status: "created", fingerprint: fp, orderRef: found.ref, simulated: found.simulated, createdAt: Date.now() });
   return { kind: "created", order: toPublic(found) };
 }
 
 export async function placeOrder(req: OrderRequest): Promise<PlaceOrderResult> {
-  const commerce = getCommerce();
-  if (commerce.mode === "live" && process.env.SAPO_ALLOW_ORDER_WRITES !== "true") return { kind: "disabled" };
+  if (!ordersEnabled()) return { kind: "disabled" };
+  const orders = getOrderBackend();
 
   const fp = fingerprint(req);
   const claim = await beginCheckout(req.checkoutId, fp);
@@ -78,7 +78,7 @@ export async function placeOrder(req: OrderRequest): Promise<PlaceOrderResult> {
   if (claim.kind === "existing") {
     const r = claim.record;
     if (r.status === "created") {
-      const order = await commerce.getOrder(r.orderRef).catch(() => null);
+      const order = await orders.getOrder(r.orderRef).catch(() => null);
       if (order) return { kind: "created", order: toPublic(order) };
       // Order exists but cannot be re-read right now: still never create a second one.
       return { kind: "processing" };
@@ -117,7 +117,7 @@ export async function placeOrder(req: OrderRequest): Promise<PlaceOrderResult> {
   const settings = req.fulfillment === "pickup" ? await getContent().siteSettings(req.locale) : null;
 
   try {
-    const order = await commerce.createOrder({
+    const order = await orders.createOrder({
       checkoutId: req.checkoutId,
       locale: req.locale,
       lines: quote.lines,
@@ -157,7 +157,7 @@ export async function placeOrder(req: OrderRequest): Promise<PlaceOrderResult> {
 
 /** For the "Check again" button after an unknown outcome. */
 export async function checkOrderStatus(checkoutId: string, fp: string | null): Promise<PlaceOrderResult> {
-  const found = await getCommerce().findOrderByCheckoutId(checkoutId);
+  const found = await getOrderBackend().findOrderByCheckoutId(checkoutId);
   if (found) {
     if (fp) await finishCheckout(checkoutId, { status: "created", fingerprint: fp, orderRef: found.ref, simulated: found.simulated, createdAt: Date.now() });
     return { kind: "created", order: toPublic(found) };

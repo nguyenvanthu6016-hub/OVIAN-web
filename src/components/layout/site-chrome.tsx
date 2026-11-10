@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCommerce, commerceMode, isUnpublishedPreview, type Category } from "@/lib/commerce";
+import { getCommerce, commerceMode, type Category } from "@/lib/commerce";
 import { getContent } from "@/lib/cms";
 import type { Locale } from "@/lib/i18n/config";
 import { getDictionary, t } from "@/lib/i18n/dictionaries";
@@ -38,10 +38,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       {commerceMode() === "mock" ? (
         <div className="bg-surface-alt text-caption text-green">
           <p className="container-page page-x py-1.5">{dict.common.mockNotice}</p>
-        </div>
-      ) : isUnpublishedPreview() ? (
-        <div className="bg-surface-alt text-caption text-green">
-          <p className="container-page page-x py-1.5">{dict.common.previewNotice}</p>
         </div>
       ) : null}
       <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur-sm">

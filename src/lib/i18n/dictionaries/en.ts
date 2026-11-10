@@ -26,7 +26,6 @@ export const en: typeof vi = {
     item: "{count} item",
     mockBadge: "Sample data",
     mockNotice: "You are viewing the store in sample mode. Products, prices and orders are simulated.",
-    previewNotice: "Internal preview: real Sapo products, including ones not yet on sale online. Ordering is off.",
     breadcrumb: "Breadcrumb",
     required: "required",
     optional: "optional",

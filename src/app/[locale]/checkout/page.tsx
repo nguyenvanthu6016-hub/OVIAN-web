@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getCommerce } from "@/lib/commerce";
+import { ordersEnabled } from "@/lib/orders";
 import { getContent } from "@/lib/cms";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -20,7 +20,6 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
   const d = getDictionary(locale);
   const content = getContent();
   const [settings, rules] = await Promise.all([content.siteSettings(locale).catch(() => null), content.shippingRules().catch(() => null)]);
-  const ordersEnabled = getCommerce().mode === "mock" || process.env.SAPO_ALLOW_ORDER_WRITES === "true";
   return (
     <div className="container-page page-x pb-8 pt-8">
       <h1 className="mb-8 text-display">{d.checkout.title}</h1>
@@ -28,7 +27,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
         locale={locale}
         dict={{ checkout: d.checkout, cart: d.cart, errors: d.errors, common: d.common, order: d.order }}
         store={settings?.store ?? null}
-        ordersEnabled={ordersEnabled}
+        ordersEnabled={ordersEnabled()}
         sampleShipping={!!rules?.sample}
       />
     </div>

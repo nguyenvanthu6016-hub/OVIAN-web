@@ -104,11 +104,11 @@ const pages: Record<string, { title: [string, string]; summary?: [string, string
     title: ["Chính sách bảo mật", "Privacy policy"],
     body: {
       vi: [
-        { type: "p", text: "Khi đặt hàng, OVIAN dùng họ tên, số điện thoại, email (nếu có) và địa chỉ giao hàng để xử lý và giao đơn. Giỏ hàng, sản phẩm đã lưu và sản phẩm vừa xem chỉ lưu trên trình duyệt của bạn." },
+        { type: "p", text: "Khi đặt hàng, OVIAN dùng họ tên, số điện thoại, email (nếu có) và địa chỉ giao hàng để xử lý và giao đơn. Thông tin đơn được lưu trong Google Sheets (Google Drive) của OVIAN. Giỏ hàng, sản phẩm đã lưu và sản phẩm vừa xem chỉ lưu trên trình duyệt của bạn." },
         { type: "p", text: "[Nội dung mẫu] Chính sách bảo mật đầy đủ sẽ được OVIAN cập nhật trong Sanity." },
       ],
       en: [
-        { type: "p", text: "When you order, OVIAN uses your name, phone number, email (if given) and delivery address to process and deliver the order. Your cart, saved products and recently viewed products are stored only in your browser." },
+        { type: "p", text: "When you order, OVIAN uses your name, phone number, email (if given) and delivery address to process and deliver the order. Order details are stored in OVIAN's Google Sheets (Google Drive). Your cart, saved products and recently viewed products are stored only in your browser." },
         { type: "p", text: "[Sample content] The full privacy policy will be added by OVIAN in Sanity." },
       ],
     },

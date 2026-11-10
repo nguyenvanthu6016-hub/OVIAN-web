@@ -1,4 +1,4 @@
-import { getCommerce } from "@/lib/commerce";
+import { getOrderBackend } from "@/lib/orders";
 import { trackRequestSchema } from "@/lib/checkout/schema";
 import { maskPhone } from "@/lib/checkout/place-order";
 import { provinceName } from "@/lib/checkout/provinces";
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const parsed = trackRequestSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return json({ error: "not-found" }, 404);
   try {
-    const order = await getCommerce().getOrder(parsed.data.orderRef.replace(/^#/, "").toUpperCase());
+    const order = await getOrderBackend().getOrder(parsed.data.orderRef.replace(/^#/, "").toUpperCase());
     if (!order || last9(order.customerPhone) !== last9(parsed.data.phone)) return json({ error: "not-found" }, 404);
     return json({
       order: {

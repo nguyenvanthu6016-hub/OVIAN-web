@@ -20,10 +20,11 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 
 ## Blockers (owner input needed)
 
-1. ~~Sapo store domain + credentials~~ — done 2026-11-04 (ovianshop.mysapo.net, read verified). Still needed: written approval (or a test store) before any real order write. **Rotate the API key/secret before go-live** (they were shared in chat).
-1a. Sapo plan upgrade with the web channel, then publish products to it (in progress by owner). Until then only the local preview flag shows products.
-1b. Room collections in Sapo: `phong-ngu` done; `phong-khach`, `bep`, `phong-tam`, `goc-lam-viec`, `ban-cong` pending.
-2. How pickup / cash-at-store orders should look in Sapo (tag, gateway, source) — current proposal in docs/OWNER_GUIDE.vi.md §5.
+1. ~~Sapo store domain + credentials~~ — done 2026-11-04 (ovianshop.mysapo.net, read verified). **REMINDER for the owner: rotate the Sapo API key/secret before go-live** (they were shared in chat).
+1a. ~~Sapo website plan~~ — owner decided 2026-11-10 not to upgrade. Catalogue: every active Sapo product (`SAPO_LIST_UNPUBLISHED=true`, hide with tag `an-web`). **Orders go to the owner's Google Sheet** via Apps Script; shipping and payment handled manually.
+1b. ~~Room collections~~ — done: phong-ngu, phong-khach, phong-bep, phong-tam, goc-lam-viec, do-dung-ngoai-troi.
+2. **Google Sheet setup by the owner** (docs/GOOGLE_SHEETS_ORDERS.vi.md): deploy the script, send the `/exec` URL; then one approved test order, then `ORDERS_ENABLED=true`.
+2a. Bulk 30% price import: 21 variants skipped (12 without SKU, 9 "Mùng chụp tự bung" with duplicate SKUs). Owner will fix later.
 3. Sanity project id (and who may edit shipping fees).
 4. Real store address, phone, opening hours; real shipping fees per region; return policy text.
 5. Real product and room photography.
@@ -32,7 +33,7 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 ## Next actions
 
 1. With credentials: run read-only probes (`/products.json`, `/custom_collections.json`, `/collects.json`, `/variants/{id}.json`, `/discount_codes/lookup.json`, `/orders.json?status=any&limit=1`) and update docs/SAPO_API.md.
-2. Create one order in the test store; compare Sapo totals, tags, note attributes with the storefront; adjust `sapo/provider.ts` mapping.
+2. After the owner deploys the Apps Script: one approved test order into the Sheet; check the row, tracking and duplicate protection.
 3. Verify webhook HMAC header with a real delivery.
 4. Improve listing/PDP LCP (static rendering of the unfiltered listing, fewer client islands).
 5. Screen-reader pass (NVDA + VoiceOver), Safari/Firefox visual pass.
@@ -57,4 +58,5 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 - [ ] Webhooks configured and verified
 - [ ] Persistent volume (or shared store) for idempotency
 - [ ] HTTPS domain, `NEXT_PUBLIC_SITE_URL` set
-- [ ] `SAPO_ALLOW_ORDER_WRITES=true` only after the above
+- [ ] Google Sheet script deployed, test order written and checked, then `ORDERS_ENABLED=true`
+- [ ] Rotate Sapo API key/secret (owner) and the Sheet secret if it was ever shared

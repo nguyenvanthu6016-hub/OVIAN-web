@@ -32,7 +32,11 @@ Open http://localhost:3000 (redirects to `/vi`). With the defaults the store run
 |---|---|---|
 | `COMMERCE_MODE` | `mock` (default) / `live` | Mock catalogue and simulated orders, or the real Sapo store |
 | `CONTENT_MODE` | `mock` (default) / `sanity` | Bundled sample copy, or Sanity CMS |
-| `SAPO_ALLOW_ORDER_WRITES` | `false` (default) / `true` | In live mode, checkout is disabled until this is `true` |
+| `ORDER_BACKEND` | empty (auto) / `sheets` / `sapo` | Where orders go. Auto = simulated in Mock Mode, Google Sheet in live mode |
+| `ORDERS_ENABLED` | `false` (default) / `true` | In live mode, checkout is disabled until this is `true` (and the Sheet URL + secret are set) |
+| `GOOGLE_SHEETS_WEBAPP_URL`, `GOOGLE_SHEETS_SECRET` | server-only | Apps Script web app that writes orders to the owner's Google Sheet, see [docs/GOOGLE_SHEETS_ORDERS.vi.md](docs/GOOGLE_SHEETS_ORDERS.vi.md) |
+| `SAPO_LIST_UNPUBLISHED` | `true` / `false` | `true`: every active Sapo product is listed (no Sapo website plan needed) |
+| `WEB_HIDE_TAG` | default `an-web` | Sapo products with this tag are hidden |
 
 Switching modes needs only an env change and a restart; no page code changes. **Live mode never falls back to mock data**: if Sapo is unreachable, pages show an "unavailable" state and checkout is blocked while keeping what the customer typed.
 
@@ -80,4 +84,4 @@ docker compose up -d --build
 
 **Caching / sync**: catalogue reads are cached 5 minutes and invalidated by the Sapo product webhook (`/api/webhooks/sapo`) and the Sanity webhook (`/api/revalidate`). Checkout always re-reads price and stock from Sapo, uncached.
 
-Do not deploy to production or enable `SAPO_ALLOW_ORDER_WRITES` until the live checklist in [PROGRESS.md](PROGRESS.md) is done.
+Do not deploy to production or enable `ORDERS_ENABLED` until the live checklist in [PROGRESS.md](PROGRESS.md) is done.

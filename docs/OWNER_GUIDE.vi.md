@@ -17,7 +17,7 @@ Tài liệu cho chủ cửa hàng. Chi tiết kỹ thuật xem `README.md` và `
 
 - **Mẫu (mặc định):** sản phẩm, giá, đơn hàng đều là dữ liệu mô phỏng. Thanh trên cùng ghi rõ "chế độ mẫu". Không có đơn thật nào được tạo.
 - **Thật:** đặt `COMMERCE_MODE=live` và `CONTENT_MODE=sanity` trong file môi trường của máy chủ, khởi động lại.
-- Ở chế độ Thật, nút **Đặt hàng** bị khoá cho tới khi đặt `SAPO_ALLOW_ORDER_WRITES=true`. Chỉ bật sau khi đã thử đặt hàng trên cửa hàng Sapo thử nghiệm.
+- Ở chế độ Thật, nút **Đặt hàng** bị khoá cho tới khi đặt `ORDERS_ENABLED=true` và đã cấu hình Google Sheet (mục 5). Chỉ bật sau khi đã đặt thử 1 đơn thành công.
 
 ## 3. Kết nối Sapo
 
@@ -28,7 +28,7 @@ Tài liệu cho chủ cửa hàng. Chi tiết kỹ thuật xem `README.md` và `
 
 ## 4. Quản lý sản phẩm
 
-- Tạo/sửa sản phẩm trong Sapo như bình thường. Sản phẩm **đang hiển thị** trong Sapo và có ít nhất một biến thể sẽ tự lên website (tối đa ~5 phút, hoặc ngay nếu có webhook).
+- Tạo/sửa sản phẩm trong Sapo như bình thường. Sản phẩm **đang hoạt động** trong Sapo, có ít nhất một phiên bản và **không** gắn tag `an-web` sẽ tự lên website (tối đa ~5 phút).
 - **Không gian (danh mục):** dùng danh mục (collection) trong Sapo. Danh mục con đặt alias dạng `cha--con`, ví dụ `bep--bao-quan` nằm trong `bep`.
 - **Bộ lọc:** gắn tag sản phẩm dạng `material:go`, `color:xanh`… (xem danh sách trong `src/lib/commerce/facets.ts`).
 - **Giá khuyến mãi:** điền "Giá so sánh" (compare at price) lớn hơn giá bán; website tự hiện nhãn "Giảm …%".
@@ -37,16 +37,18 @@ Tài liệu cho chủ cửa hàng. Chi tiết kỹ thuật xem `README.md` và `
 
 ## 5. Xử lý đơn hàng
 
-Đơn từ website vào Sapo với tag `ovian-web` và:
+OVIAN không dùng gói website của Sapo. **Đơn từ website được ghi vào Google Sheet** của cửa hàng, mỗi đơn một dòng. Cách cài đặt và ý nghĩa từng cột xem [GOOGLE_SHEETS_ORDERS.vi.md](GOOGLE_SHEETS_ORDERS.vi.md).
 
-| Cách nhận | Tag | Thanh toán | Ghi chú đơn |
-|---|---|---|---|
-| Giao tận nhà | `delivery` | COD — thu tiền mặt khi giao | "GIAO HÀNG — thu tiền mặt khi giao (COD)" |
-| Nhận tại cửa hàng | `pickup` | Tiền mặt tại quầy | "NHẬN TẠI CỬA HÀNG — thanh toán tiền mặt tại quầy" |
+| Cách nhận | Thanh toán |
+|---|---|
+| Giao tận nhà | COD — thu tiền mặt khi giao |
+| Nhận tại cửa hàng | Tiền mặt tại quầy, không phí giao |
 
-- Đơn luôn ở trạng thái **chưa thanh toán**. Chỉ đánh dấu đã thanh toán trong Sapo khi đã nhận tiền thật.
-- Gọi xác nhận theo số điện thoại trên đơn. Khách tra cứu đơn bằng **mã đơn + số điện thoại**.
-- Nếu tổng tiền trong Sapo khác tổng trên website, máy chủ ghi log `total mismatch` — kiểm tra đơn đó trước khi xử lý.
+- Cập nhật cột **Trạng thái** (Mới → Đã xác nhận → Đang giao / Sẵn sàng nhận → Hoàn tất / Đã huỷ). Khách tra cứu đơn bằng **mã đơn + số điện thoại** sẽ thấy trạng thái này.
+- Tích **Đã thu tiền** khi đã nhận tiền thật.
+- Gọi xác nhận theo số điện thoại trên đơn.
+- **Tồn kho Sapo không tự trừ** khi có đơn web: trừ trong Sapo khi xác nhận đơn.
+- Muốn ẩn sản phẩm khỏi website: gắn tag `an-web` trong Sapo.
 
 ## 6. Đổi phí giao hàng
 
@@ -61,7 +63,7 @@ Trong Sanity Studio: Trang chủ, Bộ sưu tập, Bài nhật ký, Trang thông
 | Hiện tượng | Kiểm tra |
 |---|---|
 | Website báo "Cửa hàng tạm gián đoạn" | Sapo có hoạt động không; token còn hiệu lực không; log máy chủ dòng `commerce unavailable` |
-| Nút Đặt hàng bị khoá ở chế độ Thật | `SAPO_ALLOW_ORDER_WRITES` chưa bật |
+| Nút Đặt hàng bị khoá ở chế độ Thật | `ORDERS_ENABLED` chưa bật, hoặc thiếu URL/mã bí mật Google Sheet |
 | Khách báo "chưa xác nhận được kết quả" | Tìm đơn trong Sapo theo tag `ck-…`/số điện thoại trước khi tạo đơn hộ — đơn có thể đã được tạo |
-| Sản phẩm mới chưa lên | Sản phẩm đã hiển thị trong Sapo chưa; đợi 5 phút hoặc kiểm tra webhook |
+| Sản phẩm mới chưa lên | Sản phẩm có đang hoạt động trong Sapo không, có tag `an-web` không; đợi 5 phút |
 | `/api/health` không trả về `ok` | Máy chủ không chạy — khởi động lại container |

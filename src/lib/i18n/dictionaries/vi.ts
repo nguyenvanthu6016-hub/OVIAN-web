@@ -24,7 +24,6 @@ export const vi = {
     item: "{count} sản phẩm",
     mockBadge: "Dữ liệu mẫu",
     mockNotice: "Bạn đang xem cửa hàng ở chế độ mẫu. Sản phẩm, giá và đơn hàng là dữ liệu mô phỏng.",
-    previewNotice: "Bản xem trước nội bộ: sản phẩm thật từ Sapo, gồm cả sản phẩm chưa mở bán trên website. Chưa nhận đặt hàng.",
     breadcrumb: "Đường dẫn",
     required: "bắt buộc",
     optional: "không bắt buộc",

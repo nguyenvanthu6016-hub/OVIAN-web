@@ -27,9 +27,9 @@ test.beforeAll(async ({ request }) => {
   }
 });
 
-test("home: real catalogue, preview notice, room from Sapo @mobile", async ({ page }) => {
+test("home: real catalogue, rooms from Sapo, no sample notice @mobile", async ({ page }) => {
   await page.goto("/vi");
-  await expect(page.getByText("Bản xem trước nội bộ")).toBeVisible();
+  await expect(page.getByText("chế độ mẫu")).toHaveCount(0);
   await expect(page.getByRole("navigation", { name: /sơ đồ|không gian/i }).getByRole("link").first()).toBeVisible();
   await expect(page.getByRole("navigation", { name: /Mặt bằng nhà/ }).getByText(/Phòng Ngủ/i)).toBeVisible();
   await expect(page.getByText("Ảnh mẫu")).toHaveCount(0); // no mock placeholder images

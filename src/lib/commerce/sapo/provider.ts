@@ -14,7 +14,7 @@ import type {
   Product,
   Variant,
 } from "../types";
-import { SapoForbidden, SapoNotFound, previewUnpublished, sapoGet, sapoPostOrder } from "./client";
+import { SapoForbidden, SapoNotFound, listUnpublished, sapoGet, sapoPostOrder, webHideTag } from "./client";
 
 /* ---------- Raw Sapo shapes (only fields we read). Sapo uses name/alias/content; Shopify-style aliases kept defensively. ---------- */
 interface RawVariant {
@@ -45,6 +45,8 @@ interface RawProduct {
   created_at?: string;
   published_on?: string | null;
   published_at?: string | null;
+  /** "active" seen on OVIAN's store; other values unverified, so anything else is treated as hidden. */
+  status?: string;
   images?: { id: number; src: string; alt?: string | null; width?: number; height?: number }[];
   options?: { name: string; position: number; values?: string[] }[];
   variants?: RawVariant[];
@@ -139,10 +141,14 @@ async function fetchAllProducts(): Promise<RawProduct[]> {
     out.push(...products);
     if (products.length < 250) break;
   }
-  // Auto-publish rule: any product published in Sapo with at least one variant appears on the site.
-  const includeUnpublished = previewUnpublished();
+  // Auto-publish rule: a product with at least one variant appears on the site when it is published to the
+  // Sapo web channel, or (SAPO_LIST_UNPUBLISHED) when it is active; the hide tag always wins.
+  const includeUnpublished = listUnpublished();
+  const hide = webHideTag();
   return out.filter((p) => {
-    if (includeUnpublished) return (p.variants?.length ?? 0) > 0;
+    if ((p.tags ?? "").split(",").some((t) => t.trim().toLowerCase() === hide)) return false;
+    if ((p.variants?.length ?? 0) === 0) return false;
+    if (includeUnpublished) return p.status === undefined || p.status === "active";
     const published = "published_on" in p ? p.published_on : "published_at" in p ? p.published_at : "unknown";
     return published !== null && (p.variants?.length ?? 0) > 0;
   });

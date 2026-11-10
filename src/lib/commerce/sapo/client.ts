@@ -26,17 +26,23 @@ export function readSapoConfig(): SapoConfig {
   if (!accessToken && !(apiKey && apiSecret)) {
     throw new CommerceUnavailableError("Sapo credentials are not configured");
   }
-  // Preview of unpublished products never takes orders, whatever SAPO_ALLOW_ORDER_WRITES says.
-  const allowOrderWrites = process.env.SAPO_ALLOW_ORDER_WRITES === "true" && !previewUnpublished();
+  const allowOrderWrites = process.env.SAPO_ALLOW_ORDER_WRITES === "true" || process.env.ORDERS_ENABLED === "true";
   return { domain, accessToken, apiKey, apiSecret, allowOrderWrites };
 }
 
 /**
- * Local preview only: list products that are not yet published to the Sapo web channel.
- * Ignored in production builds so an unpublished catalogue can never go live by accident.
+ * Which Sapo products appear on the site.
+ * - SAPO_LIST_UNPUBLISHED=true: every active product, whether or not it is published to a Sapo web
+ *   channel. For stores without the Sapo website plan (OVIAN's setup since 2026-11-10).
+ * - otherwise: only products published to the Sapo web channel.
+ * In both cases a product tagged with WEB_HIDE_TAG (default "an-web") is hidden.
  */
-export function previewUnpublished(): boolean {
-  return process.env.SAPO_PREVIEW_UNPUBLISHED === "true" && process.env.NODE_ENV !== "production";
+export function listUnpublished(): boolean {
+  return process.env.SAPO_LIST_UNPUBLISHED === "true";
+}
+
+export function webHideTag(): string {
+  return (process.env.WEB_HIDE_TAG?.trim() || "an-web").toLowerCase();
 }
 
 function headers(cfg: SapoConfig): HeadersInit {

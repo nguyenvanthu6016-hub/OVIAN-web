@@ -82,12 +82,13 @@ See `src/lib/commerce/types.ts`. Key points:
 4. Server recomputes the quote. If `total !== quoteTotal` → 409 with the new quote (customer must reconfirm).
 5. Idempotency: `IdempotencyStore` (durable JSON file store by default, `IDEMPOTENCY_STORE_PATH`) records `checkoutId → pending|created(orderRef)|failed`. A repeated `checkoutId` returns the stored result; a `pending` entry returns 202 “processing”. In live mode the checkoutId is also written to the Sapo order (`note_attributes` + tag `ck-<id>`) so that an *unknown* result (timeout) can be reconciled by searching recent orders before any retry.
 6. Payment: `cod` (home delivery) or `cash_at_store` (pickup). Orders are created with `financial_status: "pending"`. Never marked paid.
+7. **Order backend (since 2026-11-10).** The catalogue comes from Sapo, but orders go to an `OrderBackend` (`src/lib/orders`), chosen by `ORDER_BACKEND`: `mock` (Mock Mode default), **`sheets` (live default)** or `sapo`. OVIAN does not have the Sapo website plan, so live orders are written to the owner's **Google Sheet** through a Google Apps Script web app (`integrations/google-sheets/Code.gs`, setup in `docs/GOOGLE_SHEETS_ORDERS.vi.md`). The website server calls the script with a shared secret (`GOOGLE_SHEETS_SECRET`, server-only); the browser never sees the URL or secret. The script takes a lock, de-duplicates by `checkoutId`, assigns `OV00001`-style numbers, stores customer text as text (no formula injection) and keeps the original order data in a hidden JSON column used for tracking. Create is a single attempt; a timeout, network error, non-JSON reply or script error is an *unknown* outcome reconciled with `find` by checkoutId. Staff change status and "paid" in the sheet; tracking reads them back. Checkout needs `ORDERS_ENABLED=true`. Sapo stock is not decremented by web orders (manual).
 
 **Limitation:** the file store is durable on a single VPS/Docker host with a volume; on serverless (Vercel) it is not shared between instances. Production on serverless needs a shared store (Redis/Upstash or a small Postgres) — requires owner approval (cost).
 
 ## 6. Guest order tracking
 
-`POST /api/orders/track` with `{ orderRef, phone }`. The server fetches the order and compares the normalised phone (last 9 digits). Mismatch and not-found return the same generic 404 to avoid enumeration. Responses expose masked contact data only. Rate-limited per IP (in-memory token bucket; replace with shared store for multi-instance).
+`POST /api/orders/track` with `{ orderRef, phone }`. The server fetches the order from the order backend (Google Sheet in live mode) and compares the normalised phone (last 9 digits). Mismatch and not-found return the same generic 404 to avoid enumeration. Responses expose masked contact data only. Rate-limited per IP (in-memory token bucket; replace with shared store for multi-instance).
 
 ## 7. Shipping rules
 

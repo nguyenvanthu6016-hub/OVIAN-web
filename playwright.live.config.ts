@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Read-only smoke tests against the real Sapo store (COMMERCE_MODE=live, credentials in .env.local).
- * Never submits an order: order writes stay off (SAPO_ALLOW_ORDER_WRITES=false) and no test clicks "Đặt hàng".
+ * Never submits an order: ORDERS_ENABLED=false (orders would go to the owner's Google Sheet) and no test clicks "Đặt hàng".
  * Run: npx playwright test -c playwright.live.config.ts
  */
 const port = Number(process.env.PORT ?? 3000);
@@ -23,6 +23,6 @@ export default defineConfig({
     port,
     reuseExistingServer: true,
     timeout: 120_000,
-    env: { COMMERCE_MODE: "live", SAPO_ALLOW_ORDER_WRITES: "false" },
+    env: { COMMERCE_MODE: "live", ORDERS_ENABLED: "false", SAPO_LIST_UNPUBLISHED: "true" },
   },
 });
