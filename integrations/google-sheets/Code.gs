@@ -8,6 +8,7 @@
  *   OVIAN_SECRET   (bắt buộc)  mã bí mật, giống GOOGLE_SHEETS_SECRET trên máy chủ website
  *   NOTIFY_EMAIL   (tuỳ chọn)  email nhận thông báo khi có đơn mới
  *   NEXT_ORDER_NO  (tự tạo)    số thứ tự đơn tiếp theo
+ *   SPREADSHEET_ID (tuỳ chọn)  chỉ cần khi script được tạo riêng ở script.google.com (không mở từ Sheet)
  */
 
 const SHEET_NAME = 'Đơn hàng';
@@ -66,7 +67,8 @@ function doPost(e) {
   } catch (err) {
     console.error(err);
     // For "create" the website treats this as "outcome unknown" and checks again before retrying.
-    return json_({ ok: false, error: 'server-error' });
+    // detail is only returned to a caller that sent the right secret; it helps diagnose setup problems.
+    return json_({ ok: false, error: 'server-error', detail: String(err && err.message || err).slice(0, 200) });
   }
 }
 
@@ -248,9 +250,21 @@ function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
+/**
+ * The spreadsheet that holds orders: the one this script is attached to (Extensions → Apps Script),
+ * or, for a standalone script made at script.google.com, the one named by the SPREADSHEET_ID property
+ * (the long id in the sheet URL: docs.google.com/spreadsheets/d/<SPREADSHEET_ID>/edit).
+ */
+function spreadsheet_() {
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  if (id) return SpreadsheetApp.openById(id.trim());
+  throw new Error('Script chưa gắn với Google Sheet. Mở Sheet → Tiện ích mở rộng → Apps Script, hoặc thêm thuộc tính SPREADSHEET_ID.');
+}
+
 function getSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME);
+  const sheet = spreadsheet_().getSheetByName(SHEET_NAME);
   if (!sheet) throw new Error('Chưa có trang tính "' + SHEET_NAME + '". Hãy chạy hàm setup() một lần.');
   return sheet;
 }
@@ -267,7 +281,7 @@ function notify_(d, row) {
       '',
       'Tổng cộng: ' + money_(d.total),
       '',
-      SpreadsheetApp.getActiveSpreadsheet().getUrl(),
+      spreadsheet_().getUrl(),
     ].join('\n');
     MailApp.sendEmail(to, 'OVIAN: đơn mới ' + d.ref + ' — ' + money_(d.total), body);
   } catch (err) {
@@ -298,7 +312,7 @@ const HEADER_NOTES = {
 
 /** Chạy một lần sau khi dán mã: tạo trang tính "Đơn hàng", tiêu đề, màu, ghi chú, định dạng. */
 function setup() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = spreadsheet_();
   const sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
   if (sheet.getLastRow() > 1) {
     throw new Error('Trang tính "' + SHEET_NAME + '" đã có đơn hàng. Không chạy lại setup() để tránh làm lệch cột.');
