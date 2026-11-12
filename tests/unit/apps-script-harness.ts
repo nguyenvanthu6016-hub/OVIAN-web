@@ -15,8 +15,10 @@ export function loadAppsScript(secret = "s".repeat(32)) {
   const mails: { to: string; subject: string; body: string }[] = [];
   let sheetExists = false;
 
-  const anyRange = new Proxy({}, { get: () => () => anyRange }); // every range method is chainable no-op
-  const sheet = {
+  /** Any method not modelled is a chainable no-op (formatting, validation, notes…). */
+  const chain = <T extends object>(base: T): T =>
+    new Proxy(base, { get: (t, k) => (k in t ? (t as Record<string | symbol, unknown>)[k] : () => chain(base)) });
+  const sheet = chain({
     appendRow(r: unknown[]) {
       rawAppends.push([...r]);
       rows.push(r.map((v) => (typeof v === "string" && v.startsWith("'") ? v.slice(1) : v)));
@@ -24,28 +26,17 @@ export function loadAppsScript(secret = "s".repeat(32)) {
     getLastRow: () => rows.length,
     getMaxRows: () => 1000,
     getDataRange: () => ({ getValues: () => rows.map((r) => [...r]) }),
-    getRange: (r: number, c: number, nr?: number, nc?: number) => ({
-      ...anyRange,
-      setValues(v: unknown[][]) {
-        if (r === 1 && nr === 1) rows[0] = [...(v[0] ?? [])];
-        void c; void nc;
-        return this;
-      },
-      setFontWeight() { return this; },
-      setBackground() { return this; },
-      setNumberFormat() { return this; },
-      setWrap() { return this; },
-      setDataValidation() { return this; },
-      insertCheckboxes() { return this; },
-    }),
-    setFrozenRows() {},
-    setFrozenColumns() {},
-    setColumnWidth() {},
-    hideColumns() {},
-  };
-  const builder: Record<string, () => unknown> = {};
-  for (const m of ["requireValueInList", "setAllowInvalid"]) builder[m] = () => builder;
-  builder.build = () => ({});
+    getRange: (r: number, _c: number, nr?: number) => {
+      const range = chain({
+        setValues(v: unknown[][]) {
+          if (r === 1 && nr === 1) rows[0] = [...(v[0] ?? [])];
+          return range;
+        },
+      });
+      return range;
+    },
+  });
+  const builder = chain({ build: () => ({}) });
 
   const context = vm.createContext({
     console: { error: () => {}, log: () => {} },

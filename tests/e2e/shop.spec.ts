@@ -227,6 +227,31 @@ test("23-24: guest tracking needs the right phone", async ({ page }) => {
 
   const api = await page.request.post("/api/orders/track", { data: { orderRef: ref, phone: "0911111111" } });
   expect(api.status()).toBe(404);
+  await expect(page.getByTestId("tracked-shipment")).toHaveCount(0); // no carrier yet
+});
+
+test("tracking shows carrier and tracking number once staff fill them in", async ({ page }) => {
+  // The Google Sheet backend returns these fields; here the API reply is stubbed to test the page.
+  await page.route("**/api/orders/track", (route) =>
+    route.fulfill({
+      json: {
+        order: {
+          ref: "OV00012", createdAt: "2026-11-12T03:00:00.000Z", status: "shipping", financialStatus: "pending",
+          fulfillment: "delivery", payment: "cod", lines: [{ name: "Cốc sứ trắng 350 ml", variantTitle: "", quantity: 1, lineTotal: 129000 }],
+          subtotal: 129000, discount: 0, shippingFee: 25000, total: 154000, phoneMasked: "•••••••678", province: "Hà Nội",
+          simulated: false, shipment: { carrier: "GHN", trackingNumber: "GHN123456VN" },
+        },
+      },
+    }),
+  );
+  await page.goto("/vi/track");
+  await page.getByLabel("Mã đơn hàng").fill("OV00012");
+  await page.getByLabel("Số điện thoại").fill("0912345678");
+  await page.getByRole("button", { name: "Tra cứu" }).click();
+  await expect(page.getByTestId("tracked-status")).toHaveText("Đang giao");
+  const shipment = page.getByTestId("tracked-shipment");
+  await expect(shipment).toContainText("GHN");
+  await expect(shipment).toContainText("GHN123456VN");
 });
 
 test("mobile: drawer navigation and sticky add to cart @mobile-only", async ({ page }) => {

@@ -234,6 +234,8 @@ export const en: typeof vi = {
     track: "Track an order",
     trackIntro: "Enter the order number and the phone number used when ordering.",
     trackSubmit: "Track",
+    carrier: "Carrier",
+    trackingNumber: "Tracking number",
     trackNotFound: "No order matches this number and phone.",
     status: "Status",
     statusPending: "Awaiting confirmation",

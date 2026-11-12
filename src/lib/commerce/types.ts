@@ -200,6 +200,8 @@ export interface Order {
   customerPhone: string;
   shippingAddress: Address | null;
   simulated: boolean;
+  /** Carrier and tracking number entered by staff (Google Sheet backend). */
+  shipment?: { carrier: string | null; trackingNumber: string | null } | null;
 }
 
 export class CommerceUnavailableError extends Error {

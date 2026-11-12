@@ -95,6 +95,7 @@ interface TrackedOrder {
   total: number;
   phoneMasked: string;
   province: string | null;
+  shipment?: { carrier: string | null; trackingNumber: string | null } | null;
   simulated: boolean;
 }
 
@@ -152,6 +153,16 @@ export function TrackOrderForm({ locale, dict }: { locale: Locale; dict: D }) {
             <div><dt className="text-caption text-ink-muted">{dict.order.method}</dt><dd className="font-semibold">{state.order.fulfillment === "pickup" ? dict.checkout.pickup : `${dict.checkout.delivery}${state.order.province ? `, ${state.order.province}` : ""}`}</dd></div>
             <div><dt className="text-caption text-ink-muted">{dict.order.payment}</dt><dd className="font-semibold">{state.order.financialStatus === "paid" ? dict.order.paymentPaid : dict.order.paymentPending}</dd></div>
           </dl>
+          {state.order.shipment ? (
+            <dl className="mb-5 grid gap-3 rounded-md bg-surface-alt p-4 sm:grid-cols-2" data-testid="tracked-shipment">
+              {state.order.shipment.carrier ? (
+                <div><dt className="text-caption text-ink-muted">{dict.order.carrier}</dt><dd className="font-semibold">{state.order.shipment.carrier}</dd></div>
+              ) : null}
+              {state.order.shipment.trackingNumber ? (
+                <div><dt className="text-caption text-ink-muted">{dict.order.trackingNumber}</dt><dd className="font-semibold tabular-nums">{state.order.shipment.trackingNumber}</dd></div>
+              ) : null}
+            </dl>
+          ) : null}
           <Lines lines={state.order.lines} locale={locale} />
           <div className="mt-4">
             <TotalsList locale={locale} dict={dict} subtotal={state.order.subtotal} discount={state.order.discount} shipping={state.order.shippingFee === 0 ? dict.checkout.shippingFree : state.order.shippingFee} total={state.order.total} />

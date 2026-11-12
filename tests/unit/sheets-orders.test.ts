@@ -101,6 +101,45 @@ describe("Apps Script (Code.gs)", () => {
     expect(await sheetsOrders.getOrder("OV99999")).toBeNull();
   });
 
+  it("has the agreed columns, with the two technical columns last", () => {
+    const h = gs.api.HEADERS;
+    for (const c of ["Đơn vị vận chuyển", "Mã vận đơn", "Ngày giao", "Ngày khách nhận", "Phí ship thực tế", "Người xử lý", "Đã trừ tồn kho Sapo", "Lý do huỷ / hoàn"]) {
+      expect(h).toContain(c);
+    }
+    expect(h.slice(-2)).toEqual(["Mã phiên (không sửa)", "Dữ liệu (không sửa)"]);
+    expect(h).toHaveLength(30);
+  });
+
+  it("new row starts with staff columns empty and both checkboxes unticked", async () => {
+    await sheetsOrders.createOrder(input());
+    const row = gs.rows[1]!;
+    expect(row[gs.col("Đã thu tiền")]).toBe(false);
+    expect(row[gs.col("Đã trừ tồn kho Sapo")]).toBe(false);
+    expect(row[gs.col("Mã vận đơn")]).toBe("");
+    expect(row[gs.col("Người xử lý")]).toBe("");
+  });
+
+  it("carrier and tracking number entered by staff reach the tracking page; internal columns do not", async () => {
+    const o = await sheetsOrders.createOrder(input());
+    expect((await sheetsOrders.getOrder(o.ref))?.shipment).toBeNull();
+    const row = gs.rows[1]!;
+    row[gs.col("Đơn vị vận chuyển")] = "GHN";
+    row[gs.col("Mã vận đơn")] = "GHN123456VN";
+    row[gs.col("Phí ship thực tế")] = 22000;
+    row[gs.col("Người xử lý")] = "Lan";
+    row[gs.col("Ghi chú nội bộ")] = "khách quen";
+    const t = await sheetsOrders.getOrder(o.ref);
+    expect(t?.shipment).toEqual({ carrier: "GHN", trackingNumber: "GHN123456VN" });
+    expect(JSON.stringify(t)).not.toContain("Lan");
+    expect(JSON.stringify(t)).not.toContain("22000");
+    expect(JSON.stringify(t)).not.toContain("khách quen");
+  });
+
+  it("setup refuses to run again once orders exist", async () => {
+    await sheetsOrders.createOrder(input());
+    expect(() => gs.api.setup()).toThrow(/đã có đơn hàng/);
+  });
+
   it("finds an order by checkoutId (reconciliation)", async () => {
     const o = await sheetsOrders.createOrder(input());
     expect((await sheetsOrders.findOrderByCheckoutId(input().checkoutId))?.ref).toBe(o.ref);

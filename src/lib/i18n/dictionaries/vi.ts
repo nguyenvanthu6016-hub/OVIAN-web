@@ -232,6 +232,8 @@ export const vi = {
     track: "Tra cứu đơn hàng",
     trackIntro: "Nhập mã đơn và số điện thoại đã dùng khi đặt hàng.",
     trackSubmit: "Tra cứu",
+    carrier: "Đơn vị vận chuyển",
+    trackingNumber: "Mã vận đơn",
     trackNotFound: "Không tìm thấy đơn hàng khớp mã và số điện thoại này.",
     status: "Trạng thái",
     statusPending: "Chờ xác nhận",

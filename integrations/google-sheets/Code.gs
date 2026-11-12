@@ -21,11 +21,22 @@ const STATUS_LABELS = {
   cancelled: 'Đã huỷ',
 };
 
+/** Carriers offered in the "Đơn vị vận chuyển" list; staff may still type another name. */
+const CARRIERS = ['GHN', 'GHTK', 'Viettel Post', 'J&T Express', 'Ninja Van', 'VNPost', 'Ahamove', 'Grab/Be', 'Tự giao', 'Khác'];
+
 const HEADERS = [
-  'Thời gian', 'Mã đơn', 'Trạng thái', 'Đã thu tiền', 'Họ tên', 'Số điện thoại', 'Email',
-  'Cách nhận', 'Thanh toán', 'Tỉnh/Thành', 'Phường/Xã', 'Số nhà, đường', 'Sản phẩm',
-  'Tạm tính', 'Mã giảm giá', 'Giảm giá', 'Phí giao', 'Tổng cộng',
-  'Ghi chú của khách', 'Ghi chú nội bộ', 'Mã phiên (không sửa)', 'Dữ liệu (không sửa)',
+  // Order
+  'Thời gian', 'Mã đơn',
+  // Handling (staff edit; status, carrier and tracking number are shown to the customer)
+  'Trạng thái', 'Đã thu tiền', 'Đơn vị vận chuyển', 'Mã vận đơn', 'Ngày giao', 'Ngày khách nhận',
+  'Phí ship thực tế', 'Người xử lý', 'Đã trừ tồn kho Sapo', 'Lý do huỷ / hoàn',
+  // Customer and delivery (written by the website)
+  'Họ tên', 'Số điện thoại', 'Email', 'Cách nhận', 'Thanh toán', 'Tỉnh/Thành', 'Phường/Xã', 'Số nhà, đường',
+  'Ghi chú của khách',
+  // Products and money (calculated by the website server)
+  'Sản phẩm', 'Tạm tính', 'Mã giảm giá', 'Giảm giá', 'Phí giao', 'Tổng cộng',
+  // Staff note, then hidden technical columns (never edit)
+  'Ghi chú nội bộ', 'Mã phiên (không sửa)', 'Dữ liệu (không sửa)',
 ];
 const COL = {};
 HEADERS.forEach((h, i) => { COL[h] = i; }); // 0-based index into a row
@@ -106,6 +117,7 @@ function createOrder_(p) {
     row[COL['Mã đơn']] = ref;
     row[COL['Trạng thái']] = STATUS_LABELS.pending;
     row[COL['Đã thu tiền']] = false;
+    row[COL['Đã trừ tồn kho Sapo']] = false;
     row[COL['Họ tên']] = text_(p.customer.fullName);
     row[COL['Số điện thoại']] = "'" + String(p.customer.phone).replace(/[^\d+]/g, '');
     row[COL['Email']] = text_(p.customer.email || '');
@@ -163,6 +175,9 @@ function rowToOrder_(row) {
     provinceCode: d.provinceCode,
     ward: d.ward,
     street: d.street,
+    // Shown to the customer on the tracking page when staff fill them in.
+    carrier: String(row[COL['Đơn vị vận chuyển']] || '').trim() || null,
+    trackingNumber: String(row[COL['Mã vận đơn']] || '').trim() || null,
   };
 }
 
@@ -176,14 +191,29 @@ function findRow_(sheet, colIndex, value) {
 
 /* ------------------------------------------------------------------ helpers */
 
-/** Checkbox and status list on the new row only (pre-filled checkboxes would make appendRow skip to the bottom). */
+/**
+ * Checkboxes and lists on the new row only. Pre-filled checkboxes on empty rows would count as data
+ * and make appendRow write at the bottom of the sheet.
+ */
 function formatNewRow_(sheet, r) {
   sheet.getRange(r, COL['Đã thu tiền'] + 1).insertCheckboxes();
+  sheet.getRange(r, COL['Đã trừ tồn kho Sapo'] + 1).insertCheckboxes();
   sheet.getRange(r, COL['Trạng thái'] + 1).setDataValidation(statusRule_());
+  sheet.getRange(r, COL['Đơn vị vận chuyển'] + 1).setDataValidation(carrierRule_());
+  sheet.getRange(r, COL['Ngày giao'] + 1, 1, 2).setDataValidation(dateRule_());
 }
 
 function statusRule_() {
   return SpreadsheetApp.newDataValidation().requireValueInList(Object.values(STATUS_LABELS), true).setAllowInvalid(false).build();
+}
+
+/** List of carriers, but another name is still accepted (shown with a warning). */
+function carrierRule_() {
+  return SpreadsheetApp.newDataValidation().requireValueInList(CARRIERS, true).setAllowInvalid(true).build();
+}
+
+function dateRule_() {
+  return SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(false).setHelpText('Nhập ngày, ví dụ 15/11/2026').build();
 }
 
 function validate_(p) {
@@ -247,19 +277,52 @@ function notify_(d, row) {
 
 /* ------------------------------------------------------------------ one-time setup */
 
-/** Chạy một lần sau khi dán mã: tạo trang tính "Đơn hàng", tiêu đề, danh sách trạng thái, định dạng. */
+/** Cột anh/chị tự điền (nền vàng nhạt) — các cột còn lại do website ghi (nền xanh nhạt). */
+const STAFF_COLUMNS = [
+  'Trạng thái', 'Đã thu tiền', 'Đơn vị vận chuyển', 'Mã vận đơn', 'Ngày giao', 'Ngày khách nhận',
+  'Phí ship thực tế', 'Người xử lý', 'Đã trừ tồn kho Sapo', 'Lý do huỷ / hoàn', 'Ghi chú nội bộ',
+];
+
+const HEADER_NOTES = {
+  'Mã đơn': 'Khách dùng mã này + số điện thoại để tra cứu đơn trên website.',
+  'Trạng thái': 'Khách THẤY trạng thái này khi tra cứu đơn.',
+  'Đã thu tiền': 'Tích khi đã nhận tiền thật (COD hoặc tại cửa hàng).',
+  'Đơn vị vận chuyển': 'Khách THẤY khi tra cứu đơn. Chọn trong danh sách hoặc gõ tên khác.',
+  'Mã vận đơn': 'Khách THẤY khi tra cứu đơn, để tự theo dõi với bên vận chuyển.',
+  'Phí ship thực tế': 'Phí OVIAN trả cho bên vận chuyển. So với cột "Phí giao" (khách trả).',
+  'Đã trừ tồn kho Sapo': 'Đơn web KHÔNG tự trừ tồn kho Sapo. Tích sau khi đã trừ trong Sapo.',
+  'Phí giao': 'Phí giao khách trả, do website tính theo tỉnh.',
+  'Mã phiên (không sửa)': 'Cột kỹ thuật: chống tạo trùng đơn. Không sửa, không xoá.',
+  'Dữ liệu (không sửa)': 'Cột kỹ thuật: dữ liệu gốc của đơn, dùng cho trang tra cứu. Không sửa, không xoá.',
+};
+
+/** Chạy một lần sau khi dán mã: tạo trang tính "Đơn hàng", tiêu đề, màu, ghi chú, định dạng. */
 function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
-  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold').setBackground('#e6efe8');
+  if (sheet.getLastRow() > 1) {
+    throw new Error('Trang tính "' + SHEET_NAME + '" đã có đơn hàng. Không chạy lại setup() để tránh làm lệch cột.');
+  }
+  const col = (h) => COL[h] + 1;
+  const header = sheet.getRange(1, 1, 1, HEADERS.length);
+  header.setValues([HEADERS]).setFontWeight('bold').setBackground('#e6efe8').setFontColor('#1f2a22').setWrap(true).setVerticalAlignment('middle');
+  STAFF_COLUMNS.forEach((h) => sheet.getRange(1, col(h)).setBackground('#fff1c2'));
+  Object.keys(HEADER_NOTES).forEach((h) => sheet.getRange(1, col(h)).setNote(HEADER_NOTES[h]));
+  sheet.setRowHeight(1, 42);
   sheet.setFrozenRows(1);
   sheet.setFrozenColumns(2);
+
   const rows = sheet.getMaxRows() - 1; // formats only: they do not count as data for appendRow
-  const col = (h) => COL[h] + 1;
   sheet.getRange(2, col('Thời gian'), rows, 1).setNumberFormat('dd/MM/yyyy HH:mm');
-  ['Tạm tính', 'Giảm giá', 'Phí giao', 'Tổng cộng'].forEach((h) => sheet.getRange(2, col(h), rows, 1).setNumberFormat('#,##0'));
-  sheet.getRange(2, col('Sản phẩm'), rows, 1).setWrap(true);
-  sheet.setColumnWidth(col('Sản phẩm'), 360);
+  ['Ngày giao', 'Ngày khách nhận'].forEach((h) => sheet.getRange(2, col(h), rows, 1).setNumberFormat('dd/MM/yyyy'));
+  ['Phí ship thực tế', 'Tạm tính', 'Giảm giá', 'Phí giao', 'Tổng cộng'].forEach((h) => sheet.getRange(2, col(h), rows, 1).setNumberFormat('#,##0'));
+  ['Sản phẩm', 'Ghi chú của khách', 'Ghi chú nội bộ', 'Lý do huỷ / hoàn'].forEach((h) => sheet.getRange(2, col(h), rows, 1).setWrap(true));
+  sheet.getRange(2, 1, rows, HEADERS.length).setVerticalAlignment('top');
+
+  const widths = { 'Thời gian': 120, 'Mã đơn': 80, 'Trạng thái': 110, 'Đơn vị vận chuyển': 120, 'Mã vận đơn': 130,
+    'Họ tên': 150, 'Số điện thoại': 110, 'Số nhà, đường': 200, 'Ghi chú của khách': 200, 'Sản phẩm': 380,
+    'Lý do huỷ / hoàn': 180, 'Ghi chú nội bộ': 200 };
+  Object.keys(widths).forEach((h) => sheet.setColumnWidth(col(h), widths[h]));
   sheet.hideColumns(col('Mã phiên (không sửa)'), 2);
   if (!PropertiesService.getScriptProperties().getProperty('NEXT_ORDER_NO')) {
     PropertiesService.getScriptProperties().setProperty('NEXT_ORDER_NO', '1');

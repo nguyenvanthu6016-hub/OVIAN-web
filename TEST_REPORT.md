@@ -2,6 +2,10 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Re-run 2026-11-12 (Sheet columns for manual fulfilment)
+
+Sheet now has 30 columns: added carrier (list), tracking number, ship date, received date, actual shipping cost, handled by, "stock deducted in Sapo" checkbox, cancel/return reason. Carrier and tracking number are shown on the tracking page; staff-only columns are not returned. Typecheck, lint pass; Vitest **56 / 56**; Playwright Mock Mode **36 / 36** (new: tracking page shows carrier and tracking number). Real Apps Script deployment still untested.
+
 ## Re-run 2026-11-10 (orders to Google Sheets)
 
 | Check | Result |

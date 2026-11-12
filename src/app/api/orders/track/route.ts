@@ -35,6 +35,7 @@ export async function POST(req: Request) {
         phoneMasked: maskPhone(order.customerPhone),
         province: order.shippingAddress ? provinceName(order.shippingAddress.provinceCode) : null,
         simulated: order.simulated,
+        shipment: order.shipment ?? null,
       },
     });
   } catch (e) {

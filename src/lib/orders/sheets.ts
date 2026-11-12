@@ -58,6 +58,8 @@ export interface SheetOrder {
   provinceCode: string | null;
   ward: string | null;
   street: string | null;
+  carrier?: string | null;
+  trackingNumber?: string | null;
 }
 
 type ScriptResponse = { ok: true; order: SheetOrder | null; duplicate?: boolean } | { ok: false; error: string };
@@ -130,6 +132,7 @@ export function toOrder(o: SheetOrder): Order {
         ? { fullName: o.customerName, phone: o.customerPhone, provinceCode: o.provinceCode, ward: o.ward ?? "", street: o.street ?? "" }
         : null,
     simulated: false,
+    shipment: o.carrier || o.trackingNumber ? { carrier: o.carrier ?? null, trackingNumber: o.trackingNumber ?? null } : null,
   };
 }
 
