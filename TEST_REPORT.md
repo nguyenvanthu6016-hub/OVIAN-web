@@ -2,6 +2,23 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Live Google Sheet test 2026-11-12 (owner-approved test order)
+
+Owner deployed the Apps Script web app and ran `setup`. With `ORDERS_ENABLED=true` set only for this run (dev server stopped afterwards; `.env.local` still has `ORDERS_ENABLED=false`):
+
+| Check | Result |
+|---|---|
+| Health check (`GET /exec`) | `{"ok":true,"service":"ovian-orders"}` |
+| Wrong secret | `unauthorized`, nothing written |
+| Quote on real Sapo variant (motion-sensor lamp, sale price) | 140.000 ₫, no changes, orderable |
+| `POST /api/orders` (store pickup, test customer "ĐƠN THỬ", phone 0900000001) | **201, OV00001**, about 6 s |
+| Same checkoutId submitted twice more in parallel | both returned OV00001; OV00002 does not exist (no duplicate row) |
+| Tracking with wrong phone | 404 |
+| Tracking with right phone (lower-case ref) | OV00001, status pending, unpaid, phone masked, no carrier yet |
+| Script `find` by checkoutId | row found, total 140000, phone kept as 0900000001 |
+
+Not yet verified in the live sheet: a home-delivery order (address columns) and staff edits (status, carrier, tracking number) shown on the tracking page. Both are covered by unit tests against the same script. Note: order creation takes about 6 s (Apps Script); the checkout button shows a waiting state meanwhile.
+
 ## Re-run 2026-11-12 (Sheet columns for manual fulfilment)
 
 Sheet now has 30 columns: added carrier (list), tracking number, ship date, received date, actual shipping cost, handled by, "stock deducted in Sapo" checkbox, cancel/return reason. Carrier and tracking number are shown on the tracking page; staff-only columns are not returned. Typecheck, lint pass; Vitest **56 / 56**; Playwright Mock Mode **36 / 36** (new: tracking page shows carrier and tracking number). Real Apps Script deployment still untested.

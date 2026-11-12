@@ -23,7 +23,7 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 1. ~~Sapo store domain + credentials~~ — done 2026-11-04 (ovianshop.mysapo.net, read verified). **REMINDER for the owner: rotate the Sapo API key/secret before go-live** (they were shared in chat).
 1a. ~~Sapo website plan~~ — owner decided 2026-11-10 not to upgrade. Catalogue: every active Sapo product (`SAPO_LIST_UNPUBLISHED=true`, hide with tag `an-web`). **Orders go to the owner's Google Sheet** via Apps Script; shipping and payment handled manually.
 1b. ~~Room collections~~ — done: phong-ngu, phong-khach, phong-bep, phong-tam, goc-lam-viec, do-dung-ngoai-troi.
-2. **Google Sheet setup by the owner** (docs/GOOGLE_SHEETS_ORDERS.vi.md): deploy the script, send the `/exec` URL; then one approved test order, then `ORDERS_ENABLED=true`.
+2. ~~Google Sheet setup~~ — done 2026-11-12: script deployed, test order OV00001 written and verified (see TEST_REPORT). Owner should delete the OV00001 test row. `ORDERS_ENABLED` stays `false` until store info and real shipping fees are in (otherwise customers would see sample fees).
 2a. Bulk 30% price import: 21 variants skipped (12 without SKU, 9 "Mùng chụp tự bung" with duplicate SKUs). Owner will fix later.
 3. Sanity project id (and who may edit shipping fees).
 4. Real store address, phone, opening hours; real shipping fees per region; return policy text.
@@ -58,5 +58,6 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 - [ ] Webhooks configured and verified
 - [ ] Persistent volume (or shared store) for idempotency
 - [ ] HTTPS domain, `NEXT_PUBLIC_SITE_URL` set
-- [ ] Google Sheet script deployed, test order written and checked, then `ORDERS_ENABLED=true`
+- [x] Google Sheet script deployed, test order written and checked (2026-11-12)
+- [ ] Real store info + shipping fees in, then `ORDERS_ENABLED=true`
 - [ ] Rotate Sapo API key/secret (owner) and the Sheet secret if it was ever shared
