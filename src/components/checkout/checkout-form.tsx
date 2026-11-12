@@ -48,7 +48,7 @@ type Status =
   | { kind: "processing" }
   | { kind: "error"; message: string };
 
-export function CheckoutForm({ locale, dict, store, ordersEnabled, sampleShipping }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; sampleShipping: boolean }) {
+export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled, sampleShipping }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; pickupEnabled: boolean; sampleShipping: boolean }) {
   const router = useRouter();
   const cart = useCart();
   const hydrated = useHydrated();
@@ -57,7 +57,9 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, sampleShippin
     if (typeof window === "undefined") return emptyDraft;
     try {
       const raw = sessionStorage.getItem(DRAFT_KEY);
-      return raw ? { ...emptyDraft, ...(JSON.parse(raw) as Partial<Draft>) } : emptyDraft;
+      const draft = raw ? { ...emptyDraft, ...(JSON.parse(raw) as Partial<Draft>) } : emptyDraft;
+      // A draft saved while pickup was offered must not keep a method that no longer exists.
+      return pickupEnabled ? draft : { ...draft, fulfillment: "delivery" };
     } catch {
       return emptyDraft;
     }
@@ -219,22 +221,30 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, sampleShippin
         </fieldset>
 
         <fieldset className={step} disabled={locked}>
-          <legend className="sr-only">{dict.checkout.stepFulfillment}</legend>
-          <h2 className={stepTitle} aria-hidden="true"><span className={num}>2</span>{dict.checkout.stepFulfillment}</h2>
-          <div role="radiogroup" aria-label={dict.checkout.stepFulfillment} className="grid gap-3 sm:grid-cols-2">
-            {([
-              ["delivery", dict.checkout.delivery, dict.checkout.deliveryDesc, IconTruck],
-              ["pickup", dict.checkout.pickup, dict.checkout.pickupDesc, IconStore],
-            ] as const).map(([value, label, desc, Icon]) => (
-              <label key={value} className={cx("flex cursor-pointer gap-3 rounded-md border p-4 transition-colors duration-150", f.fulfillment === value ? "border-green bg-surface-alt" : "border-line-strong hover:border-green")}>
-                <input type="radio" name="fulfillment" value={value} checked={f.fulfillment === value} onChange={() => set("fulfillment", value)} className="mt-1 size-5 accent-green" data-testid={`fulfillment-${value}`} />
-                <span>
-                  <span className="flex items-center gap-2 font-semibold text-ink"><Icon size={20} className="text-green" />{label}</span>
-                  <span className="mt-1 block text-caption text-ink-muted">{desc}</span>
-                </span>
-              </label>
-            ))}
-          </div>
+          <legend className="sr-only">{pickupEnabled ? dict.checkout.stepFulfillment : dict.checkout.stepDelivery}</legend>
+          <h2 className={stepTitle} aria-hidden="true"><span className={num}>2</span>{pickupEnabled ? dict.checkout.stepFulfillment : dict.checkout.stepDelivery}</h2>
+          {pickupEnabled ? (
+            <div role="radiogroup" aria-label={dict.checkout.stepFulfillment} className="grid gap-3 sm:grid-cols-2">
+              {([
+                ["delivery", dict.checkout.delivery, dict.checkout.deliveryDesc, IconTruck],
+                ["pickup", dict.checkout.pickup, dict.checkout.pickupDesc, IconStore],
+              ] as const).map(([value, label, desc, Icon]) => (
+                <label key={value} className={cx("flex cursor-pointer gap-3 rounded-md border p-4 transition-colors duration-150", f.fulfillment === value ? "border-green bg-surface-alt" : "border-line-strong hover:border-green")}>
+                  <input type="radio" name="fulfillment" value={value} checked={f.fulfillment === value} onChange={() => set("fulfillment", value)} className="mt-1 size-5 accent-green" data-testid={`fulfillment-${value}`} />
+                  <span>
+                    <span className="flex items-center gap-2 font-semibold text-ink"><Icon size={20} className="text-green" />{label}</span>
+                    <span className="mt-1 block text-caption text-ink-muted">{desc}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          ) : (
+            <p className="flex items-center gap-2 rounded-md border border-green bg-surface-alt p-4 font-semibold text-ink" data-testid="fulfillment-delivery-only">
+              <IconTruck size={20} className="text-green" />
+              {dict.checkout.delivery}
+              <span className="font-normal text-ink-muted">· {dict.checkout.deliveryDesc}</span>
+            </p>
+          )}
 
           {f.fulfillment === "delivery" ? (
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -252,7 +262,7 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, sampleShippin
               <Field id="co-street" label={dict.checkout.street} error={errors.street}>
                 <input id="co-street" className={inputClass} value={f.street} onChange={(e) => set("street", e.target.value)} aria-invalid={!!errors.street} autoComplete="address-line1" maxLength={160} />
               </Field>
-              {ship?.status === "unavailable" ? <Notice tone="error" className="md:col-span-2">{dict.checkout.shippingUnavailable}</Notice> : null}
+              {ship?.status === "unavailable" ? <Notice tone="error" className="md:col-span-2">{pickupEnabled ? dict.checkout.shippingUnavailable : dict.checkout.shippingUnavailableNoPickup}</Notice> : null}
               {sampleShipping ? <p className="text-caption text-ink-muted md:col-span-2">{dict.common.mockBadge}: {dict.checkout.shippingFee}</p> : null}
             </div>
           ) : (

@@ -20,8 +20,8 @@ async function fillContact(page: Page, phone = "0912345678") {
   await page.getByLabel("Số điện thoại").fill(phone);
 }
 
+/** Home delivery is the only method (store pickup is switched off). Sample fee: Hà Nội 25.000 ₫. */
 async function fillDelivery(page: Page, province = "ha-noi") {
-  await page.getByTestId("fulfillment-delivery").check();
   await page.getByLabel("Tỉnh / Thành phố").selectOption(province);
   await page.getByLabel("Phường / Xã").fill("Phường Mẫu");
   await page.getByLabel("Số nhà, tên đường").fill("12 Đường Mẫu");
@@ -97,16 +97,26 @@ test("10-13: home delivery, shipping fee, COD order", async ({ page }) => {
   await expect(page.getByText("Tiền mặt khi nhận hàng (COD)")).toBeVisible();
 });
 
-test("14-15: store pickup, cash at store, no shipping fee", async ({ page }) => {
+test("14-15: only home delivery is offered; the server refuses store pickup", async ({ page }) => {
   await addToCart(page, "ke-go-soi-3-tang");
   await page.goto("/vi/checkout");
-  await fillContact(page);
-  await page.getByTestId("fulfillment-pickup").check();
-  await expect(page.getByTestId("shipping")).toHaveText("Miễn phí");
-  await expect(page.getByTestId("payment-method")).toHaveText("Tiền mặt tại cửa hàng khi nhận");
-  await page.getByTestId("place-order").click();
-  await expect(page.getByTestId("order-confirmed")).toBeVisible();
-  await expect(page.getByText("Tiền mặt tại cửa hàng khi nhận")).toBeVisible();
+  await expect(page.getByTestId("fulfillment-delivery-only")).toContainText("Giao tận nhà");
+  await expect(page.getByTestId("fulfillment-pickup")).toHaveCount(0);
+  await expect(page.getByText("Nhận tại cửa hàng")).toHaveCount(0);
+  await expect(page.getByTestId("payment-method")).toHaveText("Tiền mặt khi nhận hàng (COD)");
+
+  const quote = await page.request.post("/api/checkout/quote", {
+    data: { lines: [{ variantId: "v-1005-1", quantity: 1 }], couponCode: null, fulfillment: "pickup", provinceCode: null },
+  });
+  expect(quote.status()).toBe(400);
+  const order = await page.request.post("/api/orders", {
+    data: {
+      checkoutId: crypto.randomUUID(), locale: "vi", lines: [{ variantId: "v-1005-1", quantity: 1, seenPrice: 129000 }],
+      fulfillment: "pickup", customer: { fullName: "Nguyễn Thử", phone: "0912345678" }, confirmedTotal: 129000,
+    },
+  });
+  expect(order.status()).toBe(400);
+  expect(((await order.json()) as { status: string }).status).toBe("pickup-disabled");
 });
 
 test("16: item sells out before checkout", async ({ page }) => {
@@ -114,7 +124,7 @@ test("16: item sells out before checkout", async ({ page }) => {
   await addToCart(page, "so-tay-giay-tai-che-a5");
   await control(page, { action: "stock", variantId: "v-1005-1", stock: 0 });
   await page.goto("/vi/checkout");
-  await page.getByTestId("fulfillment-pickup").check();
+  await fillDelivery(page);
   await expect(page.getByTestId("quote-changes")).toContainText("Cốc sứ trắng 350 ml: đã hết hàng");
   await expect(page.getByTestId("place-order")).toBeDisabled();
   await page.getByRole("button", { name: "Tôi đã xem, cập nhật đơn" }).click();
@@ -126,14 +136,14 @@ test("17: price changes between quote and submit", async ({ page }) => {
   await addToCart(page, "coc-su-trang-350ml");
   await page.goto("/vi/checkout");
   await fillContact(page);
-  await page.getByTestId("fulfillment-pickup").check();
-  await expect(page.getByTestId("total")).toHaveText(/129\.000/);
+  await fillDelivery(page);
+  await expect(page.getByTestId("total")).toHaveText(/154\.000/); // 129.000 + 25.000 delivery
   await control(page, { action: "price", variantId: "v-1005-1", price: 149000 });
   await page.getByTestId("place-order").click();
   await expect(page.getByText("Giá hoặc số lượng đã thay đổi").first()).toBeVisible();
   await expect(page.getByTestId("quote-changes")).toContainText("149.000");
   await page.getByRole("button", { name: "Tôi đã xem, cập nhật đơn" }).click();
-  await expect(page.getByTestId("total")).toHaveText(/149\.000/);
+  await expect(page.getByTestId("total")).toHaveText(/174\.000/);
   await page.getByTestId("place-order").click();
   await expect(page.getByTestId("order-confirmed")).toBeVisible();
 });
@@ -143,7 +153,7 @@ test("18: commerce backend unavailable keeps input and blocks ordering", async (
   await page.goto("/vi/checkout");
   await fillContact(page);
   await control(page, { action: "faults", mode: "unavailable" });
-  await page.getByTestId("fulfillment-pickup").check();
+  await fillDelivery(page); // choosing a province asks the server for a new quote
   await expect(page.getByText(/Hệ thống bán hàng đang tạm gián đoạn/).first()).toBeVisible();
   await expect(page.getByTestId("place-order")).toBeDisabled();
   await expect(page.getByLabel("Họ và tên")).toHaveValue("Nguyễn Thử Nghiệm");
@@ -156,8 +166,8 @@ test("19: order times out after creation; 'check again' finds it without duplica
   await addToCart(page, "coc-su-trang-350ml");
   await page.goto("/vi/checkout");
   await fillContact(page);
-  await page.getByTestId("fulfillment-pickup").check();
-  await expect(page.getByTestId("total")).toHaveText(/129\.000/);
+  await fillDelivery(page);
+  await expect(page.getByTestId("total")).toHaveText(/154\.000/);
   await control(page, { action: "faults", mode: "order-timeout" });
   await page.getByTestId("place-order").click();
   await expect(page.getByText(/Chưa xác nhận được kết quả đặt hàng/)).toBeVisible();
@@ -170,12 +180,13 @@ test("20: repeated submissions create a single order", async ({ page }) => {
   await addToCart(page, "coc-su-trang-350ml");
   await page.goto("/vi/checkout");
   await fillContact(page);
-  await page.getByTestId("fulfillment-pickup").check();
-  await expect(page.getByTestId("total")).toHaveText(/129\.000/);
+  await fillDelivery(page);
+  await expect(page.getByTestId("total")).toHaveText(/154\.000/);
   const checkoutId = crypto.randomUUID();
   const body = {
-    checkoutId, locale: "vi", lines: [{ variantId: "v-1005-1", quantity: 1, seenPrice: 129000 }], fulfillment: "pickup",
-    customer: { fullName: "Nguyễn Thử", phone: "0912345678" }, confirmedTotal: 129000,
+    checkoutId, locale: "vi", lines: [{ variantId: "v-1005-1", quantity: 1, seenPrice: 129000 }], fulfillment: "delivery",
+    address: { provinceCode: "ha-noi", ward: "Phường Mẫu", street: "12 Đường Mẫu" },
+    customer: { fullName: "Nguyễn Thử", phone: "0912345678" }, confirmedTotal: 154000,
   };
   const results = await Promise.all(Array.from({ length: 5 }, () => page.request.post("/api/orders", { data: body })));
   const refs = new Set<string>();
@@ -210,7 +221,7 @@ test("23-24: guest tracking needs the right phone", async ({ page }) => {
   await addToCart(page, "coc-su-trang-350ml");
   await page.goto("/vi/checkout");
   await fillContact(page, "0987654321");
-  await page.getByTestId("fulfillment-pickup").check();
+  await fillDelivery(page);
   await page.getByTestId("place-order").click();
   const ref = (await page.getByTestId("order-ref").textContent())!.trim();
 

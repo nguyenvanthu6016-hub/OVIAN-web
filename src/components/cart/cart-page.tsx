@@ -29,7 +29,7 @@ export function CartPageClient({ locale, dict }: { locale: Locale; dict: D }) {
   useEffect(() => {
     if (!cart.lines.length) return;
     const ctrl = new AbortController();
-    fetchQuote({ lines: cart.lines, couponCode: cart.couponCode, fulfillment: "pickup" }, ctrl.signal)
+    fetchQuote({ lines: cart.lines, couponCode: cart.couponCode, fulfillment: "delivery" }, ctrl.signal)
       .then((r) => {
         if (!r.ok) return setError(r.error === "unavailable" ? dict.errors.unavailableBody : dict.errors.genericBody);
         setError(null);
@@ -56,7 +56,7 @@ export function CartPageClient({ locale, dict }: { locale: Locale; dict: D }) {
     e.preventDefault();
     const c = code.trim().toUpperCase();
     if (!c) return;
-    const r = await fetchQuote({ lines: cart.lines, couponCode: c, fulfillment: "pickup" });
+    const r = await fetchQuote({ lines: cart.lines, couponCode: c, fulfillment: "delivery" });
     if (!r.ok) return setCouponMsg({ ok: false, text: dict.errors.genericBody });
     const issue = r.quote.changes.find((x) => x.kind === "coupon");
     if (issue) setCouponMsg({ ok: false, text: describeChange(issue, locale, dict) });

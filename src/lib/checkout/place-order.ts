@@ -5,6 +5,7 @@ import { CommerceUnavailableError, OrderOutcomeUnknownError, type Order } from "
 import { getContent } from "@/lib/cms";
 import { beginCheckout, finishCheckout, PENDING_STALE_MS, releaseCheckout } from "./idempotency";
 import type { Quote } from "./pricing";
+import { storePickupEnabled } from "./fulfillment";
 import { buildQuote } from "./quote";
 import type { OrderRequest } from "./schema";
 
@@ -15,7 +16,8 @@ export type PlaceOrderResult =
   | { kind: "changed"; quote: Quote }
   | { kind: "not-orderable"; quote: Quote }
   | { kind: "conflict" }
-  | { kind: "disabled" };
+  | { kind: "disabled" }
+  | { kind: "pickup-disabled" };
 
 /** What the confirmation page receives — only data the customer just entered or the order totals. */
 export interface PublicOrderConfirmation {
@@ -69,6 +71,7 @@ async function reconcile(checkoutId: string, fp: string): Promise<PlaceOrderResu
 
 export async function placeOrder(req: OrderRequest): Promise<PlaceOrderResult> {
   if (!ordersEnabled()) return { kind: "disabled" };
+  if (req.fulfillment === "pickup" && !storePickupEnabled()) return { kind: "pickup-disabled" };
   const orders = getOrderBackend();
 
   const fp = fingerprint(req);

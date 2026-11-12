@@ -46,7 +46,7 @@ Hàm `setup` tạo sẵn tiêu đề, màu, ghi chú, định dạng ngày/tiề
 | 11 | **Đã trừ tồn kho Sapo** (ô tích) | Anh/chị | Không |
 | 12 | Lý do huỷ / hoàn | Anh/chị | Không |
 | 13–15 | Họ tên, Số điện thoại (giữ số 0 đầu), Email | Website | Chỉ số điện thoại, đã che bớt |
-| 16–17 | Cách nhận, Thanh toán | Website | Có |
+| 16–17 | Cách nhận, Thanh toán (hiện luôn là Giao tận nhà, COD) | Website | Có |
 | 18–20 | Tỉnh/Thành, Phường/Xã, Số nhà, đường (trống nếu nhận tại cửa hàng) | Website | Chỉ tỉnh/thành |
 | 21 | Ghi chú của khách | Website | Không |
 | 22 | Sản phẩm: mỗi món một dòng, ví dụ `2 × Pin 3A (6 Viên) [SKU] = 48.000 ₫` | Website | Có |

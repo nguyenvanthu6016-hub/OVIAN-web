@@ -11,6 +11,7 @@ beforeEach(() => {
   process.env.IDEMPOTENCY_STORE_PATH = join(mkdtempSync(join(tmpdir(), "ovian-idem-")), "store.json");
   process.env.COMMERCE_MODE = "mock";
   process.env.CONTENT_MODE = "mock";
+  process.env.STORE_PICKUP_ENABLED = "true"; // these tests use a pickup cart; default-off is tested below
   resetMockState();
 });
 
@@ -87,5 +88,23 @@ describe("placeOrder (mock)", () => {
     expect(r.order.payment).toBe("cash_at_store");
     const stored = [...mockState().orders.values()][0]!;
     expect(stored.financialStatus).toBe("pending");
+  });
+});
+
+describe("store pickup switch", () => {
+  it("is off by default: pickup orders are refused and nothing is created", async () => {
+    delete process.env.STORE_PICKUP_ENABLED;
+    expect((await placeOrder(req())).kind).toBe("pickup-disabled");
+    expect(mockState().orders.size).toBe(0);
+  });
+  it("home delivery still works with pickup off", async () => {
+    delete process.env.STORE_PICKUP_ENABLED;
+    const r = await placeOrder(req({
+      fulfillment: "delivery",
+      address: { provinceCode: "ha-noi", ward: "Phường Mẫu", street: "12 Đường Mẫu" },
+      confirmedTotal: 258000 + 25000,
+    }));
+    expect(r.kind).toBe("created");
+    if (r.kind === "created") expect(r.order.payment).toBe("cod");
   });
 });

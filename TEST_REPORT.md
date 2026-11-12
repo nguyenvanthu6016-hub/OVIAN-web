@@ -2,6 +2,10 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Re-run 2026-11-12 (delivery only)
+
+Store pickup switched off. Typecheck, lint pass; Vitest **58 / 58** (new: pickup refused by default, delivery still works); Playwright Mock Mode **36 / 36** (scenarios 14-15 now check that only home delivery is shown and that the quote and order APIs refuse pickup with 400; the other checkout scenarios use a Hà Nội delivery address, sample fee 25.000 ₫); Playwright live Sapo **18 / 18**.
+
 ## Live Google Sheet test 2026-11-12 (owner-approved test order)
 
 Owner deployed the Apps Script web app and ran `setup`. With `ORDERS_ENABLED=true` set only for this run (dev server stopped afterwards; `.env.local` still has `ORDERS_ENABLED=false`):

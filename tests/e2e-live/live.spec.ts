@@ -64,19 +64,20 @@ test("sale filter lists discounted products", async ({ page }) => {
 
 test("server quote uses the live Sapo price, not the browser's", async ({ request }) => {
   const res = await request.post("/api/checkout/quote", {
-    data: { lines: [{ variantId: SALE_PRODUCT.variantId, quantity: 2, unitPrice: 1 }], couponCode: null, fulfillment: "pickup", provinceCode: null },
+    data: { lines: [{ variantId: SALE_PRODUCT.variantId, quantity: 2, unitPrice: 1 }], couponCode: null, fulfillment: "delivery", provinceCode: null },
   });
   expect(res.ok()).toBeTruthy();
   const { quote } = await res.json();
   const unit = Number(SALE_PRODUCT.price.replace(/\./g, ""));
   expect(quote.lines[0].unitPrice).toBe(unit);
   expect(quote.total).toBe(unit * 2);
-  expect(quote.shippingFee).toBe(0);
+  expect(quote.shippingFee).toBe(0); // province not chosen yet
+  expect(quote.shipping.status).toBe("needs-province");
 });
 
 test("unknown coupon is rejected as invalid, not as an outage", async ({ request }) => {
   const res = await request.post("/api/checkout/quote", {
-    data: { lines: [{ variantId: SALE_PRODUCT.variantId, quantity: 1 }], couponCode: "KHONGTONTAI", fulfillment: "pickup", provinceCode: null },
+    data: { lines: [{ variantId: SALE_PRODUCT.variantId, quantity: 1 }], couponCode: "KHONGTONTAI", fulfillment: "delivery", provinceCode: null },
   });
   expect(res.ok()).toBeTruthy();
   const { quote } = await res.json();

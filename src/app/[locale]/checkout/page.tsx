@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ordersEnabled } from "@/lib/orders";
+import { storePickupEnabled } from "@/lib/checkout/fulfillment";
 import { getContent } from "@/lib/cms";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -28,6 +29,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
         dict={{ checkout: d.checkout, cart: d.cart, errors: d.errors, common: d.common, order: d.order }}
         store={settings?.store ?? null}
         ordersEnabled={ordersEnabled()}
+        pickupEnabled={storePickupEnabled()}
         sampleShipping={!!rules?.sample}
       />
     </div>

@@ -21,7 +21,7 @@ export default async function StorePage({ params }: PageProps<"/[locale]/store">
   return (
     <div className="container-page page-x pb-8 pt-8">
       <h1 className="mb-3 text-display">{d.pages.storeTitle}</h1>
-      <p className="mb-8 max-w-xl text-ink-muted">{d.checkout.pickupDesc}</p>
+      <p className="mb-8 max-w-xl text-ink-muted">{d.pages.storeIntro}</p>
       <div className="max-w-2xl"><StoreCard store={settings?.store ?? null} dict={d} /></div>
     </div>
   );

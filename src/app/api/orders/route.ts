@@ -18,6 +18,7 @@ export async function POST(req: Request) {
       case "not-orderable": return json({ status: "not-orderable", quote: r.quote }, 422);
       case "conflict": return json({ status: "conflict" }, 409);
       case "disabled": return json({ status: "disabled" }, 503);
+      case "pickup-disabled": return json({ status: "pickup-disabled" }, 400);
     }
   } catch (e) {
     return handleError(e, "orders");

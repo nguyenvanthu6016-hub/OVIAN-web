@@ -24,6 +24,7 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 1a. ~~Sapo website plan~~ — owner decided 2026-11-10 not to upgrade. Catalogue: every active Sapo product (`SAPO_LIST_UNPUBLISHED=true`, hide with tag `an-web`). **Orders go to the owner's Google Sheet** via Apps Script; shipping and payment handled manually.
 1b. ~~Room collections~~ — done: phong-ngu, phong-khach, phong-bep, phong-tam, goc-lam-viec, do-dung-ngoai-troi.
 2. ~~Google Sheet setup~~ — done 2026-11-12: script deployed, test order OV00001 written and verified (see TEST_REPORT). Owner should delete the OV00001 test row. `ORDERS_ENABLED` stays `false` until store info and real shipping fees are in (otherwise customers would see sample fees).
+1c. Owner decision 2026-11-12: **home delivery (COD) only**, store pickup switched off (`STORE_PICKUP_ENABLED=false`).
 2a. Bulk 30% price import: 21 variants skipped (12 without SKU, 9 "Mùng chụp tự bung" with duplicate SKUs). Owner will fix later.
 3. Sanity project id (and who may edit shipping fees).
 4. Real store address, phone, opening hours; real shipping fees per region; return policy text.

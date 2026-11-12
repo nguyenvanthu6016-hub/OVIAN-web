@@ -37,6 +37,7 @@ Open http://localhost:3000 (redirects to `/vi`). With the defaults the store run
 | `GOOGLE_SHEETS_WEBAPP_URL`, `GOOGLE_SHEETS_SECRET` | server-only | Apps Script web app that writes orders to the owner's Google Sheet, see [docs/GOOGLE_SHEETS_ORDERS.vi.md](docs/GOOGLE_SHEETS_ORDERS.vi.md) |
 | `SAPO_LIST_UNPUBLISHED` | `true` / `false` | `true`: every active Sapo product is listed (no Sapo website plan needed) |
 | `WEB_HIDE_TAG` | default `an-web` | Sapo products with this tag are hidden |
+| `STORE_PICKUP_ENABLED` | `false` (default) / `true` | Store pickup at checkout. Off: home delivery (COD) only, and the server refuses pickup orders |
 
 Switching modes needs only an env change and a restart; no page code changes. **Live mode never falls back to mock data**: if Sapo is unreachable, pages show an "unavailable" state and checkout is blocked while keeping what the customer typed.
 

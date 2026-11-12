@@ -83,7 +83,7 @@ const pages: Record<string, { title: [string, string]; summary?: [string, string
     body: {
       vi: [
         { type: "h2", text: "Hình thức nhận hàng" },
-        { type: "ul", items: ["Giao tận nhà: thanh toán tiền mặt khi nhận hàng (COD).", "Nhận tại cửa hàng OVIAN: không mất phí giao, thanh toán tiền mặt tại quầy khi nhận."] },
+        { type: "p", text: "Giao tận nhà, thanh toán tiền mặt khi nhận hàng (COD). OVIAN không nhận thanh toán trực tuyến." },
         { type: "p", text: "OVIAN không nhận thanh toán trực tuyến." },
         { type: "h2", text: "Phí giao hàng" },
         { type: "p", text: "Phí giao hàng tính theo tỉnh/thành và hiển thị ở bước thanh toán trước khi bạn đặt hàng." },
@@ -91,7 +91,7 @@ const pages: Record<string, { title: [string, string]; summary?: [string, string
       ],
       en: [
         { type: "h2", text: "Ways to receive" },
-        { type: "ul", items: ["Home delivery: pay cash on delivery (COD).", "Store pickup: no delivery fee, pay cash at the counter on collection."] },
+        { type: "p", text: "Home delivery, pay cash on delivery (COD). OVIAN does not accept online payment." },
         { type: "p", text: "OVIAN does not accept online payment." },
         { type: "h2", text: "Delivery fees" },
         { type: "p", text: "Delivery fees depend on the province and are shown at checkout before you place the order." },
@@ -188,7 +188,7 @@ export function mockJournal(locale: Locale): JournalPost[] {
 
 export function mockFaqs(locale: Locale): Faq[] {
   const f: [string, string, string, string][] = [
-    ["OVIAN nhận thanh toán thế nào?", "Tiền mặt khi nhận hàng (COD) với đơn giao tận nhà, hoặc tiền mặt tại cửa hàng với đơn nhận tại cửa hàng. OVIAN không nhận thanh toán trực tuyến.", "How can I pay?", "Cash on delivery for home delivery, or cash at the store for pickup orders. OVIAN does not accept online payment."],
+    ["OVIAN nhận thanh toán thế nào?", "Tiền mặt khi nhận hàng (COD). OVIAN không nhận thanh toán trực tuyến.", "How can I pay?", "Cash on delivery (COD). OVIAN does not accept online payment."],
     ["Phí giao hàng bao nhiêu?", "Phí tính theo tỉnh/thành và hiện ở bước thanh toán trước khi đặt.", "How much is delivery?", "The fee depends on your province and is shown at checkout before you order."],
     ["Làm sao tra cứu đơn hàng?", "Vào trang Tra cứu đơn hàng, nhập mã đơn và số điện thoại bạn dùng khi đặt.", "How do I track my order?", "Open Track an order and enter the order number with the phone number used when ordering."],
     ["Có cần tạo tài khoản không?", "Không. Bạn đặt hàng chỉ với họ tên và số điện thoại.", "Do I need an account?", "No. You can order with just your name and phone number."],

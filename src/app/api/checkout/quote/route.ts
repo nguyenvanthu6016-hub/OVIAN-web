@@ -1,4 +1,5 @@
 import { buildQuote } from "@/lib/checkout/quote";
+import { storePickupEnabled } from "@/lib/checkout/fulfillment";
 import { quoteRequestSchema } from "@/lib/checkout/schema";
 import { handleError, json, limitFor, validationError } from "@/lib/api";
 import { clientIp, rateLimit } from "@/lib/security/rate-limit";
@@ -9,6 +10,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const parsed = quoteRequestSchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error);
+  if (parsed.data.fulfillment === "pickup" && !storePickupEnabled()) return json({ error: "pickup-disabled" }, 400);
   try {
     return json({ quote: await buildQuote(parsed.data) });
   } catch (e) {

@@ -39,10 +39,7 @@ Tài liệu cho chủ cửa hàng. Chi tiết kỹ thuật xem `README.md` và `
 
 OVIAN không dùng gói website của Sapo. **Đơn từ website được ghi vào Google Sheet** của cửa hàng, mỗi đơn một dòng. Cách cài đặt và ý nghĩa từng cột xem [GOOGLE_SHEETS_ORDERS.vi.md](GOOGLE_SHEETS_ORDERS.vi.md).
 
-| Cách nhận | Thanh toán |
-|---|---|
-| Giao tận nhà | COD — thu tiền mặt khi giao |
-| Nhận tại cửa hàng | Tiền mặt tại quầy, không phí giao |
+Website **chỉ có giao tận nhà, thanh toán tiền mặt khi nhận hàng (COD)**. Lựa chọn "Nhận tại cửa hàng" đã tắt từ 12/11/2026. Muốn bật lại: đặt `STORE_PICKUP_ENABLED=true` trên máy chủ rồi khởi động lại; không cần sửa code.
 
 - Cập nhật cột **Trạng thái** (Mới → Đã xác nhận → Đang giao / Sẵn sàng nhận → Hoàn tất / Đã huỷ). Khách tra cứu đơn bằng **mã đơn + số điện thoại** sẽ thấy trạng thái này.
 - Tích **Đã thu tiền** khi đã nhận tiền thật.
