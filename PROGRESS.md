@@ -4,6 +4,8 @@ Last updated: 2026-11-04
 
 ## Current phase
 
+Ordering is switched on locally: a checkout on this machine writes a real row to OVIAN's Google Sheet.
+
 Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integration is blocked on owner inputs.**
 
 ## Done
@@ -66,5 +68,6 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 - [x] Real store info + shipping fees in (2026-11-17)
 - [ ] Owner reviews the drafted "Điều khoản sử dụng" page
 - [ ] Tax code / business registration number for the footer
-- [ ] `ORDERS_ENABLED=true`
+- [x] `ORDERS_ENABLED=true` on the development machine (2026-11-17). **Must be set again on the production server when the site is deployed.**
+- [ ] Redeploy `Code.gs`: the "Chặn" blocklist and the 3-orders-per-phone-per-day limit are still not live in the Sheet
 - [ ] Rotate Sapo API key/secret (owner) and the Sheet secret if it was ever shared
