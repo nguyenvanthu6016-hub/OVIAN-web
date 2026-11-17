@@ -61,6 +61,10 @@ Gợi ý quy trình một đơn giao tận nhà:
 4. Khách nhận và trả tiền: nhập **Ngày khách nhận**, tích **Đã thu tiền**, chọn **Hoàn tất**.
 5. Nếu huỷ hoặc khách không nhận: chọn **Đã huỷ**, ghi **Lý do huỷ / hoàn**, cộng lại tồn kho trong Sapo nếu đã trừ.
 
+## Trang tính "Chặn"
+
+Hàm `setup` tạo thêm trang tính **"Chặn"**. Thêm số điện thoại vào cột A để website từ chối mọi đơn mới từ số đó; xoá dòng để bỏ chặn. Website cũng tự giới hạn **3 đơn/24 giờ cho mỗi số điện thoại**. Chi tiết: [ANTI_SPAM.vi.md](ANTI_SPAM.vi.md).
+
 ## Lưu ý khi vận hành
 
 - **Không đổi tên** trang tính "Đơn hàng", **không đổi** dòng tiêu đề và thứ tự cột. Muốn thêm cột riêng thì thêm **ở bên phải** cột ẩn cuối cùng, hoặc dùng trang tính khác. Chỉ chạy `setup` khi Sheet còn trống (nếu đã có đơn, script sẽ từ chối chạy lại).

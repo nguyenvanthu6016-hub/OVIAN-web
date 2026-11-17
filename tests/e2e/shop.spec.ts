@@ -15,6 +15,16 @@ async function addToCart(page: Page, handle: string, opts: { color?: string; siz
   await page.keyboard.press("Escape");
 }
 
+/** The form refuses anything sent within 3s of the page being issued (anti-bot timing check). */
+async function placeOrder(page: Page) {
+  await page.waitForFunction(() => performance.now() > 3400);
+  await page.getByTestId("place-order").click();
+}
+
+async function orderToken(page: Page) {
+  return (await page.getByTestId("order-token").inputValue());
+}
+
 async function fillContact(page: Page, phone = "0912345678") {
   await page.getByLabel("Họ và tên").fill("Nguyễn Thử Nghiệm");
   await page.getByLabel("Số điện thoại").fill(phone);
@@ -91,7 +101,7 @@ test("10-13: home delivery, shipping fee, COD order", async ({ page }) => {
   await expect(page.getByTestId("place-order")).toBeDisabled();
   await page.getByLabel("Tỉnh / Thành phố").selectOption("da-nang");
   await expect(page.getByTestId("shipping")).toHaveText(/45\.000/);
-  await page.getByTestId("place-order").click();
+  await placeOrder(page);
   await expect(page.getByTestId("order-confirmed")).toBeVisible();
   await expect(page.getByText("Đây là đơn hàng mô phỏng")).toBeVisible();
   await expect(page.getByText("Tiền mặt khi nhận hàng (COD)")).toBeVisible();
@@ -109,10 +119,12 @@ test("14-15: only home delivery is offered; the server refuses store pickup", as
     data: { lines: [{ variantId: "v-1005-1", quantity: 1 }], couponCode: null, fulfillment: "pickup", provinceCode: null },
   });
   expect(quote.status()).toBe(400);
+  await page.waitForFunction(() => performance.now() > 3400);
   const order = await page.request.post("/api/orders", {
     data: {
       checkoutId: crypto.randomUUID(), locale: "vi", lines: [{ variantId: "v-1005-1", quantity: 1, seenPrice: 129000 }],
       fulfillment: "pickup", customer: { fullName: "Nguyễn Thử", phone: "0912345678" }, confirmedTotal: 129000,
+      token: await orderToken(page),
     },
   });
   expect(order.status()).toBe(400);
@@ -139,12 +151,12 @@ test("17: price changes between quote and submit", async ({ page }) => {
   await fillDelivery(page);
   await expect(page.getByTestId("total")).toHaveText(/154\.000/); // 129.000 + 25.000 delivery
   await control(page, { action: "price", variantId: "v-1005-1", price: 149000 });
-  await page.getByTestId("place-order").click();
+  await placeOrder(page);
   await expect(page.getByText("Giá hoặc số lượng đã thay đổi").first()).toBeVisible();
   await expect(page.getByTestId("quote-changes")).toContainText("149.000");
   await page.getByRole("button", { name: "Tôi đã xem, cập nhật đơn" }).click();
   await expect(page.getByTestId("total")).toHaveText(/174\.000/);
-  await page.getByTestId("place-order").click();
+  await placeOrder(page);
   await expect(page.getByTestId("order-confirmed")).toBeVisible();
 });
 
@@ -169,7 +181,7 @@ test("19: order times out after creation; 'check again' finds it without duplica
   await fillDelivery(page);
   await expect(page.getByTestId("total")).toHaveText(/154\.000/);
   await control(page, { action: "faults", mode: "order-timeout" });
-  await page.getByTestId("place-order").click();
+  await placeOrder(page);
   await expect(page.getByText(/Chưa xác nhận được kết quả đặt hàng/)).toBeVisible();
   await control(page, { action: "faults", mode: "none" });
   await page.getByRole("button", { name: "Kiểm tra lại" }).click();
@@ -187,7 +199,9 @@ test("20: repeated submissions create a single order", async ({ page }) => {
     checkoutId, locale: "vi", lines: [{ variantId: "v-1005-1", quantity: 1, seenPrice: 129000 }], fulfillment: "delivery",
     address: { provinceCode: "ha-noi", ward: "Phường Mẫu", street: "12 Đường Mẫu" },
     customer: { fullName: "Nguyễn Thử", phone: "0912345678" }, confirmedTotal: 154000,
+    token: await orderToken(page),
   };
+  await page.waitForFunction(() => performance.now() > 3400);
   const results = await Promise.all(Array.from({ length: 5 }, () => page.request.post("/api/orders", { data: body })));
   const refs = new Set<string>();
   for (const r of results) {
@@ -222,7 +236,7 @@ test("23-24: guest tracking needs the right phone", async ({ page }) => {
   await page.goto("/vi/checkout");
   await fillContact(page, "0987654321");
   await fillDelivery(page);
-  await page.getByTestId("place-order").click();
+  await placeOrder(page);
   const ref = (await page.getByTestId("order-ref").textContent())!.trim();
 
   await page.goto("/vi/track");
@@ -275,4 +289,44 @@ test("mobile: drawer navigation and sticky add to cart @mobile-only", async ({ p
   await expect(page.getByRole("heading", { level: 1, name: "Đồ mặc cơ bản" })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("25: anti-bot checks refuse scripted orders but not a real customer", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  await fillContact(page);
+  await fillDelivery(page);
+  const token = await orderToken(page);
+  const base = {
+    locale: "vi", lines: [{ variantId: "v-1005-1", quantity: 1, seenPrice: 129000 }], fulfillment: "delivery",
+    address: { provinceCode: "ha-noi", ward: "Phường Mẫu", street: "12 Đường Mẫu" },
+    customer: { fullName: "Nguyễn Thử", phone: "0912345678" }, confirmedTotal: 154000,
+  };
+  const post = (over: Record<string, unknown>) =>
+    page.request.post("/api/orders", { data: { checkoutId: crypto.randomUUID(), ...base, ...over } });
+  await page.waitForFunction(() => performance.now() > 3400);
+
+  // No token (a script posting straight at the API), a forged one, and the hidden honeypot filled in.
+  for (const over of [{}, { token: "9999999999999.forged" }, { token, website: "http://spam.example" }]) {
+    const r = await post(over);
+    expect(r.status()).toBe(400);
+    expect(((await r.json()) as { status: string }).status).toBe("refused");
+  }
+
+  // Too many items, and too large a total.
+  const big = await post({ token, lines: [{ variantId: "v-1005-1", quantity: 99, seenPrice: 129000 }], confirmedTotal: 12_771_000 });
+  expect(((await big.json()) as { error: string }).error).toBe("too-large");
+
+  // The customer's own submission still goes through, and says nothing about the checks.
+  await placeOrder(page);
+  await expect(page.getByTestId("order-confirmed")).toBeVisible();
+});
+
+test("the hidden anti-bot field is invisible and unreachable by keyboard @mobile-only", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  const honeypot = page.locator("#co-website");
+  await expect(honeypot).toHaveCount(1);
+  await expect(honeypot).not.toBeInViewport();
+  expect(await honeypot.evaluate((el) => el.closest("[aria-hidden=true]") !== null && (el as HTMLInputElement).tabIndex === -1)).toBe(true);
 });

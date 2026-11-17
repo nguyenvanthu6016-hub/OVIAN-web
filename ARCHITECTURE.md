@@ -87,6 +87,18 @@ See `src/lib/commerce/types.ts`. Key points:
 
 **Limitation:** the file store is durable on a single VPS/Docker host with a volume; on serverless (Vercel) it is not shared between instances. Production on serverless needs a shared store (Redis/Upstash or a small Postgres) — requires owner approval (cost).
 
+## 5b. Anti-spam on the order form (2026-11-17)
+
+Layered, and invisible to a real customer (`src/lib/security/anti-bot.ts`, enforced in `/api/orders` before anything is priced or written):
+
+1. **Signed form token.** The checkout page issues `HMAC-SHA256(issuedAt)` keyed by `ORDER_TOKEN_SECRET` (falling back to `GOOGLE_SHEETS_SECRET`, then a random per-process key). The order must carry it, be at least 3 s and at most 6 h old. A script posting straight at the API has no token, and the timestamp cannot be rewritten without the key.
+2. **Honeypot.** Hidden `website` field (off-screen, `aria-hidden`, `tabIndex=-1`). Anything in it is a script. Checked first, so the reply never reveals which rule caught the request.
+3. **Order caps.** `MAX_ORDER_ITEMS` (20) and `MAX_ORDER_TOTAL` (5.000.000 ₫).
+4. **Per-IP windows.** 10/minute and 5/hour (in-memory, per process).
+5. **Durable rules in the Google Sheet** (Apps Script, inside the write lock and after the duplicate check, so a retry of an accepted order is never caught): a phone on the `Chặn` sheet is refused (`refused:blocked`), and more than `MAX_ORDERS_PER_PHONE_DAY` (3) orders from one number in 24 h is refused (`refused:too-many`). Numbers compare by last 9 digits. Both are decided before a row is written, so the client maps them to `OrderRefusedError` → a definite no, never an unknown outcome.
+
+Messages to the customer stay vague for 1–2 ("reload and try again") and explicit for 3 and 5, which real people can hit.
+
 ## 6. Guest order tracking
 
 `POST /api/orders/track` with `{ orderRef, phone }`. The server fetches the order from the order backend (Google Sheet in live mode) and compares the normalised phone (last 9 digits). Mismatch and not-found return the same generic 404 to avoid enumeration. Responses expose masked contact data only. Rate-limited per IP (in-memory token bucket; replace with shared store for multi-instance).

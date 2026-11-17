@@ -47,6 +47,10 @@ Website **chỉ có giao tận nhà, thanh toán tiền mặt khi nhận hàng (
 - **Tồn kho Sapo không tự trừ** khi có đơn web: trừ trong Sapo khi xác nhận đơn.
 - Muốn ẩn sản phẩm khỏi website: gắn tag `an-web` trong Sapo.
 
+## 5b. Chống bot spam đơn
+
+Website tự chặn bot bằng nhiều lớp ẩn; khách thật không phải làm gì thêm. Mỗi số điện thoại đặt tối đa **3 đơn/24 giờ**. Muốn chặn hẳn một số, thêm vào trang tính **"Chặn"** trong Google Sheet. Xem [ANTI_SPAM.vi.md](ANTI_SPAM.vi.md).
+
 ## 6. Đổi phí giao hàng
 
 Sanity → "Phí giao hàng" → thêm vùng, chọn mã tỉnh (danh sách trong `docs/SHIPPING.md`), điền phí và mức miễn phí. Có hiệu lực sau khoảng 1 phút. Tỉnh không thuộc vùng nào sẽ **không giao được** trừ khi bật "Giao tới tỉnh không có trong danh sách".

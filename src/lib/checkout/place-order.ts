@@ -2,6 +2,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { getOrderBackend, ordersEnabled } from "@/lib/orders";
 import { CommerceUnavailableError, OrderOutcomeUnknownError, type Order } from "@/lib/commerce/types";
+import { OrderRefusedError } from "@/lib/orders/sheets";
 import { getContent } from "@/lib/cms";
 import { beginCheckout, finishCheckout, PENDING_STALE_MS, releaseCheckout } from "./idempotency";
 import type { Quote } from "./pricing";
@@ -17,7 +18,8 @@ export type PlaceOrderResult =
   | { kind: "not-orderable"; quote: Quote }
   | { kind: "conflict" }
   | { kind: "disabled" }
-  | { kind: "pickup-disabled" };
+  | { kind: "pickup-disabled" }
+  | { kind: "blocked"; message: "too-many" | "blocked" };
 
 /** What the confirmation page receives — only data the customer just entered or the order totals. */
 export interface PublicOrderConfirmation {
@@ -152,6 +154,10 @@ export async function placeOrder(req: OrderRequest): Promise<PlaceOrderResult> {
     if (e instanceof OrderOutcomeUnknownError) {
       await finishCheckout(req.checkoutId, { status: "unknown", fingerprint: fp, startedAt: Date.now() });
       return { kind: "unknown" };
+    }
+    if (e instanceof OrderRefusedError) {
+      await releaseCheckout(req.checkoutId);
+      return { kind: "blocked", message: e.rule };
     }
     if (e instanceof CommerceUnavailableError) await releaseCheckout(req.checkoutId);
     throw e;

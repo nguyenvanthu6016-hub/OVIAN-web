@@ -14,6 +14,9 @@ export function register() {
     problems.push("NEXT_PUBLIC_SITE_URL must be the public https:// address (used for canonical links, sitemap and robots.txt).");
   }
   if (!live) problems.push("COMMERCE_MODE is not \"live\": the site shows SAMPLE products and simulated orders.");
+  if (!env.ORDER_TOKEN_SECRET && !env.GOOGLE_SHEETS_SECRET) {
+    problems.push("ORDER_TOKEN_SECRET is not set: the anti-spam form token is random per start, so a restart makes open checkout pages fail once.");
+  }
   if (env.MOCK_CONTROL === "true") problems.push("MOCK_CONTROL=true is for tests only. Set it to false (it is ignored in production anyway).");
   if (live && (!env.SAPO_STORE_DOMAIN || !(env.SAPO_ACCESS_TOKEN || (env.SAPO_API_KEY && env.SAPO_API_SECRET)))) {
     problems.push("Sapo domain or credentials are missing: the catalogue will show the \"unavailable\" state.");

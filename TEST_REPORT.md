@@ -2,6 +2,21 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Anti-spam layer 1 — 2026-11-17
+
+| Check | Result |
+|---|---|
+| Typecheck, lint, production build (no warnings) | Pass |
+| Vitest | **74 / 74** (16 new) |
+| Playwright Mock Mode | **38 / 38** (2 new) |
+| Playwright live Sapo, read-only | 18 / 18 |
+
+New unit tests (`tests/unit/anti-bot.test.ts`): token accepted at 4 s; missing, malformed, re-signed, re-timestamped and wrong-key tokens rejected; submit under 3 s and over 6 h rejected; honeypot; item and total caps with their env overrides; honeypot checked first. Against the real Apps Script: 4th order from one phone in 24 h refused with no row written and no order number used; `0912…`, `+8491…` and `8491…` counted as one person; orders older than 24 h not counted; another phone unaffected; blocklist sheet; cap configurable and switchable off; a retry of an accepted order never caught by the cap.
+
+New E2E: posting to `/api/orders` with no token, a forged token or the honeypot filled in returns 400 `refused`; 99 items returns `too-large`; the customer's own submission still goes through. The hidden field is off-screen, `aria-hidden` and not reachable by keyboard; axe on checkout still reports 0 violations.
+
+Not tested against the live Google Sheet: the blocklist and the per-phone cap run there only once the owner redeploys `Code.gs`.
+
 ## Pre-publish optimisation 2026-11-17
 
 Changes: Next.js 16.4.2 → **16.4.6** (fixes moderate advisory GHSA-mfr8-8qww-v76h; `npm audit --omit=dev`: 0 vulnerabilities); product and journal pages cached per page (ISR, 5 min) instead of rendered per visit; Sapo catalogue snapshot built once per request; `collects` paginated (was capped at 250 links); server bundle no longer traces the whole project (standalone output 31 MB, no docs or source copied in); optimised images kept 30 days; first home product images preloaded; checkout and cart reserve a full screen so the footer does not jump; `/api/mock-control` always off in production builds; startup configuration check (`src/instrumentation.ts`); 19 unused text strings removed.

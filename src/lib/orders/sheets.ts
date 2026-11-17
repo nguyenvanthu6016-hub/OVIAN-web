@@ -16,6 +16,13 @@ import { provinceName } from "@/lib/checkout/provinces";
  * so a retried request after a timeout returns the same order instead of a second row.
  */
 
+/** The Google Sheet refused the order on purpose: blocked phone, or too many orders from it today. */
+export class OrderRefusedError extends Error {
+  constructor(readonly rule: "too-many" | "blocked") {
+    super(`Order refused by the sheet: ${rule}`);
+  }
+}
+
 export interface SheetsConfig {
   url: string;
   secret: string;
@@ -175,6 +182,10 @@ export const sheetsOrders = {
       );
     } catch (e) {
       throw new OrderOutcomeUnknownError(`Google Sheet order outcome unknown: ${e instanceof Error ? e.message : "error"}`);
+    }
+    // A refusal is decided before anything is written, so no row exists and no reconciliation is needed.
+    if (!r.ok && (r.error === "refused:blocked" || r.error === "refused:too-many")) {
+      throw new OrderRefusedError(r.error === "refused:blocked" ? "blocked" : "too-many");
     }
     // "server-error" is raised by the script after it may already have written the row.
     if (!r.ok && r.error === "server-error") throw new OrderOutcomeUnknownError("Google Sheet script error during create");

@@ -48,6 +48,10 @@ export const orderRequestSchema = z
       .optional()
       .nullable(),
     note: z.string().trim().max(500).optional(),
+    /** Anti-spam: signed token issued by the checkout page. */
+    token: z.string().max(200).optional(),
+    /** Anti-spam honeypot: hidden on the page, so a real customer always leaves it empty. */
+    website: z.string().max(200).optional(),
     /** Total the customer confirmed; server rejects if it no longer matches */
     confirmedTotal: z.number().int().nonnegative(),
   })

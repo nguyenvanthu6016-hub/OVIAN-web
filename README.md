@@ -38,6 +38,8 @@ Open http://localhost:3000 (redirects to `/vi`). With the defaults the store run
 | `SAPO_LIST_UNPUBLISHED` | `true` / `false` | `true`: every active Sapo product is listed (no Sapo website plan needed) |
 | `WEB_HIDE_TAG` | default `an-web` | Sapo products with this tag are hidden |
 | `STORE_PICKUP_ENABLED` | `false` (default) / `true` | Store pickup at checkout. Off: home delivery (COD) only, and the server refuses pickup orders |
+| `ORDER_TOKEN_SECRET` | server-only | Signs the hidden anti-spam form token. Set it in production (see [docs/ANTI_SPAM.vi.md](docs/ANTI_SPAM.vi.md)) |
+| `MAX_ORDER_TOTAL`, `MAX_ORDER_ITEMS` | default 5.000.000 ₫ / 20 | Orders above either limit are refused online |
 
 Switching modes needs only an env change and a restart; no page code changes. **Live mode never falls back to mock data**: if Sapo is unreachable, pages show an "unavailable" state and checkout is blocked while keeping what the customer typed.
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ordersEnabled } from "@/lib/orders";
 import { storePickupEnabled } from "@/lib/checkout/fulfillment";
+import { issueOrderToken } from "@/lib/security/anti-bot";
 import { getContent } from "@/lib/cms";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -30,6 +31,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
         store={settings?.store ?? null}
         ordersEnabled={ordersEnabled()}
         pickupEnabled={storePickupEnabled()}
+        orderToken={issueOrderToken()}
         sampleShipping={!!rules?.sample}
       />
     </div>

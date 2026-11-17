@@ -48,7 +48,7 @@ type Status =
   | { kind: "processing" }
   | { kind: "error"; message: string };
 
-export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled, sampleShipping }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; pickupEnabled: boolean; sampleShipping: boolean }) {
+export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled, sampleShipping, orderToken }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; pickupEnabled: boolean; sampleShipping: boolean; orderToken: string }) {
   const router = useRouter();
   const cart = useCart();
   const hydrated = useHydrated();
@@ -69,6 +69,8 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const inFlight = useRef(false);
+  // Anti-spam honeypot: hidden from people, so anything in here came from a script.
+  const honeypot = useRef<HTMLInputElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -158,6 +160,8 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
           address: f.fulfillment === "delivery" ? { provinceCode: f.provinceCode, ward: f.ward, street: f.street } : null,
           note: f.note || undefined,
           confirmedTotal: quote.total,
+          token: orderToken,
+          website: honeypot.current?.value || undefined,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { status?: string; order?: PublicOrderConfirmation; quote?: Quote; error?: string };
@@ -165,7 +169,8 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
       if (res.status === 202) { setStatus({ kind: data.status === "processing" ? "processing" : "unknown" }); return; }
       if (res.status === 409 && data.quote) { setQuote(data.quote); return showError(dict.checkout.changesBody); }
       if (res.status === 422 && data.quote) { setQuote(data.quote); return showError(dict.checkout.shippingUnavailable); }
-      if (res.status === 429) return showError(dict.checkout.errorRateLimited);
+      if (res.status === 429) return showError(data.status === "blocked" ? dict.checkout.errorBlocked : dict.checkout.errorRateLimited);
+      if (res.status === 400 && data.status === "refused") return showError(data.error === "too-large" ? dict.checkout.errorTooLarge : dict.checkout.errorRefused);
       if (res.status === 400) return showError(dict.checkout.errorValidation);
       if (data.status === "disabled") return showError(dict.checkout.liveOrdersDisabled);
       return showError(dict.checkout.errorUnavailable);
@@ -199,6 +204,12 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
 
   return (
     <form onSubmit={submit} noValidate className="grid gap-10 lg:grid-cols-12 lg:gap-12" aria-busy={busy}>
+      {/* Honeypot. Kept out of the accessibility tree and off the keyboard path, so only a script fills it. */}
+      <div aria-hidden="true" className="pointer-events-none absolute left-[-9999px] top-0 h-0 w-0 overflow-hidden">
+        <label htmlFor="co-website">Website</label>
+        <input id="co-website" ref={honeypot} type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
+      </div>
+      <input type="hidden" name="t" value={orderToken} data-testid="order-token" readOnly />
       <div className="space-y-6 lg:col-span-7">
         {!ordersEnabled ? <Notice tone="error">{dict.checkout.liveOrdersDisabled}</Notice> : null}
 

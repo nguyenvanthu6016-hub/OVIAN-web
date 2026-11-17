@@ -9,9 +9,13 @@
  *   NOTIFY_EMAIL   (tuỳ chọn)  email nhận thông báo khi có đơn mới
  *   NEXT_ORDER_NO  (tự tạo)    số thứ tự đơn tiếp theo
  *   SPREADSHEET_ID (tuỳ chọn)  chỉ cần khi script được tạo riêng ở script.google.com (không mở từ Sheet)
+ *   MAX_ORDERS_PER_PHONE_DAY   (tuỳ chọn) số đơn tối đa mỗi số điện thoại trong 24 giờ; mặc định 3, đặt 0 để tắt
  */
 
 const SHEET_NAME = 'Đơn hàng';
+/** Trang tính danh sách chặn: cột A số điện thoại, cột B lý do. */
+const BLOCK_SHEET_NAME = 'Chặn';
+const DEFAULT_MAX_PER_PHONE_DAY = 3;
 
 const STATUS_LABELS = {
   pending: 'Mới',
@@ -85,6 +89,9 @@ function createOrder_(p) {
     // Same checkout submitted again (double click, retry after a timeout): return the existing order.
     const existing = findRow_(sheet, COL['Mã phiên (không sửa)'], p.checkoutId);
     if (existing) return { ok: true, duplicate: true, order: rowToOrder_(existing) };
+
+    const refusal = spamCheck_(sheet, p.customer.phone);
+    if (refusal) return { ok: false, error: 'refused:' + refusal };
 
     const props = PropertiesService.getScriptProperties();
     const n = Number(props.getProperty('NEXT_ORDER_NO') || '1');
@@ -189,6 +196,56 @@ function findRow_(sheet, colIndex, value) {
     if (String(values[i][colIndex]) === value) return values[i];
   }
   return null;
+}
+
+/** Trang tính "Chặn": thêm số điện thoại vào cột A để website từ chối đơn từ số đó. */
+function setupBlocklist_(ss) {
+  const sheet = ss.getSheetByName(BLOCK_SHEET_NAME) || ss.insertSheet(BLOCK_SHEET_NAME);
+  if (sheet.getLastRow() >= 1 && sheet.getRange(1, 1).getValue()) return;
+  sheet.getRange(1, 1, 1, 3).setValues([['Số điện thoại', 'Lý do', 'Ngày thêm']])
+    .setFontWeight('bold').setBackground('#fff1c2');
+  sheet.getRange(1, 1).setNote('Thêm mỗi số một dòng. Website sẽ từ chối đơn mới từ các số này. Xoá dòng để bỏ chặn.');
+  sheet.setFrozenRows(1);
+  sheet.setColumnWidth(1, 140);
+  sheet.setColumnWidth(2, 260);
+  sheet.getRange(2, 1, sheet.getMaxRows() - 1, 1).setNumberFormat('@');
+  sheet.getRange(2, 3, sheet.getMaxRows() - 1, 1).setNumberFormat('dd/MM/yyyy');
+}
+
+/* ------------------------------------------------------------------ anti-spam */
+
+const digits_ = (v) => String(v == null ? '' : v).replace(/\D/g, '').slice(-9);
+
+/**
+ * Refuses an order before anything is written: 'blocked' for a number on the "Chặn" sheet,
+ * 'too-many' when that number already has MAX_ORDERS_PER_PHONE_DAY orders in the last 24 hours.
+ * Numbers are compared by their last 9 digits, so 0912…, +8491… and 8491… all match.
+ */
+function spamCheck_(sheet, phone) {
+  const want = digits_(phone);
+  if (!want) return null;
+  if (isBlocked_(want)) return 'blocked';
+
+  const max = Number(PropertiesService.getScriptProperties().getProperty('MAX_ORDERS_PER_PHONE_DAY') || DEFAULT_MAX_PER_PHONE_DAY);
+  if (!(max > 0)) return null;
+  const since = Date.now() - 24 * 3600 * 1000;
+  const values = sheet.getDataRange().getValues();
+  let seen = 0;
+  for (let i = values.length - 1; i >= 1; i--) {
+    const at = values[i][COL['Thời gian']];
+    const time = at instanceof Date ? at.getTime() : Date.parse(at);
+    if (time && time < since) break; // rows are in order, so everything above is older
+    if (digits_(values[i][COL['Số điện thoại']]) === want && ++seen >= max) return 'too-many';
+  }
+  return null;
+}
+
+function isBlocked_(want) {
+  const sheet = spreadsheet_().getSheetByName(BLOCK_SHEET_NAME);
+  if (!sheet || sheet.getLastRow() < 2) return false;
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+  for (let i = 0; i < values.length; i++) if (digits_(values[i][0]) === want) return true;
+  return false;
 }
 
 /* ------------------------------------------------------------------ helpers */
@@ -338,6 +395,7 @@ function setup() {
     'Lý do huỷ / hoàn': 180, 'Ghi chú nội bộ': 200 };
   Object.keys(widths).forEach((h) => sheet.setColumnWidth(col(h), widths[h]));
   sheet.hideColumns(col('Mã phiên (không sửa)'), 2);
+  setupBlocklist_(ss);
   if (!PropertiesService.getScriptProperties().getProperty('NEXT_ORDER_NO')) {
     PropertiesService.getScriptProperties().setProperty('NEXT_ORDER_NO', '1');
   }

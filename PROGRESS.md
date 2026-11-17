@@ -51,6 +51,9 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 
 ## Live go-live checklist
 
+- [ ] Redeploy `Code.gs` (new version) so the "Chặn" blocklist and the 3 orders/phone/day limit are live
+- [ ] Set `ORDER_TOKEN_SECRET` on the server
+
 - [ ] Sapo read endpoints verified with real data
 - [ ] Test-store order matches storefront totals (incl. shipping, discount)
 - [ ] Pickup/COD representation approved by owner
