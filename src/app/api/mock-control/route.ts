@@ -5,7 +5,7 @@ import { json } from "@/lib/api";
 
 /**
  * TEST-ONLY fault injection for Mock Mode (E2E scenarios: stock/price change, outage, timeout).
- * Disabled unless COMMERCE_MODE=mock AND MOCK_CONTROL=true.
+ * Disabled unless COMMERCE_MODE=mock AND MOCK_CONTROL=true, and always disabled in production builds.
  */
 const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("reset") }),
@@ -15,7 +15,8 @@ const schema = z.discriminatedUnion("action", [
 ]);
 
 export async function POST(req: Request) {
-  if (commerceMode() !== "mock" || process.env.MOCK_CONTROL !== "true") return json({ error: "not-found" }, 404);
+  // Never available in a production build, whatever the environment says.
+  if (process.env.NODE_ENV === "production" || commerceMode() !== "mock" || process.env.MOCK_CONTROL !== "true") return json({ error: "not-found" }, 404);
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return json({ error: "validation" }, 400);
   const st = mockState();

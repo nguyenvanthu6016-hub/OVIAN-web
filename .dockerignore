@@ -9,3 +9,8 @@ test-results
 playwright-report
 qa/screenshots
 studio/node_modules
+playwright-report-live
+tests
+qa
+docs
+*.md

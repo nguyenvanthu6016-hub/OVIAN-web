@@ -83,6 +83,8 @@ docker compose up -d --build
 
 **Vercel**: works for browsing, but the file-based idempotency store is not shared between serverless instances. Before taking real orders on Vercel, replace it with a shared store (e.g. Upstash Redis) — this needs a decision on cost (see ARCHITECTURE §5).
 
+**Startup check**: in production the server log prints `[config]` lines for anything missing (public URL, Sapo credentials, Google Sheet, ordering switch, sample content). Read them after the first start.
+
 **Caching / sync**: catalogue reads are cached 5 minutes and invalidated by the Sapo product webhook (`/api/webhooks/sapo`) and the Sanity webhook (`/api/revalidate`). Checkout always re-reads price and stock from Sapo, uncached.
 
 Do not deploy to production or enable `ORDERS_ENABLED` until the live checklist in [PROGRESS.md](PROGRESS.md) is done.

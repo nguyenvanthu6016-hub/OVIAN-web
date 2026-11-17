@@ -15,7 +15,7 @@ export default async function CartPage({ params }: PageProps<"/[locale]/cart">) 
   if (!isLocale(locale)) notFound();
   const d = getDictionary(locale);
   return (
-    <div className="container-page page-x pb-8 pt-8">
+    <div className="container-page page-x min-h-screen pb-8 pt-8">
       <h1 className="mb-8 text-display">{d.cart.title}</h1>
       <CartPageClient locale={locale} dict={{ cart: d.cart, product: d.product, checkout: d.checkout, errors: d.errors, common: d.common }} />
     </div>

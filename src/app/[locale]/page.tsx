@@ -93,14 +93,14 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       {collection && collectionProducts.length ? (
         <section className="container-page page-x pb-20" aria-labelledby="col-title">
           <SectionHeading id="col-title" title={collection.title.value} intro={collection.body?.value} />
-          <ProductGrid products={collectionProducts} locale={locale} dict={d} />
+          <ProductGrid products={collectionProducts} locale={locale} dict={d} priorityCount={2} />
         </section>
       ) : null}
 
       {newest.length ? (
         <section className="container-page page-x pb-20" aria-labelledby="new-title">
           <SectionHeading id="new-title" title={d.home.newArrivals} action={<Link href={routes.newArrivals(locale)} className="text-small font-semibold text-green underline underline-offset-4">{d.common.viewAll}</Link>} />
-          <ProductGrid products={newest} locale={locale} dict={d} />
+          <ProductGrid products={newest} locale={locale} dict={d} priorityCount={collection && collectionProducts.length ? 0 : 2} />
         </section>
       ) : null}
 

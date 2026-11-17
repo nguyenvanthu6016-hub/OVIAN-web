@@ -11,6 +11,11 @@ import { Breadcrumbs, Notice } from "@/components/ui/primitives";
 
 export const revalidate = 600;
 
+/** Cache each post after its first visit (see the product page for the same pattern). */
+export function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: PageProps<"/[locale]/journal/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isLocale(locale)) return {};

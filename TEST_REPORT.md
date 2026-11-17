@@ -2,6 +2,30 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Pre-publish optimisation 2026-11-17
+
+Changes: Next.js 16.4.2 → **16.4.6** (fixes moderate advisory GHSA-mfr8-8qww-v76h; `npm audit --omit=dev`: 0 vulnerabilities); product and journal pages cached per page (ISR, 5 min) instead of rendered per visit; Sapo catalogue snapshot built once per request; `collects` paginated (was capped at 250 links); server bundle no longer traces the whole project (standalone output 31 MB, no docs or source copied in); optimised images kept 30 days; first home product images preloaded; checkout and cart reserve a full screen so the footer does not jump; `/api/mock-control` always off in production builds; startup configuration check (`src/instrumentation.ts`); 19 unused text strings removed.
+
+| Check | Result |
+|---|---|
+| Typecheck, lint, production build (no warnings) | Pass |
+| Vitest | 58 / 58 |
+| Playwright Mock Mode | 36 / 36 |
+| Playwright live Sapo, read-only | 18 / 18 |
+| Product page server time | 805 ms first visit, 8 ms from cache (`x-nextjs-cache: HIT`) |
+
+Lab speed, production build, **real Sapo data**, Pixel 7 emulation, 4× CPU throttle, about 1.6 Mbps (two warm runs; lab numbers vary run to run and are not field data):
+
+| Page | LCP before | LCP after | CLS before | CLS after |
+|---|---|---|---|---|
+| /vi | 1260 ms | 1260–1380 ms | 0.000 | 0.000 |
+| /vi/products | 1308 ms | 1232–1280 ms | 0.000 | 0.000 |
+| /vi/spaces/phong-ngu | 1096 ms | 1380–1584 ms | 0.000 | 0.000 |
+| product page | 1312 ms | 1612–1708 ms | 0.000 | 0.000 |
+| /vi/checkout (empty cart) | 960 ms | 1028–1080 ms | 0.085 | **0.000** |
+
+LCP differences between before and after are within run-to-run noise; every page is under the 2.5 s target. The measurable gains are server response time for product pages, layout stability on checkout, and a smaller, cleaner deployment. INP is still not measured.
+
 ## Re-run 2026-11-12 (delivery only)
 
 Store pickup switched off. Typecheck, lint pass; Vitest **58 / 58** (new: pickup refused by default, delivery still works); Playwright Mock Mode **36 / 36** (scenarios 14-15 now check that only home delivery is shown and that the quote and order APIs refuse pickup with 400; the other checkout scenarios use a Hà Nội delivery address, sample fee 25.000 ₫); Playwright live Sapo **18 / 18**.

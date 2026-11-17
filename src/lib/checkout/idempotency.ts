@@ -22,7 +22,7 @@ const TTL_MS = 7 * 24 * 3600 * 1000;
 /** A pending record older than this means the process died mid-request → reconcile. */
 export const PENDING_STALE_MS = 60_000;
 
-const storePath = () => resolve(process.cwd(), process.env.IDEMPOTENCY_STORE_PATH || ".data/idempotency.json");
+const storePath = () => resolve(/* turbopackIgnore: true */ process.cwd(), process.env.IDEMPOTENCY_STORE_PATH || ".data/idempotency.json");
 
 let chain: Promise<unknown> = Promise.resolve();
 function serialised<T>(fn: () => Promise<T>): Promise<T> {

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import type { Locale } from "@/lib/i18n/config";
 import { getContent } from "@/lib/cms";
 import type { CategoryLocalization, ProductLocalization } from "@/lib/cms/types";
@@ -159,12 +160,21 @@ async function fetchAllProducts(): Promise<RawProduct[]> {
  * Product membership comes from /collects.json (custom collections). Smart collections: Unverified.
  */
 async function fetchCollections(): Promise<{ collections: RawCollection[]; membership: Map<number, number[]> }> {
+  const fetchCollects = async () => {
+    const out: { collection_id: number; product_id: number }[] = [];
+    for (let page = 1; page <= 40; page++) {
+      const { collects } = await sapoGet<{ collects: typeof out }>(`/collects.json?limit=250&page=${page}`, { revalidate: PRODUCTS_TTL, tags: ["products"] });
+      out.push(...collects);
+      if (collects.length < 250) break;
+    }
+    return out;
+  };
   const [{ custom_collections }, collects] = await Promise.all([
     sapoGet<{ custom_collections: RawCollection[] }>(`/custom_collections.json?limit=250`, { revalidate: PRODUCTS_TTL, tags: ["products"] }),
-    sapoGet<{ collects: { collection_id: number; product_id: number }[] }>(`/collects.json?limit=250`, { revalidate: PRODUCTS_TTL, tags: ["products"] }),
+    fetchCollects(),
   ]);
   const membership = new Map<number, number[]>();
-  for (const c of collects.collects) membership.set(c.product_id, [...(membership.get(c.product_id) ?? []), c.collection_id]);
+  for (const c of collects) membership.set(c.product_id, [...(membership.get(c.product_id) ?? []), c.collection_id]);
   return { collections: custom_collections, membership };
 }
 
@@ -185,6 +195,8 @@ function mapCategory(c: RawCollection, all: RawCollection[], locale: Locale, cou
     productCount: counts.get(String(c.id)) ?? 0,
   };
 }
+
+const loggedFallback = new Set<number>();
 
 function mapProduct(p: RawProduct, locale: Locale, membership: Map<number, number[]>, loc: ProductLocalization | undefined): Product {
   const viName = p.name ?? p.title ?? "";
@@ -222,7 +234,10 @@ function mapProduct(p: RawProduct, locale: Locale, membership: Map<number, numbe
   const description = useEn && descEn ? lt(descEn, "en") : viDesc || loc?.descriptionVi ? lt(loc?.descriptionVi ?? stripHtml(viDesc), "vi") : null;
   const summarySrc = useEn && loc?.summaryEn ? lt(loc.summaryEn, "en") : loc?.summaryVi ? lt(loc.summaryVi, "vi") : p.summary ? lt(stripHtml(p.summary), "vi") : null;
   const translationMissing = useEn && (!nameEn || !descEn);
-  if (translationMissing) console.info(`[i18n-fallback] product ${p.id} missing English copy`);
+  if (translationMissing && !loggedFallback.has(p.id)) {
+    loggedFallback.add(p.id);
+    console.info(`[i18n-fallback] product ${p.id} missing English copy`);
+  }
 
   return {
     id: String(p.id),
@@ -249,7 +264,7 @@ function mapProduct(p: RawProduct, locale: Locale, membership: Map<number, numbe
   };
 }
 
-async function snapshot(locale: Locale) {
+const snapshot = cache(async function snapshot(locale: Locale) {
   const [raw, { collections, membership }, locs] = await Promise.all([fetchAllProducts(), fetchCollections(), getContent().productLocalizations()]);
   const products = raw.map((p) => mapProduct(p, locale, membership, locs.products.get(String(p.id))));
   const counts = new Map<string, number>();
@@ -258,7 +273,7 @@ async function snapshot(locale: Locale) {
   // Parent counts include children.
   for (const c of categories) if (!c.parentId) c.productCount += categories.filter((x) => x.parentId === c.id).reduce((s, x) => s + x.productCount, 0);
   return { products, categories };
-}
+});
 
 function mapOrderStatus(o: RawOrder): OrderStatus {
   if (o.cancelled_on ?? o.cancelled_at) return "cancelled";

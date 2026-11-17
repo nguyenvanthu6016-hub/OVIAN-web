@@ -22,7 +22,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
   const content = getContent();
   const [settings, rules] = await Promise.all([content.siteSettings(locale).catch(() => null), content.shippingRules().catch(() => null)]);
   return (
-    <div className="container-page page-x pb-8 pt-8">
+    <div className="container-page page-x min-h-screen pb-8 pt-8">
       <h1 className="mb-8 text-display">{d.checkout.title}</h1>
       <CheckoutForm
         locale={locale}

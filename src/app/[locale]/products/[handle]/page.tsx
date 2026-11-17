@@ -16,6 +16,15 @@ import { Breadcrumbs, Notice } from "@/components/ui/primitives";
 
 export const revalidate = 300;
 
+/**
+ * No product is built ahead of time, but returning an empty list lets Next cache each product page
+ * after its first visit and refresh it every 5 minutes (or at once via the Sapo webhook), instead
+ * of rendering it for every visitor.
+ */
+export function generateStaticParams() {
+  return [];
+}
+
 async function getData(handle: string, locale: Locale) {
   const commerce = getCommerce();
   const product = await commerce.getProduct(handle, locale);

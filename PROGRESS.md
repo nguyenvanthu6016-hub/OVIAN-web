@@ -36,7 +36,7 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 1. With credentials: run read-only probes (`/products.json`, `/custom_collections.json`, `/collects.json`, `/variants/{id}.json`, `/discount_codes/lookup.json`, `/orders.json?status=any&limit=1`) and update docs/SAPO_API.md.
 2. After the owner deploys the Apps Script: one approved test order into the Sheet; check the row, tracking and duplicate protection.
 3. Verify webhook HMAC header with a real delivery.
-4. Improve listing/PDP LCP (static rendering of the unfiltered listing, fewer client islands).
+4. ~~Improve listing/PDP speed~~ — done 2026-11-17 (ISR for product pages, see TEST_REPORT). INP still unmeasured.
 5. Screen-reader pass (NVDA + VoiceOver), Safari/Firefox visual pass.
 
 ## Key decisions

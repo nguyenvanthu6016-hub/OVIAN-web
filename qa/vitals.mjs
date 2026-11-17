@@ -1,7 +1,8 @@
 // Lab measurement of LCP / CLS / TBT-ish long tasks on the production build. Not field data.
 import { chromium, devices } from "@playwright/test";
 const base = process.env.BASE_URL ?? "http://localhost:3100";
-const paths = ["/vi", "/vi/products", "/vi/products/ke-go-soi-3-tang", "/vi/checkout"];
+// PATHS="/vi,/vi/products" overrides the default (mock catalogue) list.
+const paths = process.env.PATHS ? process.env.PATHS.split(",") : ["/vi", "/vi/products", "/vi/products/ke-go-soi-3-tang", "/vi/checkout"];
 const browser = await chromium.launch();
 for (const path of paths) {
   const ctx = await browser.newContext({ ...devices["Pixel 7"] });
@@ -18,8 +19,9 @@ for (const path of paths) {
   await page.goto(base + path, { waitUntil: "networkidle" });
   await page.waitForTimeout(1500);
   const v = await page.evaluate(() => window.__v);
+  const ttfb = await page.evaluate(() => Math.round(performance.getEntriesByType("navigation")[0]?.responseStart ?? 0));
   const js = await page.evaluate(() => performance.getEntriesByType("resource").filter((r) => r.initiatorType === "script").reduce((s, r) => s + (r.transferSize || 0), 0));
-  console.log(`${path.padEnd(32)} LCP ${Math.round(v.lcp)}ms  CLS ${v.cls.toFixed(3)}  blocking ${Math.round(v.longTasks)}ms  JS ${(js / 1024).toFixed(0)}KB`);
+  console.log(`${path.slice(0, 44).padEnd(44)} TTFB ${ttfb}ms  LCP ${Math.round(v.lcp)}ms  CLS ${v.cls.toFixed(3)}  blocking ${Math.round(v.longTasks)}ms  JS ${(js / 1024).toFixed(0)}KB`);
   await ctx.close();
 }
 await browser.close();
