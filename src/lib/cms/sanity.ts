@@ -82,6 +82,7 @@ export const sanityProvider: ContentProvider = {
     return {
       contactEmail: r?.contactEmail,
       contactPhone: r?.contactPhone,
+      showJournal: true,
       social: r?.social ?? [],
       store: r?.store && r.store.address
         ? {

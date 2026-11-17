@@ -10,7 +10,7 @@ import type { OrderRequest } from "@/lib/checkout/schema";
 beforeEach(() => {
   process.env.IDEMPOTENCY_STORE_PATH = join(mkdtempSync(join(tmpdir(), "ovian-idem-")), "store.json");
   process.env.COMMERCE_MODE = "mock";
-  process.env.CONTENT_MODE = "mock";
+  process.env.CONTENT_MODE = "sample";
   process.env.STORE_PICKUP_ENABLED = "true"; // these tests use a pickup cart; default-off is tested below
   resetMockState();
 });

@@ -14,6 +14,12 @@ import { cx } from "@/components/ui/primitives";
 import { Logo } from "./logo";
 import { SearchBox } from "./search-box";
 
+/** Which optional sections have content right now. */
+export interface NavSections {
+  journal: boolean;
+  store: boolean;
+}
+
 export interface NavSpace {
   handle: string;
   name: string;
@@ -25,7 +31,7 @@ export interface NavSpace {
 
 type D = Pick<Dictionary, "common" | "nav" | "search" | "cart">;
 
-export function HeaderClient({ locale, spaces, dict }: { locale: Locale; spaces: NavSpace[]; dict: D }) {
+export function HeaderClient({ locale, spaces, dict, sections }: { locale: Locale; spaces: NavSpace[]; dict: D; sections: NavSections }) {
   const pathname = usePathname();
   const [mega, setMega] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -91,7 +97,7 @@ export function HeaderClient({ locale, spaces, dict }: { locale: Locale; spaces:
           </button>
           <Link href={routes.newArrivals(locale)} className={navLink}>{dict.nav.newArrivals}</Link>
           <Link href={routes.onSale(locale)} className={navLink}>{dict.nav.onSale}</Link>
-          <Link href={routes.journal(locale)} className={navLink}>{dict.nav.journal}</Link>
+          {sections.journal ? <Link href={routes.journal(locale)} className={navLink}>{dict.nav.journal}</Link> : null}
           <Link href={routes.about(locale)} className={navLink}>{dict.nav.about}</Link>
         </nav>
 
@@ -201,16 +207,16 @@ export function HeaderClient({ locale, spaces, dict }: { locale: Locale; spaces:
             </ul>
             <div className="mx-3 my-3 border-t border-line" />
             <ul>
-              {[
+              {([
                 [routes.products(locale), dict.common.allProducts],
                 [routes.newArrivals(locale), dict.nav.newArrivals],
                 [routes.onSale(locale), dict.nav.onSale],
-                [routes.journal(locale), dict.nav.journal],
+                ...(sections.journal ? [[routes.journal(locale), dict.nav.journal]] : []),
                 [routes.about(locale), dict.nav.about],
-                [routes.store(locale), dict.nav.store],
+                ...(sections.store ? [[routes.store(locale), dict.nav.store]] : []),
                 [routes.wishlist(locale), dict.common.wishlist],
                 [routes.account(locale), dict.common.account],
-              ].map(([href, label]) => (
+              ] as [string, string][]).map(([href, label]) => (
                 <li key={href}>
                   <Link href={href!} className="flex h-12 items-center rounded-md px-3 text-ink hover:bg-surface-alt">{label}</Link>
                 </li>

@@ -1,10 +1,25 @@
 import "server-only";
-import type { ContentProvider } from "./types";
+import type { ContentMode, ContentProvider } from "./types";
 import { sanityProvider } from "./sanity";
-import { mockFaqs, mockHome, mockJournal, mockPage, mockShippingRules, mockSiteSettings } from "./mock-content";
+import { ovianFaqs, ovianHome, ovianJournal, ovianPage, ovianShippingRules, ovianSiteSettings } from "./ovian-content";
+import { mockFaqs, mockHome, mockJournal, mockPage, mockShippingRules, mockSiteSettings } from "./sample-content";
 
-const mockContent: ContentProvider = {
-  mode: "mock",
+/** OVIAN's own content, kept in code (the owner edits it through a developer, not a CMS). */
+const ovianContent: ContentProvider = {
+  mode: "ovian",
+  async siteSettings(locale) { return ovianSiteSettings(locale); },
+  async home(locale) { return ovianHome(locale); },
+  async page(slug, locale) { return ovianPage(slug, locale); },
+  async journal(locale) { return ovianJournal(locale); },
+  async journalPost(slug, locale) { return ovianJournal(locale).find((p) => p.slug === slug) ?? null; },
+  async faqs(locale) { return ovianFaqs(locale); },
+  async shippingRules() { return ovianShippingRules; },
+  async productLocalizations() { return { products: new Map(), categories: new Map() }; },
+};
+
+/** Sample copy for the automated tests only (CONTENT_MODE=sample). */
+const sampleContent: ContentProvider = {
+  mode: "sample",
   async siteSettings(locale) { return mockSiteSettings(locale); },
   async home(locale) { return mockHome(locale); },
   async page(slug, locale) { return mockPage(slug, locale); },
@@ -15,10 +30,15 @@ const mockContent: ContentProvider = {
   async productLocalizations() { return { products: new Map(), categories: new Map() }; },
 };
 
-export function contentMode(): "mock" | "sanity" {
-  return process.env.CONTENT_MODE === "sanity" ? "sanity" : "mock";
+export function contentMode(): ContentMode {
+  const v = process.env.CONTENT_MODE;
+  return v === "sanity" ? "sanity" : v === "sample" || v === "mock" ? "sample" : "ovian";
 }
 
 export function getContent(): ContentProvider {
-  return contentMode() === "sanity" ? sanityProvider : mockContent;
+  switch (contentMode()) {
+    case "sanity": return sanityProvider;
+    case "sample": return sampleContent;
+    default: return ovianContent;
+  }
 }

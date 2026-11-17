@@ -25,8 +25,8 @@ export function register() {
     if (!env.GOOGLE_SHEETS_WEBAPP_URL || !env.GOOGLE_SHEETS_SECRET) problems.push("Google Sheet URL or secret is missing: checkout stays disabled.");
     else if (env.ORDERS_ENABLED !== "true") problems.push("ORDERS_ENABLED is not \"true\": customers cannot place orders yet.");
   }
-  if ((env.CONTENT_MODE ?? "mock") === "mock") {
-    problems.push("CONTENT_MODE=mock: store info, shipping fees and policies come from the built-in content file. Make sure it holds OVIAN's real content, not the samples.");
+  if (env.CONTENT_MODE === "sample" || env.CONTENT_MODE === "mock") {
+    problems.push("CONTENT_MODE is the test sample content: customers would see placeholder policies and sample shipping fees. Leave it unset for OVIAN's real content.");
   }
 
   if (problems.length === 0) console.info("[config] production configuration looks complete.");

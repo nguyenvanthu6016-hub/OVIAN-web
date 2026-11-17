@@ -33,6 +33,16 @@ export default async function ContactPage({ params }: PageProps<"/[locale]/conta
           ) : (
             <p className="text-ink-muted">{d.pages.contentMissing}</p>
           )}
+          {settings?.zaloPhone || settings?.social.length ? (
+            <p className="flex flex-wrap gap-x-5 gap-y-2 text-small">
+              {settings.zaloPhone ? (
+                <a href={`https://zalo.me/${settings.zaloPhone.replace(/\D/g, "")}`} rel="noopener noreferrer" className="font-semibold text-green underline underline-offset-4">Zalo</a>
+              ) : null}
+              {settings.social.map((s) => (
+                <a key={s.url} href={s.url} rel="noopener noreferrer" className="font-semibold text-green underline underline-offset-4">{s.label}</a>
+              ))}
+            </p>
+          ) : null}
           <p className="flex flex-wrap gap-x-5 gap-y-2 text-small">
             <Link href={routes.track(locale)} className="font-semibold text-green underline underline-offset-4">{d.order.track}</Link>
             <Link href={routes.faq(locale)} className="font-semibold text-green underline underline-offset-4">{d.footer.faq}</Link>

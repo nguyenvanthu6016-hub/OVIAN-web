@@ -26,8 +26,8 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 2. ~~Google Sheet setup~~ — done 2026-11-12: script deployed, test order OV00001 written and verified (see TEST_REPORT). Owner should delete the OV00001 test row. `ORDERS_ENABLED` stays `false` until store info and real shipping fees are in (otherwise customers would see sample fees).
 1c. Owner decision 2026-11-12: **home delivery (COD) only**, store pickup switched off (`STORE_PICKUP_ENABLED=false`).
 2a. Bulk 30% price import: 21 variants skipped (12 without SKU, 9 "Mùng chụp tự bung" with duplicate SKUs). Owner will fix later.
-3. Sanity project id (and who may edit shipping fees).
-4. Real store address, phone, opening hours; real shipping fees per region; return policy text.
+3. ~~Sanity~~ — owner chose to keep content in code (`src/lib/cms/ovian-content.ts`), 2026-11-12.
+4. ~~Store info, shipping fees, policies~~ — supplied 2026-11-17 and live in the content file. **Still missing: tax code / business registration number for the footer, and a contact email.**
 5. Real product and room photography.
 6. Hosting choice. If serverless (Vercel), approve a shared idempotency store (e.g. Upstash Redis, has a cost).
 
@@ -63,5 +63,8 @@ Phases 0–7 done in Mock Mode. Phase 8 (handover) docs written. **Live integrat
 - [ ] Persistent volume (or shared store) for idempotency
 - [ ] HTTPS domain, `NEXT_PUBLIC_SITE_URL` set
 - [x] Google Sheet script deployed, test order written and checked (2026-11-12)
-- [ ] Real store info + shipping fees in, then `ORDERS_ENABLED=true`
+- [x] Real store info + shipping fees in (2026-11-17)
+- [ ] Owner reviews the drafted "Điều khoản sử dụng" page
+- [ ] Tax code / business registration number for the footer
+- [ ] `ORDERS_ENABLED=true`
 - [ ] Rotate Sapo API key/secret (owner) and the Sheet secret if it was ever shared

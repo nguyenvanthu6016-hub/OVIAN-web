@@ -2,6 +2,19 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Real OVIAN content — 2026-11-17
+
+The owner's filled-in content form replaced the sample copy. Content now has three sources: `ovian-content.ts` (real, the default), Sanity, and `sample-content.ts` (tests only, `CONTENT_MODE=sample`).
+
+| Check | Result |
+|---|---|
+| Typecheck, lint, production build (no warnings) | Pass |
+| Vitest | 74 / 74 |
+| Playwright Mock Mode (`CONTENT_MODE=sample`) | 38 / 38 |
+| Playwright live Sapo + real content | 18 / 18 |
+
+Verified against the running site: `/api/health` reports `content: "ovian"`; quote returns 10.000 ₫ for TP.HCM / Cà Mau, 15.000 ₫ for Hà Nội / Đà Nẵng / Lâm Đồng, and 0 ₫ once the order passes 300.000 ₫; all 34 provinces are covered, so no province is ever undeliverable; `/vi/store` and `/vi/journal` return 404 and their links are gone; the about page, all four policy pages and the FAQ carry the owner's text with no placeholder wording left; the footer shows phone, Zalo, Facebook, TikTok and the business line; a room with no products is hidden from the nav.
+
 ## Anti-spam layer 1 — 2026-11-17
 
 | Check | Result |

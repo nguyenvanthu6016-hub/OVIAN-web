@@ -24,6 +24,6 @@ export default defineConfig({
     port,
     reuseExistingServer: true,
     timeout: 120_000,
-    env: { COMMERCE_MODE: "mock", CONTENT_MODE: "mock", MOCK_CONTROL: "true" },
+    env: { COMMERCE_MODE: "mock", CONTENT_MODE: "sample", MOCK_CONTROL: "true" },
   },
 });

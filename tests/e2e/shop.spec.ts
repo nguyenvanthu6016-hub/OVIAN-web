@@ -104,7 +104,7 @@ test("10-13: home delivery, shipping fee, COD order", async ({ page }) => {
   await placeOrder(page);
   await expect(page.getByTestId("order-confirmed")).toBeVisible();
   await expect(page.getByText("Đây là đơn hàng mô phỏng")).toBeVisible();
-  await expect(page.getByText("Tiền mặt khi nhận hàng (COD)")).toBeVisible();
+  await expect(page.locator("main").getByText("Tiền mặt khi nhận hàng (COD)")).toBeVisible();
 });
 
 test("14-15: only home delivery is offered; the server refuses store pickup", async ({ page }) => {

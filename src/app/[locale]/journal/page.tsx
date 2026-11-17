@@ -23,6 +23,7 @@ export default async function JournalPage({ params }: PageProps<"/[locale]/journ
   if (!isLocale(locale)) notFound();
   const d = getDictionary(locale);
   const posts = await getContent().journal(locale).catch(() => []);
+  if (!posts.length) notFound(); // no posts yet: the section does not exist for visitors
   return (
     <div className="container-page page-x pb-8 pt-8">
       <header className="mb-10 max-w-2xl">

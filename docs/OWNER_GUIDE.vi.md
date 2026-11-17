@@ -16,7 +16,7 @@ Tài liệu cho chủ cửa hàng. Chi tiết kỹ thuật xem `README.md` và `
 ## 2. Chế độ Mẫu và chế độ Thật
 
 - **Mẫu (mặc định):** sản phẩm, giá, đơn hàng đều là dữ liệu mô phỏng. Thanh trên cùng ghi rõ "chế độ mẫu". Không có đơn thật nào được tạo.
-- **Thật:** đặt `COMMERCE_MODE=live` và `CONTENT_MODE=sanity` trong file môi trường của máy chủ, khởi động lại.
+- **Thật:** đặt `COMMERCE_MODE=live` trong file môi trường của máy chủ, khởi động lại. Nội dung các trang (giới thiệu, chính sách, phí giao hàng) nằm trong mã nguồn, mục 7 bên dưới.
 - Ở chế độ Thật, nút **Đặt hàng** bị khoá cho tới khi đặt `ORDERS_ENABLED=true` và đã cấu hình Google Sheet (mục 5). Chỉ bật sau khi đã đặt thử 1 đơn thành công.
 
 ## 3. Kết nối Sapo
@@ -56,6 +56,16 @@ Website tự chặn bot bằng nhiều lớp ẩn; khách thật không phải l
 Sanity → "Phí giao hàng" → thêm vùng, chọn mã tỉnh (danh sách trong `docs/SHIPPING.md`), điền phí và mức miễn phí. Có hiệu lực sau khoảng 1 phút. Tỉnh không thuộc vùng nào sẽ **không giao được** trừ khi bật "Giao tới tỉnh không có trong danh sách".
 
 ## 7. Sửa nội dung
+
+Nội dung các trang (Câu chuyện OVIAN, chính sách giao hàng, đổi trả, bảo mật, điều khoản, câu hỏi thường gặp, phí giao hàng theo vùng, số điện thoại, mạng xã hội) nằm trong một file mã nguồn duy nhất: `src/lib/cms/ovian-content.ts`. Muốn sửa, báo người quản trị website; sau khi sửa phải build và khởi động lại.
+
+Hai mục bật/tắt nhanh trong file đó:
+- `store: null` → ẩn trang Cửa hàng. Điền thông tin cửa hàng vào đây nếu sau này mở cửa hàng đón khách.
+- `showJournal: false` → ẩn mục Nhật ký. Đổi thành `true` khi đã có bài thật trong `ovianJournal`.
+
+Một phòng chưa có sản phẩm nào sẽ tự ẩn khỏi menu và trang chủ, và hiện lại ngay khi anh/chị thêm sản phẩm vào phòng đó trong Sapo.
+
+### 7b. Sửa nội dung bằng Sanity (chưa dùng)
 
 Trong Sanity Studio: Trang chủ, Bộ sưu tập, Bài nhật ký, Trang thông tin (slug: `about`, `giao-hang`, `doi-tra`, `bao-mat`, `dieu-khoan`), Câu hỏi thường gặp, Cửa hàng. Mỗi trường có ô Tiếng Việt (bắt buộc) và English (không bắt buộc). Bấm Publish; website cập nhật trong vài phút (ngay lập tức nếu đã cài webhook `/api/revalidate`).
 

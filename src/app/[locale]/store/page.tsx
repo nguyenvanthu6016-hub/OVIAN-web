@@ -18,6 +18,7 @@ export default async function StorePage({ params }: PageProps<"/[locale]/store">
   if (!isLocale(locale)) notFound();
   const d = getDictionary(locale);
   const settings = await getContent().siteSettings(locale).catch(() => null);
+  if (!settings?.store) notFound(); // OVIAN has no shop customers can visit
   return (
     <div className="container-page page-x pb-8 pt-8">
       <h1 className="mb-3 text-display">{d.pages.storeTitle}</h1>

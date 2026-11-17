@@ -276,8 +276,9 @@ export const vi = {
     stores: "Cửa hàng",
     about: "Câu chuyện OVIAN",
     journal: "Nhật ký",
-    payment: "Thanh toán tiền mặt khi nhận hàng hoặc tại cửa hàng.",
+    payment: "Thanh toán tiền mặt khi nhận hàng (COD).",
     rights: "© {year} OVIAN.",
+    taxId: "Mã số thuế",
   },
   pages: {
     contactTitle: "Liên hệ",

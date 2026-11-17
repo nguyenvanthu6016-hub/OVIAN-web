@@ -278,8 +278,9 @@ export const en: typeof vi = {
     stores: "Store",
     about: "The OVIAN story",
     journal: "Journal",
-    payment: "Cash on delivery or cash at the store.",
+    payment: "Pay in cash when your order arrives (COD).",
     rights: "© {year} OVIAN.",
+    taxId: "Tax code",
   },
   pages: {
     contactTitle: "Contact",

@@ -16,7 +16,7 @@ let gs: ReturnType<typeof loadAppsScript>;
 beforeEach(() => {
   process.env.IDEMPOTENCY_STORE_PATH = join(mkdtempSync(join(tmpdir(), "ovian-sheets-")), "store.json");
   process.env.COMMERCE_MODE = "mock";
-  process.env.CONTENT_MODE = "mock";
+  process.env.CONTENT_MODE = "sample";
   process.env.STORE_PICKUP_ENABLED = "true"; // these tests use a pickup cart; default-off is tested below
   process.env.ORDER_BACKEND = "sheets";
   process.env.ORDERS_ENABLED = "true";

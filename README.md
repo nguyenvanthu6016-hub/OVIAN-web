@@ -31,7 +31,7 @@ Open http://localhost:3000 (redirects to `/vi`). With the defaults the store run
 | Variable | Values | Effect |
 |---|---|---|
 | `COMMERCE_MODE` | `mock` (default) / `live` | Mock catalogue and simulated orders, or the real Sapo store |
-| `CONTENT_MODE` | `mock` (default) / `sanity` | Bundled sample copy, or Sanity CMS |
+| `CONTENT_MODE` | empty (default) / `sanity` / `sample` | Empty: OVIAN's real content from `src/lib/cms/ovian-content.ts`. `sanity`: Sanity CMS. `sample`: placeholder copy, tests only |
 | `ORDER_BACKEND` | empty (auto) / `sheets` / `sapo` | Where orders go. Auto = simulated in Mock Mode, Google Sheet in live mode |
 | `ORDERS_ENABLED` | `false` (default) / `true` | In live mode, checkout is disabled until this is `true` (and the Sheet URL + secret are set) |
 | `GOOGLE_SHEETS_WEBAPP_URL`, `GOOGLE_SHEETS_SECRET` | server-only | Apps Script web app that writes orders to the owner's Google Sheet, see [docs/GOOGLE_SHEETS_ORDERS.vi.md](docs/GOOGLE_SHEETS_ORDERS.vi.md) |
@@ -62,7 +62,7 @@ Switching modes needs only an env change and a restart; no page code changes. **
 src/app/[locale]/…        pages (vi | en)
 src/app/api/…             server endpoints: quote, orders, tracking, search, webhooks, health
 src/lib/commerce/         CommerceProvider interface + mock/ and sapo/ adapters
-src/lib/cms/              ContentProvider: mock content or Sanity (GROQ over HTTP)
+src/lib/cms/              ContentProvider: ovian-content.ts (real, default), sanity.ts, sample-content.ts (tests)
 src/lib/checkout/         pricing, shipping rules, validation, idempotency, order placement
 src/lib/i18n/             locales, dictionaries, formatting
 src/components/           UI primitives, layout, product, cart, checkout, catalog

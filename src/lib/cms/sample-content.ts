@@ -1,5 +1,5 @@
 /**
- * MOCK MODE CONTENT — sample editorial copy so pages render without Sanity.
+ * SAMPLE CONTENT — used by the automated tests (CONTENT_MODE=sample), never in production.
  * Business facts that OVIAN has not supplied (store address, hours, return windows, fees)
  * are deliberately NOT invented: they read as placeholders to be filled in Sanity.
  */
@@ -24,6 +24,7 @@ export function mockSiteSettings(locale: Locale): SiteSettings {
       hours: [L("Giờ mở cửa cập nhật trong Sanity", "Opening hours to be set in Sanity", locale)],
       sample: true,
     },
+    showJournal: true,
     social: [],
   };
 }

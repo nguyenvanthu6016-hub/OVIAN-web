@@ -2,6 +2,9 @@ import type { Locale } from "@/lib/i18n/config";
 import type { LocalizedText, ProductImage } from "@/lib/commerce/types";
 import type { ShippingRuleSet } from "@/lib/checkout/shipping";
 
+/** Where page content comes from: OVIAN's own content in code, Sanity, or the test samples. */
+export type ContentMode = "ovian" | "sanity" | "sample";
+
 /** Minimal rich-text model; Sanity Portable Text is converted into this. */
 export type ContentBlock =
   | { type: "h2"; text: string }
@@ -27,9 +30,16 @@ export interface StoreInfo {
 }
 
 export interface SiteSettings {
+  /** null when OVIAN has no shop customers can visit: the store page and its links disappear. */
   store: StoreInfo | null;
+  /** false hides the journal everywhere until there are real posts. */
+  showJournal: boolean;
   contactEmail?: string;
   contactPhone?: string;
+  /** Phone number behind the Zalo link; usually the same as contactPhone. */
+  zaloPhone?: string;
+  /** Business details shown in the footer. */
+  legal?: { name: LocalizedText; address?: string; taxId?: string };
   social: { label: string; url: string }[];
 }
 
@@ -95,7 +105,7 @@ export interface LocalizationIndex {
 }
 
 export interface ContentProvider {
-  readonly mode: "mock" | "sanity";
+  readonly mode: ContentMode;
   siteSettings(locale: Locale): Promise<SiteSettings>;
   home(locale: Locale): Promise<HomeContent>;
   page(slug: string, locale: Locale): Promise<ContentPage | null>;
