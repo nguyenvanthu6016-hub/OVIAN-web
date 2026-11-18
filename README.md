@@ -49,6 +49,7 @@ Switching modes needs only an env change and a restart; no page code changes. **
 |---|---|
 | `npm run dev` | Dev server |
 | `npm run build` / `npm start` | Production build / server |
+| `npm run build:turbopack` | Same build with Turbopack (faster locally) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint (Next core-web-vitals + TS) |
 | `npm test` | Vitest unit tests (pricing, shipping, filters, validation, idempotency) |
@@ -74,6 +75,8 @@ public/mock/              neutral placeholder images for Mock Mode only
 ## Deploy
 
 The app is hosting-agnostic (`output: "standalone"`).
+
+**Build note**: `npm run build` uses webpack, not Turbopack. Turbopack compiles the CSS in a child Node process, which shared hosting blocks — Hostinger's build failed with `node process exited before we could connect to it` on `globals.css`. webpack does it in-process. `npm run build:turbopack` is the faster local alternative.
 
 **Docker / VPS** (recommended first target — the idempotency store needs a persistent disk):
 
