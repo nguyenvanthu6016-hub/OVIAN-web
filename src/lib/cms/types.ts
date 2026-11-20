@@ -96,6 +96,8 @@ export interface CategoryLocalization {
   nameEn?: string;
   descriptionEn?: string;
   areaM2?: number;
+  /** Room photo for the floor plan, e.g. "/rooms/phong-ngu.jpg". Falls back to a product photo. */
+  imageUrl?: string;
 }
 
 export interface LocalizationIndex {

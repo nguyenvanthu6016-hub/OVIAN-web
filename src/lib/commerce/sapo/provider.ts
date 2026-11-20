@@ -191,7 +191,9 @@ function mapCategory(c: RawCollection, all: RawCollection[], locale: Locale, cou
     description: locale === "en" && loc?.descriptionEn ? lt(loc.descriptionEn, "en") : desc ? lt(stripHtml(desc), "vi") : null,
     parentId: parent ? String(parent.id) : null,
     areaM2: loc?.areaM2,
-    image: c.image?.src ? { url: c.image.src, alt: viName, width: 1200, height: 800 } : undefined,
+    // A real photo of the room: the collection image set in Sapo, or one the owner put in the
+    // content file. Left empty otherwise — the floor plan then draws the room's furniture.
+    image: (c.image?.src ?? loc?.imageUrl) ? { url: (c.image?.src ?? loc!.imageUrl)!, alt: viName, width: 1200, height: 800 } : undefined,
     productCount: counts.get(String(c.id)) ?? 0,
   };
 }
@@ -271,7 +273,12 @@ const snapshot = cache(async function snapshot(locale: Locale) {
   for (const p of products) for (const c of p.categoryIds) counts.set(c, (counts.get(c) ?? 0) + 1);
   const categories = collections.map((c) => mapCategory(c, collections, locale, counts, locs.categories.get(c.alias ?? c.handle ?? "")));
   // Parent counts include children.
-  for (const c of categories) if (!c.parentId) c.productCount += categories.filter((x) => x.parentId === c.id).reduce((s, x) => s + x.productCount, 0);
+  for (const c of categories) {
+    if (c.parentId) continue;
+    const children = categories.filter((x) => x.parentId === c.id);
+    c.productCount += children.reduce((s, x) => s + x.productCount, 0);
+    c.image ??= children.find((x) => x.image)?.image;
+  }
   return { products, categories };
 });
 

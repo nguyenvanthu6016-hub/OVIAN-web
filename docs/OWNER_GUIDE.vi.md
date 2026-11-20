@@ -51,6 +51,12 @@ Website **chỉ có giao tận nhà, thanh toán tiền mặt khi nhận hàng (
 
 Website tự chặn bot bằng nhiều lớp ẩn; khách thật không phải làm gì thêm. Mỗi số điện thoại đặt tối đa **3 đơn/24 giờ**. Muốn chặn hẳn một số, thêm vào trang tính **"Chặn"** trong Google Sheet. Xem [ANTI_SPAM.vi.md](ANTI_SPAM.vi.md).
 
+## 5c. Ảnh phòng trên sơ đồ trang chủ
+
+Mỗi ô phòng trên sơ đồ mặt bằng đang vẽ sẵn đồ đạc theo kiểu bản vẽ (giường, sofa, bếp, bồn tắm, bàn làm việc). Muốn thay bằng **ảnh chụp phòng thật**: vào Sapo → danh mục phòng đó → tải ảnh đại diện cho danh mục. Website tự dùng ảnh đó, không cần sửa code.
+
+Ảnh nên chụp ngang (khổ 3:2), rộng tối thiểu 1200px, sáng và ít chi tiết rối ở góc trên bên trái, vì tên phòng nằm ở đó. Không dùng ảnh quảng cáo có chữ.
+
 ## 6. Đổi phí giao hàng
 
 Sanity → "Phí giao hàng" → thêm vùng, chọn mã tỉnh (danh sách trong `docs/SHIPPING.md`), điền phí và mức miễn phí. Có hiệu lực sau khoảng 1 phút. Tỉnh không thuộc vùng nào sẽ **không giao được** trừ khi bật "Giao tới tỉnh không có trong danh sách".

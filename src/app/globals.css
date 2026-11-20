@@ -107,6 +107,22 @@
       "r4 r6 r2 r2";
   }
 }
+/* Five rooms: the last room takes the space the sixth would have used, so no empty block shows. */
+.floorplan[data-rooms="5"] {
+  grid-template-areas:
+    "r1 r1"
+    "r2 r3"
+    "r4 r4"
+    "r5 r5";
+}
+@media (min-width: 768px) {
+  .floorplan[data-rooms="5"] {
+    grid-template-areas:
+      "r1 r1 r3 r5"
+      "r1 r1 r2 r2"
+      "r4 r4 r2 r2";
+  }
+}
 .floorplan > :nth-child(1) { grid-area: r1; }
 .floorplan > :nth-child(2) { grid-area: r2; }
 .floorplan > :nth-child(3) { grid-area: r3; }

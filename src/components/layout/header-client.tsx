@@ -24,6 +24,8 @@ export interface NavSpace {
   handle: string;
   name: string;
   lang: Locale;
+  /** A real photo of the room, when OVIAN has one. */
+  photo?: { url: string };
   areaM2?: number;
   count: number;
   children: { handle: string; name: string; lang: Locale }[];

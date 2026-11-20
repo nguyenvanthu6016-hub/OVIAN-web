@@ -16,6 +16,7 @@ export function buildSpaces(categories: Category[]): NavSpace[] {
       handle: c.handle,
       name: c.name.value,
       lang: c.name.lang,
+      photo: c.image ? { url: c.image.url } : undefined,
       areaM2: c.areaM2,
       count: c.productCount,
       children: categories.filter((x) => x.parentId === c.id).map((x) => ({ handle: x.handle, name: x.name.value, lang: x.name.lang })),
