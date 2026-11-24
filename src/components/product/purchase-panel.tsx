@@ -36,6 +36,19 @@ export function ProductPurchase({ product, locale, dict }: { product: Product; l
 
   useEffect(() => pushRecent(product.id), [product.id]);
 
+  // "Looked at this product", once per product — not again when the shopper switches colour or size.
+  const viewed = useRef<string | null>(null);
+  useEffect(() => {
+    if (viewed.current === product.id || !variant) return;
+    viewed.current = product.id;
+    track("ViewContent", {
+      value: variant.price,
+      currency: "VND",
+      content_ids: [variant.id],
+      content_type: "product",
+    });
+  }, [product.id, variant]);
+
   useEffect(() => {
     const el = mainBtn.current;
     if (!el || typeof IntersectionObserver === "undefined") return;

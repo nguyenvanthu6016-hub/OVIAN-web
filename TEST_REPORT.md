@@ -2,6 +2,29 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Meta Pixel, second pass — 2026-11-24
+
+Pixel id `1154641583709617` supplied. Verified on a production build, with the fbq call log read in the browser:
+
+| Requirement | Result |
+|---|---|
+| Installed once, no duplicate init | 1 snippet, 1 `init`, 1 `PageView` on first load; the second `connect.facebook.net` script is Meta's own per-pixel config |
+| PageView on Next.js navigation | Fires on client-side navigation |
+| ViewContent on a product page | `value 24000, currency VND, content_ids ["234991531"], content_type product`; does **not** fire again when the shopper switches variant |
+| AddToCart | `value 20000, VND, content_ids ["234991532"], num_items 1` — follows the selected variant |
+| InitiateCheckout | Fires on reaching checkout with a cart |
+| Purchase only after the backend confirms | Fired once on a simulated order: `value 154000` (real order total incl. shipping), `eventID OV319283` |
+| No Purchase on failure / abandon / reload | Reload of the confirmation page fires nothing; `finish()` is reachable only from the `201 created` branch, verified by reading every branch of the submit handler |
+| No Purchase twice for one order | `trackOnce` keyed by order number, plus Meta's own eventID de-duplication; unit-tested |
+| No personal data | Only variant ids, amounts and counts. `autoConfig false` stops Meta's Automatic Advanced Matching from scraping the name/phone/email fields |
+| Nothing loads without an id | No Facebook markup in the HTML and the CSP stays closed, re-verified on a clean build |
+
+Vitest **82 / 82**, Playwright Mock Mode 38 / 38, live Sapo 18 / 18, production build clean.
+
+**Not verified:** Meta Events Manager Test Events, which needs the owner's Facebook account and a test code; and Purchase against a real order in the Google Sheet. The pixel is also not live yet — production still serves no pixel, so `NEXT_PUBLIC_FACEBOOK_PIXEL_ID` has not been set in Hostinger.
+
+Test fix: order confirmation assertions waited the default 5s. A real order takes about 6s against the Google Sheet, and the first order of a run is slower still while the dev server compiles, so the suite flaked. Raised to 30s.
+
 ## Meta Pixel — 2026-11-24
 
 Added behind `NEXT_PUBLIC_FACEBOOK_PIXEL_ID`: PageView (including client-side navigation), ViewContent-free AddToCart, InitiateCheckout and Purchase with the order total; the order number is the event id so a later Conversions API copy is deduplicated. No name, phone, email or address is sent. The CSP opens `connect.facebook.net` and `www.facebook.com` only when an id is configured. Privacy policy updated to disclose Meta.

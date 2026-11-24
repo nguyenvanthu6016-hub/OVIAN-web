@@ -16,7 +16,7 @@ import { routes } from "@/lib/routes";
 import { cartActions, useCart } from "@/lib/client/stores";
 import { describeChange, fetchQuote } from "@/lib/client/quote";
 import { useHydrated } from "@/lib/client/use-hydrated";
-import { track } from "@/lib/analytics/pixel";
+import { track, trackOnce } from "@/lib/analytics/pixel";
 import { TotalsList } from "@/components/cart/summary";
 import { IconStore, IconTruck } from "@/components/ui/icons";
 import { Button, ButtonLink, EmptyState, Field, Notice, cx, inputClass } from "@/components/ui/primitives";
@@ -139,8 +139,10 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
   };
 
   const finish = (order: PublicOrderConfirmation) => {
-    // The order number is the event id, so a Conversions API copy of this event is not counted twice.
-    track(
+    // Reported once per order number: the same order comes back here when "Kiểm tra lại" finds an
+    // order that was already created. The order number is also the event id, so a Conversions API
+    // copy of this event is not counted twice either.
+    trackOnce(
       "Purchase",
       {
         value: order.total,

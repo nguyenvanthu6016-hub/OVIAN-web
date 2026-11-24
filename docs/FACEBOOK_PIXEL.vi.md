@@ -33,20 +33,33 @@ Rồi bấm **Triển khai lại (deploy)**.
 
 | Sự kiện | Khi nào | Kèm thông tin |
 |---|---|---|
-| `PageView` | Mỗi lần xem trang, kể cả khi tắt JavaScript | — |
-| `AddToCart` | Bấm "Thêm vào giỏ" | Số tiền, mã sản phẩm, số lượng |
-| `InitiateCheckout` | Vào trang thanh toán khi giỏ có hàng | Tổng tiền giỏ, số món |
-| `Purchase` | Đặt hàng thành công | **Tổng tiền đơn**, mã sản phẩm, số món |
+| `PageView` | Mỗi lần xem trang, kể cả khi chuyển trang không tải lại và khi tắt JavaScript | — |
+| `ViewContent` | Mở trang chi tiết sản phẩm (một lần mỗi sản phẩm, đổi màu/cỡ không tính lại) | Giá, mã phiên bản, loại |
+| `AddToCart` | Bấm "Thêm vào giỏ" | Số tiền, mã phiên bản, loại, số lượng |
+| `InitiateCheckout` | Vào trang thanh toán khi giỏ có hàng | Tổng tiền giỏ, mã phiên bản, số món |
+| `Purchase` | **Chỉ khi máy chủ xác nhận đã ghi đơn vào Google Sheet** | **Tổng tiền đơn thật**, mã phiên bản, số món, mã đơn làm khoá chống trùng |
+
+`Purchase` KHÔNG được gửi khi: đơn thất bại, khách thoát giữa chừng, tải lại trang xác nhận, hoặc bấm "Kiểm tra lại" cho một đơn đã tạo trước đó.
 
 **Tỷ lệ đặt hàng** anh/chị hỏi chính là `Purchase` chia cho `PageView` (hoặc chia cho `InitiateCheckout` nếu muốn xem tỷ lệ hoàn tất thanh toán). Facebook tự tính trong phần báo cáo quảng cáo.
 
 Mã đơn hàng được gửi kèm làm **mã nhận dạng sự kiện**, nên nếu sau này thêm Conversions API thì một đơn không bị đếm hai lần.
 
+## Đã tắt tính năng tự đọc biểu mẫu của Meta
+
+Mặc định Meta Pixel bật "Automatic Advanced Matching": script của Meta **tự đọc các ô họ tên, số điện thoại, email** trong biểu mẫu và gửi về. Website đã tắt bằng `fbq('set','autoConfig',false,...)`.
+
+**Đừng bật lại "Tự động so khớp nâng cao" trong Trình quản lý sự kiện của Facebook**, nếu không Meta sẽ nhận thông tin cá nhân của khách và trang Chính sách bảo mật sẽ nói sai.
+
 ## Dữ liệu nào được gửi, dữ liệu nào không
 
 **Có gửi:** trang đã xem, mã sản phẩm, số lượng, số tiền.
 
-**Không gửi:** họ tên, số điện thoại, email, địa chỉ giao hàng. Tôi cố ý không gửi những thông tin này.
+**Không gửi:** họ tên, số điện thoại, email, địa chỉ giao hàng.
+
+Lưu ý: Meta luôn tự nhận được địa chỉ trang, địa chỉ IP và loại trình duyệt — điều này đúng với mọi website có pixel. Nếu khách tìm kiếm trên web, từ khoá nằm trong địa chỉ trang nên cũng sẽ được gửi.
+
+**Về consent:** website chưa có thanh hỏi đồng ý cookie. Chính sách bảo mật đã nói rõ việc dùng Meta Pixel và cách khách từ chối. Nghị định 13/2023 về bảo vệ dữ liệu cá nhân nhìn chung yêu cầu có sự đồng ý; nếu anh/chị bán cho khách ở châu Âu thì chắc chắn cần thanh đồng ý. Tôi không phải luật sư — nếu cần, báo tôi làm thanh hỏi đồng ý, pixel sẽ chỉ chạy sau khi khách bấm "Đồng ý".
 
 Trang **Chính sách bảo mật** đã được cập nhật để nói rõ việc dùng Meta Pixel và cách khách từ chối. Đây là việc bắt buộc, vì trước đó chính sách cam kết không chia sẻ dữ liệu cho bên thứ ba.
 

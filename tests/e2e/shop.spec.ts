@@ -35,6 +35,15 @@ async function placeOrder(page: Page) {
   await page.getByTestId("place-order").click();
 }
 
+/**
+ * Creating an order is a round trip to the order backend — about 6s against the real Google
+ * Sheet, and slower still on the first order of a run while the dev server compiles the route.
+ * The default 5s assertion is too short for that.
+ */
+async function expectOrderConfirmed(page: Page) {
+  await expect(page.getByTestId("order-confirmed")).toBeVisible({ timeout: 30_000 });
+}
+
 async function fillContact(page: Page, phone = "0912345678") {
   await page.getByLabel("Họ và tên").fill("Nguyễn Thử Nghiệm");
   await page.getByLabel("Số điện thoại").fill(phone);
@@ -112,7 +121,7 @@ test("10-13: home delivery, shipping fee, COD order", async ({ page }) => {
   await page.getByLabel("Tỉnh / Thành phố").selectOption("da-nang");
   await expect(page.getByTestId("shipping")).toHaveText(/45\.000/);
   await placeOrder(page);
-  await expect(page.getByTestId("order-confirmed")).toBeVisible();
+  await expectOrderConfirmed(page);
   await expect(page.getByText("Đây là đơn hàng mô phỏng")).toBeVisible();
   await expect(page.locator("main").getByText("Tiền mặt khi nhận hàng (COD)")).toBeVisible();
 });
@@ -167,7 +176,7 @@ test("17: price changes between quote and submit", async ({ page }) => {
   await page.getByRole("button", { name: "Tôi đã xem, cập nhật đơn" }).click();
   await expect(page.getByTestId("total")).toHaveText(/174\.000/);
   await placeOrder(page);
-  await expect(page.getByTestId("order-confirmed")).toBeVisible();
+  await expectOrderConfirmed(page);
 });
 
 test("18: commerce backend unavailable keeps input and blocks ordering", async ({ page }) => {
@@ -195,7 +204,7 @@ test("19: order times out after creation; 'check again' finds it without duplica
   await expect(page.getByText(/Chưa xác nhận được kết quả đặt hàng/)).toBeVisible();
   await control(page, { action: "faults", mode: "none" });
   await page.getByRole("button", { name: "Kiểm tra lại" }).click();
-  await expect(page.getByTestId("order-confirmed")).toBeVisible();
+  await expectOrderConfirmed(page);
 });
 
 test("20: repeated submissions create a single order", async ({ page }) => {
@@ -329,7 +338,7 @@ test("25: anti-bot checks refuse scripted orders but not a real customer", async
 
   // The customer's own submission still goes through, and says nothing about the checks.
   await placeOrder(page);
-  await expect(page.getByTestId("order-confirmed")).toBeVisible();
+  await expectOrderConfirmed(page);
 });
 
 test("the hidden anti-bot field is invisible and unreachable by keyboard @mobile-only", async ({ page }) => {

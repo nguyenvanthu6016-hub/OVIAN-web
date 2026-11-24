@@ -37,3 +37,21 @@ export function track(event: PixelEvent, params: PixelParams = {}, eventId?: str
     // Analytics must never break the shop.
   }
 }
+
+/**
+ * Reports an event at most once per browser session for a given id. Used for Purchase: the
+ * checkout form hands the same order back when "Kiểm tra lại" finds an order that was already
+ * created, and that must not count as a second sale. Meta also de-duplicates on eventID, so a
+ * browser that refuses sessionStorage is still covered.
+ */
+export function trackOnce(event: PixelEvent, params: PixelParams, eventId: string): void {
+  if (typeof window === "undefined") return;
+  const key = `ovian.pixel.${event}.${eventId}`;
+  try {
+    if (window.sessionStorage.getItem(key)) return;
+    window.sessionStorage.setItem(key, "1");
+  } catch {
+    // Private mode or storage disabled: fall through and let Meta de-duplicate.
+  }
+  track(event, params, eventId);
+}
