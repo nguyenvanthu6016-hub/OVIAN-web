@@ -24,6 +24,18 @@ t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
 document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('init','${id}');fbq('track','PageView');`}
       </Script>
+      {/* Meta's fallback for a visitor with JavaScript off. Plain <img>, not next/image: it must
+          stay exactly this request, and it is a 1×1 tracking pixel, not a picture. */}
+      <noscript>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          height="1"
+          width="1"
+          alt=""
+          style={{ display: "none" }}
+          src={`https://www.facebook.com/tr?id=${id}&ev=PageView&noscript=1`}
+        />
+      </noscript>
       <PageViewOnNavigate />
     </>
   );

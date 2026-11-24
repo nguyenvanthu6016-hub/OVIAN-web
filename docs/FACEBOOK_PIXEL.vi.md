@@ -15,7 +15,9 @@ Thêm một biến môi trường:
 
 | Khoá | Giá trị |
 |---|---|
-| `NEXT_PUBLIC_FACEBOOK_PIXEL_ID` | Dãy số Pixel ID |
+| `NEXT_PUBLIC_FACEBOOK_PIXEL_ID` | `1154641583709617` |
+
+(Đây là Pixel ID của OVIAN, chủ cửa hàng cung cấp ngày 24/11/2026.)
 
 Rồi bấm **Triển khai lại (deploy)**.
 
@@ -31,7 +33,7 @@ Rồi bấm **Triển khai lại (deploy)**.
 
 | Sự kiện | Khi nào | Kèm thông tin |
 |---|---|---|
-| `PageView` | Mỗi lần xem trang | — |
+| `PageView` | Mỗi lần xem trang, kể cả khi tắt JavaScript | — |
 | `AddToCart` | Bấm "Thêm vào giỏ" | Số tiền, mã sản phẩm, số lượng |
 | `InitiateCheckout` | Vào trang thanh toán khi giỏ có hàng | Tổng tiền giỏ, số món |
 | `Purchase` | Đặt hàng thành công | **Tổng tiền đơn**, mã sản phẩm, số món |
