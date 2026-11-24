@@ -140,6 +140,7 @@ export const en: typeof vi = {
     subtotal: "Subtotal",
     discount: "Discount",
     shipping: "Delivery",
+    saved: "{percent}% off",
     shippingAtCheckout: "Calculated at checkout",
     total: "Total",
     coupon: "Discount code",

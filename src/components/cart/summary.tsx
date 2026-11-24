@@ -4,7 +4,7 @@ import { formatPrice } from "@/lib/i18n/format";
 
 /** Order totals block shared by cart and checkout. `shipping` is a pre-formatted label or amount. */
 export function TotalsList({
-  locale, dict, subtotal, discount, couponCode, shipping, total,
+  locale, dict, subtotal, discount, couponCode, shipping, shippingListPrice, total,
 }: {
   locale: Locale;
   dict: Pick<Dictionary, "cart">;
@@ -12,6 +12,8 @@ export function TotalsList({
   discount: number;
   couponCode?: string | null;
   shipping: number | string;
+  /** Shown struck through next to `shipping` when the customer is paying less than this. */
+  shippingListPrice?: number | null;
   total: number;
 }) {
   return (
@@ -28,7 +30,12 @@ export function TotalsList({
       ) : null}
       <div className="flex justify-between gap-4">
         <dt className="text-ink-muted">{dict.cart.shipping}</dt>
-        <dd data-testid="shipping">{typeof shipping === "number" ? formatPrice(shipping, locale) : shipping}</dd>
+        <dd data-testid="shipping" className="flex items-baseline gap-2">
+          {shippingListPrice ? <s className="text-caption font-normal text-ink-muted">{formatPrice(shippingListPrice, locale)}</s> : null}
+          <span className={shippingListPrice ? "font-semibold text-green" : undefined}>
+            {typeof shipping === "number" ? formatPrice(shipping, locale) : shipping}
+          </span>
+        </dd>
       </div>
       <div className="flex items-baseline justify-between gap-4 border-t border-line pt-3">
         <dt className="font-semibold text-ink">{dict.cart.total}</dt>

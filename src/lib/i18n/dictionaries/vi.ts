@@ -138,6 +138,7 @@ export const vi = {
     subtotal: "Tạm tính",
     discount: "Giảm giá",
     shipping: "Phí giao hàng",
+    saved: "Giảm {percent}%",
     shippingAtCheckout: "Tính ở bước thanh toán",
     total: "Tổng cộng",
     coupon: "Mã giảm giá",

@@ -73,6 +73,9 @@ const FREE_OVER = 300_000;
  * without a fee — there is no fallback on purpose.
  */
 export const ovianShippingRules: ShippingRuleSet = {
+  // Ongoing promotion agreed with the owner on 2026-11-24: every order pays 5.000 đ, and the
+  // zone fee below is shown struck through. Both are stated on the delivery policy page.
+  promoFee: 5_000,
   sample: false,
   rules: [
     { id: "zone-south", label: "Phía Nam", provinceCodes: SOUTH, fee: 10_000, freeOver: FREE_OVER },
@@ -111,7 +114,11 @@ const pages: Record<string, { title: [string, string]; summary?: [string, string
     body: {
       vi: [
         { type: "h2", text: "Phí giao hàng" },
-        { type: "p", text: "OVIAN giao hàng toàn quốc. Phí giao được tính theo tỉnh/thành và hiện ở bước thanh toán, trước khi bạn đặt hàng." },
+        { type: "p", text: "OVIAN giao hàng toàn quốc. Phí giao hiện ở bước thanh toán, trước khi bạn đặt hàng." },
+        { type: "h3", text: "Đang áp dụng: đồng giá 5.000 ₫ toàn quốc" },
+        { type: "p", text: "Mọi đơn hàng chỉ chịu phí giao 5.000 ₫, bất kể ở tỉnh nào. Đơn từ 300.000 ₫ được miễn phí giao hàng hoàn toàn." },
+        { type: "h3", text: "Biểu phí tiêu chuẩn" },
+        { type: "p", text: "Đây là mức phí theo khu vực, áp dụng khi chương trình đồng giá ở trên kết thúc:" },
         { type: "ul", items: [
           "TP. Hồ Chí Minh, Đồng Nai, Tây Ninh, Cần Thơ, An Giang, Đồng Tháp, Vĩnh Long, Cà Mau: 10.000 ₫",
           "Các tỉnh, thành phố còn lại: 15.000 ₫",

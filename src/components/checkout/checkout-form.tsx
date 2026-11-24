@@ -220,6 +220,7 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
   const busy = status.kind === "submitting" || status.kind === "processing";
   const locked = busy || status.kind === "unknown";
   const ship = quote?.shipping;
+  const originalByVariant = new Map(quote?.lines.map((l) => [l.variantId, l.compareAtPrice]) ?? []);
   const shippingLabel: string | number =
     f.fulfillment === "pickup" ? dict.checkout.shippingFree
       : !ship || ship.status === "needs-province" ? dict.checkout.shippingChooseProvince
@@ -351,7 +352,7 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
                   <span className="block truncate font-medium">{l.name}</span>
                   <span className="text-caption text-ink-muted">{[l.variantTitle, `× ${l.quantity}`].filter(Boolean).join(" ")}</span>
                 </span>
-                <span className="shrink-0">{formatPrice(l.price * l.quantity, locale)}</span>
+                <SummaryLinePrice price={l.price} compareAt={originalByVariant.get(l.variantId) ?? l.compareAt} quantity={l.quantity} locale={locale} dict={dict} />
               </li>
             ))}
           </ul>
@@ -375,7 +376,16 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
           ) : null}
 
           {quote ? (
-            <TotalsList locale={locale} dict={dict} subtotal={quote.subtotal} discount={quote.discount} couponCode={quote.coupon?.code} shipping={shippingLabel} total={quote.total} />
+            <TotalsList
+              locale={locale}
+              dict={dict}
+              subtotal={quote.subtotal}
+              discount={quote.discount}
+              couponCode={quote.coupon?.code}
+              shipping={shippingLabel}
+              shippingListPrice={ship?.status === "ok" && ship.listFee > ship.fee ? ship.listFee : null}
+              total={quote.total}
+            />
           ) : (
             <p className="text-small text-ink-muted" aria-live="polite">{quoteError ?? dict.common.loading}</p>
           )}
@@ -410,5 +420,32 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
         </div>
       </aside>
     </form>
+  );
+}
+
+/** A cart line in the order summary: struck original price, the price paid, and the saving. */
+function SummaryLinePrice({
+  price, compareAt, quantity, locale, dict,
+}: {
+  price: number;
+  compareAt?: number | null;
+  quantity: number;
+  locale: Locale;
+  dict: Pick<D, "cart">;
+}) {
+  const onSale = compareAt != null && compareAt > price;
+  const off = onSale ? Math.round((1 - price / compareAt) * 100) : 0;
+  return (
+    <span className="shrink-0 text-right">
+      {onSale ? (
+        <>
+          <s className="block text-caption font-normal text-ink-muted">{formatPrice(compareAt * quantity, locale)}</s>
+          <span className="block font-semibold text-green">{formatPrice(price * quantity, locale)}</span>
+          <span className="block text-caption text-green">{t(dict.cart.saved, { percent: off })}</span>
+        </>
+      ) : (
+        formatPrice(price * quantity, locale)
+      )}
+    </span>
   );
 }

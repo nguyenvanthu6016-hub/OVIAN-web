@@ -63,6 +63,7 @@ export function priceCart(input: PricingInput): Quote {
       variantTitle: Object.keys(variant.options).length ? variant.title : "",
       quantity,
       unitPrice: variant.price,
+      ...(variant.compareAtPrice && variant.compareAtPrice > variant.price ? { compareAtPrice: variant.compareAtPrice } : {}),
       lineTotal: variant.price * quantity,
     });
   }

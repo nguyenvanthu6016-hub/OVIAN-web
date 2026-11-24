@@ -28,7 +28,16 @@ export function CartLines({ lines, locale, dict, compact, onNavigate }: { lines:
                 <Link href={routes.product(locale, l.handle)} onClick={onNavigate} className="block text-small font-semibold text-ink hover:text-green">{l.name}</Link>
                 {l.variantTitle ? <p className="text-caption text-ink-muted">{l.variantTitle}</p> : null}
               </div>
-              <p className="shrink-0 text-small font-semibold">{formatPrice(l.price * l.quantity, locale)}</p>
+              <p className="shrink-0 text-right text-small">
+                {l.compareAt != null && l.compareAt > l.price ? (
+                  <>
+                    <s className="block text-caption font-normal text-ink-muted">{formatPrice(l.compareAt * l.quantity, locale)}</s>
+                    <span className="block font-semibold text-green">{formatPrice(l.price * l.quantity, locale)}</span>
+                  </>
+                ) : (
+                  <span className="font-semibold">{formatPrice(l.price * l.quantity, locale)}</span>
+                )}
+              </p>
             </div>
             <div className="flex items-center justify-between gap-3">
               <QuantityStepper

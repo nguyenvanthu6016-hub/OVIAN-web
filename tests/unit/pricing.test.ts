@@ -90,6 +90,36 @@ describe("priceCart", () => {
 describe("quoteShipping", () => {
   it("requires a province", () => expect(quoteShipping(rules, undefined, 1).status).toBe("needs-province"));
   it("is free over the threshold", () => expect(quoteShipping(rules, "ha-noi", 800000)).toMatchObject({ status: "ok", fee: 0, freeApplied: true }));
+
+  describe("flat promotional fee", () => {
+    // Two zones, as OVIAN has, so the struck price is checked per zone.
+    const promo: ShippingRuleSet = {
+      ...rules,
+      promoFee: 5000,
+      rules: [...rules.rules, { id: "dn", label: "DN", provinceCodes: ["da-nang"], fee: 45000, freeOver: 800000 }],
+    };
+
+    it("charges the flat fee and keeps the zone fee to show struck through", () => {
+      expect(quoteShipping(promo, "ha-noi", 100000)).toMatchObject({ status: "ok", fee: 5000, listFee: 25000 });
+      // A cheaper zone is struck at its own price, not somebody else's.
+      expect(quoteShipping(promo, "da-nang", 100000)).toMatchObject({ fee: 5000, listFee: 45000 });
+    });
+
+    it("still gives free delivery over the threshold", () =>
+      expect(quoteShipping(promo, "ha-noi", 800000)).toMatchObject({ fee: 0, listFee: 25000, freeApplied: true }));
+
+    it("never raises a fee that is already lower", () =>
+      expect(quoteShipping({ ...rules, promoFee: 30000 }, "ha-noi", 100000)).toMatchObject({ fee: 25000, listFee: 25000 }));
+
+    it("charges the zone fee when there is no promotion", () =>
+      expect(quoteShipping(rules, "ha-noi", 100000)).toMatchObject({ fee: 25000, listFee: 25000 }));
+
+    it("is what the customer actually pays", () => {
+      const q = priceCart({ lines: [{ variantId: "a", quantity: 1 }], variants, coupon: null, fulfillment: "delivery", provinceCode: "ha-noi", shippingRules: promo });
+      expect(q.shippingFee).toBe(5000);
+      expect(q.total).toBe(q.subtotal + 5000);
+    });
+  });
   it("uses fallback when configured", () =>
     expect(quoteShipping({ ...rules, fallback: { fee: 60000, freeOver: null } }, "ca-mau", 100)).toMatchObject({ status: "ok", fee: 60000 }));
 });

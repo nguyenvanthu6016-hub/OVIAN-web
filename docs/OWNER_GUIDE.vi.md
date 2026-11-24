@@ -63,6 +63,12 @@ Website đã có sẵn Meta Pixel; chỉ cần dán Pixel ID vào biến `NEXT_P
 
 ## 6. Đổi phí giao hàng
 
+**Đang chạy:** đồng giá **5.000 ₫ toàn quốc**, đơn từ 300.000 ₫ miễn phí. Ở trang thanh toán, khách thấy phí vùng (10.000 ₫ hoặc 15.000 ₫) bị gạch và chỉ trả 5.000 ₫.
+
+Muốn **tắt ưu đãi**: trong `src/lib/cms/ovian-content.ts`, đổi `promoFee: 5_000` thành `promoFee: null`. Khách sẽ trả lại phí vùng và không còn giá gạch. Muốn đổi mức: sửa con số đó.
+
+Biểu phí vùng (giá bị gạch) và mức đồng giá đều được ghi trên trang Chính sách giao hàng, nên giá gạch là giá có thật chứ không phải giá bịa.
+
 Sanity → "Phí giao hàng" → thêm vùng, chọn mã tỉnh (danh sách trong `docs/SHIPPING.md`), điền phí và mức miễn phí. Có hiệu lực sau khoảng 1 phút. Tỉnh không thuộc vùng nào sẽ **không giao được** trừ khi bật "Giao tới tỉnh không có trong danh sách".
 
 ## 7. Sửa nội dung

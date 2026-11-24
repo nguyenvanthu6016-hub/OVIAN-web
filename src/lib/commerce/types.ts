@@ -161,6 +161,8 @@ export interface OrderLine {
   variantTitle: string;
   quantity: number;
   unitPrice: number;
+  /** Price before the discount, when the product is on sale. Display only. */
+  compareAtPrice?: number;
   lineTotal: number;
 }
 

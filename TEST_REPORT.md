@@ -2,6 +2,16 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Checkout shows the saving — 2026-11-24
+
+Owner's goal: the customer should see a bargain at checkout.
+
+- **Shipping.** A flat promotional fee (`promoFee` on the rule set) is what the customer is charged; the zone fee stays and is shown struck through. Verified from the server: Hồ Chí Minh charged 5.000 with 10.000 struck, Hà Nội charged 5.000 with 15.000 struck, and an order over 300.000 is still free with the zone fee struck. A promotion never raises a fee that is already lower, and free delivery wins over it.
+- **Products.** Each cart and checkout line shows the original price struck through, the sale price, and "Giảm 30%". The original comes from the server quote (`OrderLine.compareAtPrice`, read from the fresh Sapo variant), not from whatever the browser kept, so a stale price is never struck.
+- **Honesty.** The delivery policy page now states both the 5.000 flat rate in force and the standard 10.000/15.000 zone fees, so the struck figure is a published rate rather than an invented one. The owner chose to run this indefinitely; the risk of striking a price never charged was put to them first.
+
+Vitest **89 / 89** (6 new on the promotional fee), Playwright Mock Mode 38 / 38, live Sapo 18 / 18, build clean.
+
 ## Meta Pixel on the live site — 2026-11-24
 
 The owner deployed and reported Events Manager stuck at "0% complete". The pixel itself is fine: on ovianvietnam.com the base code loads, Meta serves its per-pixel config for `1154641583709617`, and `www.facebook.com/tr/?ev=PageView` and `?ev=AddToCart&cd[value]=140000&cd[currency]=VND` were both observed leaving the browser. The checklist in Events Manager is Meta's own onboarding widget and does not reflect a working install.
