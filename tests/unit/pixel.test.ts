@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { pixelId, track, trackOnce } from "@/lib/analytics/pixel";
+import { flushPending, pixelId, track, trackOnce } from "@/lib/analytics/pixel";
 
 afterEach(() => {
   delete (globalThis as { window?: unknown }).window;
@@ -68,6 +68,31 @@ describe("Meta Pixel helper", () => {
     const fbq = withFbq(blocked);
     trackOnce("Purchase", { value: 150000 }, "OV00002");
     expect(fbq).toHaveBeenCalledWith("track", "Purchase", { value: 150000 }, { eventID: "OV00002" });
+  });
+
+  it("holds an event raised before the pixel script loaded, then sends it", () => {
+    // What happens to someone arriving from an ad: the product page reports ViewContent while
+    // the pixel script is still loading.
+    process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID = "1154641583709617";
+    (globalThis as unknown as { window: Record<string, unknown> }).window = { sessionStorage: fakeSessionStorage() };
+    track("ViewContent", { value: 140000, currency: "VND" });
+
+    const fbq = vi.fn();
+    (globalThis as unknown as { window: Record<string, unknown> }).window.fbq = fbq;
+    flushPending();
+    expect(fbq).toHaveBeenCalledWith("track", "ViewContent", { value: 140000, currency: "VND" }, undefined);
+    // Sent once, not again on a later flush.
+    flushPending();
+    expect(fbq).toHaveBeenCalledTimes(1);
+  });
+
+  it("holds nothing when no pixel is configured", () => {
+    (globalThis as unknown as { window: Record<string, unknown> }).window = {};
+    track("ViewContent", { value: 1 });
+    const fbq = vi.fn();
+    (globalThis as unknown as { window: Record<string, unknown> }).window.fbq = fbq;
+    flushPending();
+    expect(fbq).not.toHaveBeenCalled();
   });
 
   it("never lets a broken pixel break the shop", () => {

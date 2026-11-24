@@ -2,6 +2,24 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Meta Pixel on the live site — 2026-11-24
+
+The owner deployed and reported Events Manager stuck at "0% complete". The pixel itself is fine: on ovianvietnam.com the base code loads, Meta serves its per-pixel config for `1154641583709617`, and `www.facebook.com/tr/?ev=PageView` and `?ev=AddToCart&cd[value]=140000&cd[currency]=VND` were both observed leaving the browser. The checklist in Events Manager is Meta's own onboarding widget and does not reflect a working install.
+
+**Bug found while checking, now fixed.** `ViewContent` never reached Meta on a page opened directly — exactly what happens when someone clicks an ad. The pixel script loads after hydration, so an event raised as the page mounts ran while `window.fbq` was still undefined and `track()` dropped it. `InitiateCheckout` had the same flaw on a direct load of checkout. Events raised before the script exists are now held and sent once it appears; next/script's `onReady` was tried first and does not fire for an inline script, so the helper polls instead.
+
+Verified on a production build after the fix, reading the actual requests to `facebook.com/tr`:
+
+| Entry point | Events that reached Meta |
+|---|---|
+| Direct load of a product page | `PageView`, `ViewContent value 24000 VND ids ["234991531"]` |
+| Direct load of checkout with a cart | `PageView`, `InitiateCheckout value 24000 VND` |
+| Add to cart | `AddToCart value 140000 VND ids ["234991533"]` (on the live site) |
+
+Vitest **84 / 84** (4 new, covering the hold-and-flush), Playwright Mock Mode 38 / 38, live Sapo 18 / 18, build clean.
+
+Still unverified: Purchase against a real order, and Events Manager Test Events (needs the owner's account).
+
 ## Meta Pixel, second pass — 2026-11-24
 
 Pixel id `1154641583709617` supplied. Verified on a production build, with the fbq call log read in the browser:

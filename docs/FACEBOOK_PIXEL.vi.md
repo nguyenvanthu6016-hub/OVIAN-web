@@ -25,6 +25,9 @@ Rồi bấm **Triển khai lại (deploy)**.
 
 ## Bước 3: Kiểm tra
 
+**Lưu ý:** ô "Finish setting up Meta Pixel — 0% complete" trong Trình quản lý sự kiện là bảng hướng dẫn của Facebook, **không phản ánh pixel có chạy hay không**. Nút "Set up events" bị mờ vì đó là công cụ tự gắn sự kiện bằng cách bấm chuột — website này đã gắn sẵn trong mã nên không cần. Cứ bỏ qua ô đó và xem tab **Test events** hoặc biểu đồ hoạt động.
+
+
 1. Cài tiện ích **Meta Pixel Helper** cho Chrome.
 2. Mở **ovianvietnam.com**, bấm vào biểu tượng tiện ích. Phải thấy pixel của anh/chị và sự kiện **PageView**.
 3. Trong Trình quản lý sự kiện của Facebook, tab **Kiểm tra sự kiện (Test Events)**, nhập địa chỉ website rồi thao tác thử trên web để xem sự kiện chạy về.
