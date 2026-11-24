@@ -16,6 +16,7 @@ import { routes } from "@/lib/routes";
 import { cartActions, useCart } from "@/lib/client/stores";
 import { describeChange, fetchQuote } from "@/lib/client/quote";
 import { useHydrated } from "@/lib/client/use-hydrated";
+import { track } from "@/lib/analytics/pixel";
 import { TotalsList } from "@/components/cart/summary";
 import { IconStore, IconTruck } from "@/components/ui/icons";
 import { Button, ButtonLink, EmptyState, Field, Notice, cx, inputClass } from "@/components/ui/primitives";
@@ -81,6 +82,20 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
   const linesKey = cart.lines.map((l) => `${l.variantId}:${l.quantity}:${l.price}`).join("|");
   const province = f.fulfillment === "delivery" ? f.provinceCode : "";
 
+  // "Reached checkout with a cart", reported once per visit to this page.
+  const reportedCheckout = useRef(false);
+  useEffect(() => {
+    if (!hydrated || reportedCheckout.current || !cart.lines.length) return;
+    reportedCheckout.current = true;
+    track("InitiateCheckout", {
+      value: cart.lines.reduce((s, l) => s + l.price * l.quantity, 0),
+      currency: "VND",
+      content_ids: cart.lines.map((l) => l.variantId),
+      content_type: "product",
+      num_items: cart.lines.reduce((s, l) => s + l.quantity, 0),
+    });
+  }, [hydrated, cart.lines]);
+
   useEffect(() => {
     if (!cart.lines.length) return;
     const ctrl = new AbortController();
@@ -124,6 +139,18 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
   };
 
   const finish = (order: PublicOrderConfirmation) => {
+    // The order number is the event id, so a Conversions API copy of this event is not counted twice.
+    track(
+      "Purchase",
+      {
+        value: order.total,
+        currency: "VND",
+        content_ids: order.lines.map((l) => l.variantId),
+        content_type: "product",
+        num_items: order.lines.reduce((s, l) => s + l.quantity, 0),
+      },
+      order.ref,
+    );
     try {
       sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
       sessionStorage.removeItem(CHECKOUT_KEY);

@@ -5,6 +5,7 @@ import { isLocale, locales } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { siteUrl } from "@/lib/seo";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-chrome";
+import { FacebookPixel } from "@/components/analytics/facebook-pixel";
 import "../globals.css";
 
 const beVietnam = Be_Vietnam_Pro({
@@ -51,6 +52,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         <SiteHeader locale={locale} />
         <main id="main" tabIndex={-1} className="outline-none">{children}</main>
         <SiteFooter locale={locale} />
+        <FacebookPixel />
       </body>
     </html>
   );

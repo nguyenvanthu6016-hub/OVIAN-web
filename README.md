@@ -37,6 +37,7 @@ Open http://localhost:3000 (redirects to `/vi`). With the defaults the store run
 | `GOOGLE_SHEETS_WEBAPP_URL`, `GOOGLE_SHEETS_SECRET` | server-only | Apps Script web app that writes orders to the owner's Google Sheet, see [docs/GOOGLE_SHEETS_ORDERS.vi.md](docs/GOOGLE_SHEETS_ORDERS.vi.md) |
 | `SAPO_LIST_UNPUBLISHED` | `true` / `false` | `true`: every active Sapo product is listed (no Sapo website plan needed) |
 | `WEB_HIDE_TAG` | default `an-web` | Sapo products with this tag are hidden |
+| `NEXT_PUBLIC_FACEBOOK_PIXEL_ID` | empty (default) | Meta Pixel id. Empty: no tracking script is served and the CSP stays closed. Read at build time — see [docs/FACEBOOK_PIXEL.vi.md](docs/FACEBOOK_PIXEL.vi.md) |
 | `STORE_PICKUP_ENABLED` | `false` (default) / `true` | Store pickup at checkout. Off: home delivery (COD) only, and the server refuses pickup orders |
 | `ORDER_TOKEN_SECRET` | server-only | Signs the hidden anti-spam form token. Set it in production (see [docs/ANTI_SPAM.vi.md](docs/ANTI_SPAM.vi.md)) |
 | `MAX_ORDER_TOTAL`, `MAX_ORDER_ITEMS` | default 5.000.000 ₫ / 20 | Orders above either limit are refused online |

@@ -57,6 +57,10 @@ Mỗi ô phòng trên sơ đồ mặt bằng đang vẽ sẵn đồ đạc theo 
 
 Ảnh nên chụp ngang (khổ 3:2), rộng tối thiểu 1200px, sáng và ít chi tiết rối ở góc trên bên trái, vì tên phòng nằm ở đó. Không dùng ảnh quảng cáo có chữ.
 
+## 5d. Đo lường quảng cáo Facebook
+
+Website đã có sẵn Meta Pixel; chỉ cần dán Pixel ID vào biến `NEXT_PUBLIC_FACEBOOK_PIXEL_ID` rồi deploy lại. Các sự kiện xem trang, thêm giỏ, vào thanh toán và **đặt hàng kèm số tiền** đều được gửi tự động. Xem [FACEBOOK_PIXEL.vi.md](FACEBOOK_PIXEL.vi.md).
+
 ## 6. Đổi phí giao hàng
 
 Sanity → "Phí giao hàng" → thêm vùng, chọn mã tỉnh (danh sách trong `docs/SHIPPING.md`), điền phí và mức miễn phí. Có hiệu lực sau khoảng 1 phút. Tỉnh không thuộc vùng nào sẽ **không giao được** trừ khi bật "Giao tới tỉnh không có trong danh sách".

@@ -2,6 +2,23 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Meta Pixel — 2026-11-24
+
+Added behind `NEXT_PUBLIC_FACEBOOK_PIXEL_ID`: PageView (including client-side navigation), ViewContent-free AddToCart, InitiateCheckout and Purchase with the order total; the order number is the event id so a later Conversions API copy is deduplicated. No name, phone, email or address is sent. The CSP opens `connect.facebook.net` and `www.facebook.com` only when an id is configured. Privacy policy updated to disclose Meta.
+
+| Check | Result |
+|---|---|
+| Typecheck, lint, production build | Pass |
+| Vitest | **79 / 79** (5 new) |
+| Playwright Mock Mode | 38 / 38 |
+| Playwright live Sapo | 18 / 18 |
+| No id set: Facebook script and CSP hosts | Absent, verified on a production build |
+| Id set: pixel loads, CSP opens | Verified; AddToCart fired `value 140000 VND`, InitiateCheckout fired, PageView fired on client-side navigation |
+
+Purchase is the one event not exercised end to end, because that needs a real order.
+
+Test fix found on the way: the E2E helper waited on `performance.now()`, which starts at navigation and so runs ahead of the anti-spam token the server issues when it renders. On a slow dev compile the helper under-waited and the order was refused with `token-too-fast`. It now waits on the token's own timestamp. Production is unaffected — there the token is always older than the page the customer sees.
+
 ## Real OVIAN content — 2026-11-17
 
 The owner's filled-in content form replaced the sample copy. Content now has three sources: `ovian-content.ts` (real, the default), Sanity, and `sample-content.ts` (tests only, `CONTENT_MODE=sample`).

@@ -15,14 +15,24 @@ async function addToCart(page: Page, handle: string, opts: { color?: string; siz
   await page.keyboard.press("Escape");
 }
 
-/** The form refuses anything sent within 3s of the page being issued (anti-bot timing check). */
-async function placeOrder(page: Page) {
-  await page.waitForFunction(() => performance.now() > 3400);
-  await page.getByTestId("place-order").click();
-}
-
 async function orderToken(page: Page) {
   return (await page.getByTestId("order-token").inputValue());
+}
+
+/**
+ * The server refuses an order sent within 3s of issuing the form token. The token carries the
+ * moment the server made it, so wait on that — not on page load, which starts earlier and would
+ * under-wait whenever the server is slow to render.
+ */
+async function waitForFormAge(page: Page) {
+  const issuedAt = Number((await orderToken(page)).split(".")[0]);
+  const left = 3200 - (Date.now() - issuedAt);
+  if (left > 0) await page.waitForTimeout(left);
+}
+
+async function placeOrder(page: Page) {
+  await waitForFormAge(page);
+  await page.getByTestId("place-order").click();
 }
 
 async function fillContact(page: Page, phone = "0912345678") {
@@ -119,7 +129,7 @@ test("14-15: only home delivery is offered; the server refuses store pickup", as
     data: { lines: [{ variantId: "v-1005-1", quantity: 1 }], couponCode: null, fulfillment: "pickup", provinceCode: null },
   });
   expect(quote.status()).toBe(400);
-  await page.waitForFunction(() => performance.now() > 3400);
+  await waitForFormAge(page);
   const order = await page.request.post("/api/orders", {
     data: {
       checkoutId: crypto.randomUUID(), locale: "vi", lines: [{ variantId: "v-1005-1", quantity: 1, seenPrice: 129000 }],
@@ -201,7 +211,7 @@ test("20: repeated submissions create a single order", async ({ page }) => {
     customer: { fullName: "Nguyễn Thử", phone: "0912345678" }, confirmedTotal: 154000,
     token: await orderToken(page),
   };
-  await page.waitForFunction(() => performance.now() > 3400);
+  await waitForFormAge(page);
   const results = await Promise.all(Array.from({ length: 5 }, () => page.request.post("/api/orders", { data: body })));
   const refs = new Set<string>();
   for (const r of results) {
@@ -304,7 +314,7 @@ test("25: anti-bot checks refuse scripted orders but not a real customer", async
   };
   const post = (over: Record<string, unknown>) =>
     page.request.post("/api/orders", { data: { checkoutId: crypto.randomUUID(), ...base, ...over } });
-  await page.waitForFunction(() => performance.now() > 3400);
+  await waitForFormAge(page);
 
   // No token (a script posting straight at the API), a forged one, and the hidden honeypot filled in.
   for (const over of [{}, { token: "9999999999999.forged" }, { token, website: "http://spam.example" }]) {

@@ -2,13 +2,23 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
 
+/**
+ * Meta Pixel hosts, added only when NEXT_PUBLIC_FACEBOOK_PIXEL_ID is set at build time.
+ * Without them the browser blocks the pixel outright, which is the usual reason a pixel
+ * installed on a site with a strict policy never reports anything.
+ */
+const pixelOn = !!process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID?.trim();
+const fbScript = pixelOn ? " https://connect.facebook.net" : "";
+const fbConnect = pixelOn ? " https://www.facebook.com https://connect.facebook.net" : "";
+const fbImg = pixelOn ? " https://www.facebook.com" : "";
+
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${fbScript}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://cdn.sanity.io https://*.dktcdn.net https://*.mysapo.net",
+  `img-src 'self' data: blob: https://cdn.sanity.io https://*.dktcdn.net https://*.mysapo.net${fbImg}`,
   "font-src 'self'",
-  "connect-src 'self'",
+  `connect-src 'self'${fbConnect}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

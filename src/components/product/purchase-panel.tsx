@@ -7,6 +7,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { t } from "@/lib/i18n/dictionaries";
 import { formatPrice } from "@/lib/i18n/format";
 import { cartActions, cartDrawer, pushRecent } from "@/lib/client/stores";
+import { track } from "@/lib/analytics/pixel";
 import { QuantityStepper } from "@/components/cart/quantity";
 import { IconCheck } from "@/components/ui/icons";
 import { Badge, Button, Price, cx } from "@/components/ui/primitives";
@@ -60,6 +61,13 @@ export function ProductPurchase({ product, locale, dict }: { product: Product; l
 
   const add = () => {
     if (!variant || !available) return;
+    track("AddToCart", {
+      value: variant.price * qty,
+      currency: "VND",
+      content_ids: [variant.id],
+      content_type: "product",
+      num_items: qty,
+    });
     cartActions.add(
       {
         variantId: variant.id,
