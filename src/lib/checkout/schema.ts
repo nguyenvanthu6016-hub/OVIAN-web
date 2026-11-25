@@ -17,11 +17,26 @@ export const cartLineSchema = z.object({
   seenPrice: z.number().int().nonnegative().optional(),
 });
 
+/** An upsell offer the customer accepted. The server re-checks the signature and the price. */
+export const acceptedUpsellSchema = z.object({
+  variantId: z.string().min(1).max(64),
+  quantity: z.union([z.literal(1), z.literal(2)]),
+  issuedAt: z.number().int().positive(),
+  signature: z.string().min(16).max(200),
+});
+
 export const quoteRequestSchema = z.object({
   lines: z.array(cartLineSchema).min(1).max(50),
   couponCode: z.string().trim().max(40).optional().nullable(),
   fulfillment: z.enum(["delivery", "pickup"]),
   provinceCode: z.enum(provinceCodes).optional().nullable(),
+  upsell: acceptedUpsellSchema.optional().nullable(),
+});
+
+export const upsellRequestSchema = z.object({
+  checkoutId: z.string().uuid(),
+  locale: z.enum(["vi", "en"]),
+  lines: z.array(cartLineSchema).min(1).max(50),
 });
 
 const deliveryAddressSchema = z.object({
@@ -36,6 +51,7 @@ export const orderRequestSchema = z
     locale: z.enum(["vi", "en"]),
     lines: z.array(cartLineSchema).min(1).max(50),
     couponCode: z.string().trim().max(40).optional().nullable(),
+    upsell: acceptedUpsellSchema.optional().nullable(),
     fulfillment: z.enum(["delivery", "pickup"]),
     customer: z.object({
       fullName: z.string().trim().min(2).max(80),
@@ -67,5 +83,6 @@ export const trackRequestSchema = z.object({
   phone: phoneSchema,
 });
 
+export type UpsellRequest = z.infer<typeof upsellRequestSchema>;
 export type QuoteRequest = z.infer<typeof quoteRequestSchema>;
 export type OrderRequest = z.infer<typeof orderRequestSchema>;

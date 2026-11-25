@@ -58,8 +58,11 @@ function toPublic(o: Order): PublicOrderConfirmation {
 
 export function fingerprint(req: OrderRequest): string {
   const lines = [...req.lines].map((l) => `${l.variantId}x${l.quantity}`).sort().join(",");
+  // The upsell changes what is bought and what it costs, so two carts that differ only by the
+  // offer must not share a fingerprint.
+  const upsell = req.upsell ? `${req.upsell.variantId}x${req.upsell.quantity}` : "";
   return createHash("sha256")
-    .update([lines, req.fulfillment, req.couponCode ?? "", req.address?.provinceCode ?? "", req.customer.phone].join("|"))
+    .update([lines, upsell, req.fulfillment, req.couponCode ?? "", req.address?.provinceCode ?? "", req.customer.phone].join("|"))
     .digest("hex")
     .slice(0, 32);
 }
@@ -105,6 +108,7 @@ export async function placeOrder(req: OrderRequest): Promise<PlaceOrderResult> {
       couponCode: req.couponCode,
       fulfillment: req.fulfillment,
       provinceCode: req.fulfillment === "delivery" ? req.address?.provinceCode : null,
+      upsell: req.upsell,
     });
   } catch (e) {
     await releaseCheckout(req.checkoutId);

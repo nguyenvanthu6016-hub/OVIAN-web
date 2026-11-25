@@ -14,7 +14,8 @@ import { t } from "@/lib/i18n/dictionaries";
 import { formatPrice } from "@/lib/i18n/format";
 import { routes } from "@/lib/routes";
 import { cartActions, useCart } from "@/lib/client/stores";
-import { describeChange, fetchQuote } from "@/lib/client/quote";
+import { describeChange, fetchQuote, fetchUpsellOffer } from "@/lib/client/quote";
+import type { AcceptedUpsell, UpsellOffer } from "@/lib/checkout/upsell-offer";
 import { useHydrated } from "@/lib/client/use-hydrated";
 import { track, trackOnce } from "@/lib/analytics/pixel";
 import { TotalsList } from "@/components/cart/summary";
@@ -68,6 +69,8 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
   const [errors, setErrors] = useState<Partial<Record<keyof Draft, string>>>({});
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [offer, setOffer] = useState<UpsellOffer | null>(null);
+  const [upsellTaken, setUpsellTaken] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const inFlight = useRef(false);
   // Anti-spam honeypot: hidden from people, so anything in here came from a script.
@@ -96,10 +99,29 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
     });
   }, [hydrated, cart.lines]);
 
+  const acceptedUpsell: AcceptedUpsell | null =
+    upsellTaken && offer
+      ? { variantId: offer.variantId, quantity: offer.quantity, issuedAt: offer.issuedAt, signature: offer.signature }
+      : null;
+
+  // Asked for once per visit. The offer is tied to the checkout id, so it does not change under
+  // the customer while they fill the form.
+  const offerAsked = useRef(false);
+  useEffect(() => {
+    if (!hydrated || offerAsked.current || !cart.lines.length) return;
+    offerAsked.current = true;
+    let alive = true;
+    fetchUpsellOffer({ checkoutId: getCheckoutId(), locale, lines: cart.lines })
+      .then((o) => { if (alive) setOffer(o); })
+      .catch(() => undefined);
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, linesKey, locale]);
+
   useEffect(() => {
     if (!cart.lines.length) return;
     const ctrl = new AbortController();
-    fetchQuote({ lines: cart.lines, couponCode: cart.couponCode, fulfillment: f.fulfillment, provinceCode: province || null }, ctrl.signal)
+    fetchQuote({ lines: cart.lines, couponCode: cart.couponCode, fulfillment: f.fulfillment, provinceCode: province || null, upsell: acceptedUpsell }, ctrl.signal)
       .then((r) => {
         if (r.ok) { setQuote(r.quote); setQuoteError(null); }
         else setQuoteError(r.error === "unavailable" || r.error === "network" ? dict.checkout.errorUnavailable : dict.errors.genericBody);
@@ -107,7 +129,7 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
       .catch(() => undefined);
     return () => ctrl.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linesKey, cart.couponCode, f.fulfillment, province]);
+  }, [linesKey, cart.couponCode, f.fulfillment, province, upsellTaken, offer?.variantId]);
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => {
     setF((p) => ({ ...p, [k]: v }));
@@ -184,6 +206,7 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
           locale,
           lines: cart.lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity, seenPrice: l.price })),
           couponCode: cart.couponCode,
+          upsell: acceptedUpsell,
           fulfillment: f.fulfillment,
           customer: { fullName: f.fullName, phone: f.phone, email: f.email },
           address: f.fulfillment === "delivery" ? { provinceCode: f.provinceCode, ward: f.ward, street: f.street } : null,
@@ -221,6 +244,8 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
   const locked = busy || status.kind === "unknown";
   const ship = quote?.shipping;
   const originalByVariant = new Map(quote?.lines.map((l) => [l.variantId, l.compareAtPrice]) ?? []);
+  // The server decides whether the offer actually applied; the button only records the intent.
+  const upsellLine = quote?.lines.find((l) => l.upsell) ?? null;
   const shippingLabel: string | number =
     f.fulfillment === "pickup" ? dict.checkout.shippingFree
       : !ship || ship.status === "needs-province" ? dict.checkout.shippingChooseProvince
@@ -355,7 +380,40 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
                 <SummaryLinePrice price={l.price} compareAt={originalByVariant.get(l.variantId) ?? l.compareAt} quantity={l.quantity} locale={locale} dict={dict} />
               </li>
             ))}
+            {upsellLine ? (
+              <li className="flex gap-3 rounded-sm bg-surface p-2 text-small" data-testid="upsell-line">
+                {offer?.image ? (
+                  <Image src={offer.image.url} alt="" width={56} height={56} unoptimized={offer.image.url.endsWith(".svg")} className="size-14 shrink-0 rounded-sm object-cover" />
+                ) : null}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{upsellLine.name}</span>
+                  <span className="block text-caption text-green">{[dict.checkout.upsellBadge, `× ${upsellLine.quantity}`].join(" · ")}</span>
+                  <button type="button" className="mt-0.5 text-caption text-ink-muted underline underline-offset-4" onClick={() => setUpsellTaken(false)}>
+                    {dict.checkout.upsellRemove}
+                  </button>
+                </span>
+                <SummaryLinePrice price={upsellLine.unitPrice} compareAt={upsellLine.compareAtPrice} quantity={upsellLine.quantity} locale={locale} dict={dict} />
+              </li>
+            ) : null}
           </ul>
+
+          {offer && !upsellLine ? (
+            <UpsellCard
+              offer={offer}
+              locale={locale}
+              dict={dict}
+              onAdd={() => {
+                setUpsellTaken(true);
+                track("AddToCart", {
+                  value: offer.unitPrice * offer.quantity,
+                  currency: "VND",
+                  content_ids: [offer.variantId],
+                  content_type: "product",
+                  num_items: offer.quantity,
+                });
+              }}
+            />
+          ) : null}
 
           {quote?.changes.length ? (
             <Notice title={dict.checkout.changesTitle}>
@@ -447,5 +505,45 @@ function SummaryLinePrice({
         formatPrice(price * quantity, locale)
       )}
     </span>
+  );
+}
+
+/**
+ * The checkout offer: one product at the deeper discount, with delivery on the house. Drawn as a
+ * single quiet card rather than a banner — it sits beside an order the customer has already
+ * decided on, and should read as a kindness, not a sales pitch.
+ */
+function UpsellCard({ offer, locale, dict, onAdd }: { offer: UpsellOffer; locale: Locale; dict: Pick<D, "checkout">; onAdd: () => void }) {
+  const total = offer.unitPrice * offer.quantity;
+  const wouldPay = offer.listPrice * offer.quantity;
+  return (
+    <section className="rounded-sm border border-green/35 bg-surface p-4" aria-labelledby="upsell-title" data-testid="upsell-offer">
+      <h3 id="upsell-title" className="text-caption font-semibold uppercase tracking-wide text-green">{dict.checkout.upsellTitle}</h3>
+      <div className="mt-3 flex gap-3">
+        {offer.image ? (
+          <Image
+            src={offer.image.url}
+            alt=""
+            width={72}
+            height={72}
+            unoptimized={offer.image.url.endsWith(".svg")}
+            className="size-18 shrink-0 rounded-sm object-cover"
+          />
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <p className="text-small font-medium">{offer.name}</p>
+          {offer.variantTitle ? <p className="text-caption text-ink-muted">{offer.variantTitle}</p> : null}
+          <p className="mt-1 flex flex-wrap items-baseline gap-2">
+            <s className="text-caption text-ink-muted">{formatPrice(wouldPay, locale)}</s>
+            <span className="text-small font-semibold text-green">{formatPrice(total, locale)}</span>
+            <span className="text-caption font-semibold text-green">{dict.checkout.upsellBadge}</span>
+          </p>
+        </div>
+      </div>
+      <p className="mt-3 text-caption text-ink-muted">{offer.quantity === 2 ? dict.checkout.upsellTwo : dict.checkout.upsellOne}</p>
+      <Button size="sm" variant="secondary" className="mt-3 w-full" onClick={onAdd}>
+        {offer.quantity === 2 ? dict.checkout.upsellAddTwo : dict.checkout.upsellAddOne}
+      </Button>
+    </section>
   );
 }

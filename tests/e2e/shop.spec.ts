@@ -126,6 +126,47 @@ test("10-13: home delivery, shipping fee, COD order", async ({ page }) => {
   await expect(page.locator("main").getByText("Tiền mặt khi nhận hàng (COD)")).toBeVisible();
 });
 
+test("checkout upsell: the offer is priced and shipped by the server, not the browser", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  await fillContact(page);
+  await fillDelivery(page, "ha-noi");
+  await expect(page.getByTestId("shipping")).toHaveText(/25\.000/);
+
+  const offer = page.getByTestId("upsell-offer");
+  await expect(offer).toBeVisible();
+  const totalBefore = await page.getByTestId("total").innerText();
+
+  await offer.getByRole("button", { name: /Thêm vào đơn|Lấy 2 món/ }).click();
+
+  // Accepting adds a line at the deeper discount and takes the delivery fee off the whole order.
+  const line = page.getByTestId("upsell-line");
+  await expect(line).toBeVisible();
+  await expect(line).toContainText("Giảm 40%");
+  await expect(page.getByTestId("shipping")).toHaveText(/Miễn phí/);
+  await expect(page.getByTestId("total")).not.toHaveText(totalBefore);
+  await expect(offer).toBeHidden();
+
+  // The order itself must go through with the offer on it: the server re-checks the signature.
+  await placeOrder(page);
+  await expectOrderConfirmed(page);
+});
+
+test("checkout upsell: dropping the offer puts the delivery fee back", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  await fillContact(page);
+  await fillDelivery(page, "ha-noi");
+  const offer = page.getByTestId("upsell-offer");
+  await offer.getByRole("button", { name: /Thêm vào đơn|Lấy 2 món/ }).click();
+  await expect(page.getByTestId("upsell-line")).toBeVisible();
+
+  await page.getByRole("button", { name: "Bỏ ưu đãi này" }).click();
+  await expect(page.getByTestId("upsell-line")).toBeHidden();
+  await expect(page.getByTestId("shipping")).toHaveText(/25\.000/);
+  await expect(offer).toBeVisible();
+});
+
 test("14-15: only home delivery is offered; the server refuses store pickup", async ({ page }) => {
   await addToCart(page, "ke-go-soi-3-tang");
   await page.goto("/vi/checkout");

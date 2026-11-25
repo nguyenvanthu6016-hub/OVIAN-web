@@ -1,5 +1,5 @@
 import "server-only";
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { signPayload, verifyPayload } from "./signing";
 
 /**
  * Layer 1 anti-spam for the order form. Nothing here is visible to a real customer.
@@ -17,21 +17,10 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 const MIN_FORM_MS = 3_000;
 const MAX_TOKEN_MS = 6 * 3600_000;
 
-/** Signing key. Set ORDER_TOKEN_SECRET in production so tokens survive a restart or a second instance. */
-let fallbackSecret: string | null = null;
-function tokenSecret(): string {
-  const env = process.env.ORDER_TOKEN_SECRET?.trim() || process.env.GOOGLE_SHEETS_SECRET?.trim();
-  if (env && env.length >= 16) return env;
-  fallbackSecret ??= randomBytes(32).toString("hex");
-  return fallbackSecret;
-}
-
-const sign = (payload: string) => createHmac("sha256", tokenSecret()).update(payload).digest("base64url");
-
 /** Called when the checkout page is rendered. */
 export function issueOrderToken(now = Date.now()): string {
   const payload = String(now);
-  return `${payload}.${sign(payload)}`;
+  return `${payload}.${signPayload(payload)}`;
 }
 
 export type TokenCheck = "ok" | "missing" | "invalid" | "too-fast" | "expired";
@@ -41,9 +30,7 @@ export function checkOrderToken(token: string | undefined, now = Date.now()): To
   const dot = token.lastIndexOf(".");
   if (dot < 1) return "invalid";
   const payload = token.slice(0, dot);
-  const given = Buffer.from(token.slice(dot + 1));
-  const expected = Buffer.from(sign(payload));
-  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return "invalid";
+  if (!verifyPayload(payload, token.slice(dot + 1))) return "invalid";
   const issuedAt = Number(payload);
   if (!Number.isFinite(issuedAt)) return "invalid";
   const age = now - issuedAt;

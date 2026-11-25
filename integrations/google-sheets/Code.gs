@@ -290,7 +290,10 @@ function validate_(p) {
 function lineText_(l) {
   const variant = l.variantTitle && l.variantTitle !== l.name ? ' (' + l.variantTitle + ')' : '';
   const sku = l.sku ? ' [' + l.sku + ']' : '';
-  return l.quantity + ' × ' + l.name + variant + sku + ' = ' + money_(l.lineTotal);
+  // Marks a line the customer took from the checkout offer: 40% off and free delivery, so the
+  // price on the row is meant to be lower than the shop's usual one.
+  const offer = l.upsell ? ' (ưu đãi thêm -40%)' : '';
+  return l.quantity + ' × ' + l.name + variant + sku + offer + ' = ' + money_(l.lineTotal);
 }
 
 function money_(n) {

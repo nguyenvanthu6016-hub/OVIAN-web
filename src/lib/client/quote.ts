@@ -1,6 +1,7 @@
 "use client";
 
 import type { Quote, QuoteChange } from "@/lib/checkout/pricing";
+import type { AcceptedUpsell, UpsellOffer } from "@/lib/checkout/upsell-offer";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { t } from "@/lib/i18n/dictionaries";
@@ -14,6 +15,7 @@ export async function fetchQuote(body: {
   couponCode: string | null;
   fulfillment: "delivery" | "pickup";
   provinceCode?: string | null;
+  upsell?: AcceptedUpsell | null;
 }, signal?: AbortSignal): Promise<QuoteResult> {
   try {
     const res = await fetch("/api/checkout/quote", {
@@ -25,6 +27,7 @@ export async function fetchQuote(body: {
         couponCode: body.couponCode || null,
         fulfillment: body.fulfillment,
         provinceCode: body.provinceCode || null,
+        upsell: body.upsell ?? null,
       }),
     });
     if (res.ok) return { ok: true, quote: ((await res.json()) as { quote: Quote }).quote };
@@ -46,5 +49,32 @@ export function describeChange(c: QuoteChange, locale: Locale, d: Pick<Dictionar
       return c.reason === "min-subtotal"
         ? t(d.cart.couponMinSubtotal, { code: c.code, amount: formatPrice(c.minSubtotal ?? 0, locale) })
         : t(d.cart.couponInvalid, { code: c.code });
+  }
+}
+
+/**
+ * Asks the server whether this checkout has an offer. A missing or failed offer is not an error
+ * worth showing anyone — the card simply does not appear.
+ */
+export async function fetchUpsellOffer(
+  body: { checkoutId: string; locale: Locale; lines: CartLine[] },
+  signal?: AbortSignal,
+): Promise<UpsellOffer | null> {
+  try {
+    const res = await fetch("/api/checkout/upsell", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal,
+      body: JSON.stringify({
+        checkoutId: body.checkoutId,
+        locale: body.locale,
+        lines: body.lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity })),
+      }),
+    });
+    if (!res.ok) return null;
+    return ((await res.json()) as { offer: UpsellOffer | null }).offer;
+  } catch (e) {
+    if ((e as Error).name === "AbortError") throw e;
+    return null;
   }
 }

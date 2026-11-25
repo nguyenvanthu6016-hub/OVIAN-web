@@ -1,5 +1,6 @@
 import type { Coupon, FulfillmentMethod, OrderLine, Product, Variant } from "@/lib/commerce/types";
 import { quoteShipping, type ShippingQuote, type ShippingRuleSet } from "./shipping";
+import { isUpsellEligible, upsellUnitPrice, type UpsellQuantity } from "./upsell";
 
 export type QuoteChange =
   | { kind: "price"; variantId: string; name: string; from: number; to: number }
@@ -16,6 +17,8 @@ export interface Quote {
   shippingFee: number;
   total: number;
   changes: QuoteChange[];
+  /** Set when the upsell offer was accepted and honoured: that line is cheaper and delivery is free. */
+  upsell: { variantId: string; quantity: number } | null;
   /** false when the order cannot be placed as-is (empty after changes, or delivery unavailable) */
   orderable: boolean;
 }
@@ -28,6 +31,8 @@ export interface PricingInput {
   fulfillment: FulfillmentMethod;
   provinceCode?: string | null;
   shippingRules: ShippingRuleSet;
+  /** An upsell offer whose signature the caller has already verified. */
+  upsell?: { variantId: string; quantity: UpsellQuantity } | null;
 }
 
 /** Pure, deterministic pricing — the single source of truth for totals (server-side). */
@@ -68,6 +73,37 @@ export function priceCart(input: PricingInput): Quote {
     });
   }
 
+  // The upsell rides alongside the cart rather than inside it, so accepting the offer cannot
+  // disturb what the customer already chose, and dropping the offer cannot empty the order.
+  let upsell: Quote["upsell"] = null;
+  const wanted = input.upsell;
+  const hit = wanted ? input.variants.get(wanted.variantId) : undefined;
+  if (
+    wanted &&
+    hit &&
+    lines.length > 0 &&
+    // Already bought at the normal price in this cart: one line, not two prices for one product.
+    !merged.has(wanted.variantId) &&
+    isUpsellEligible(hit.variant, wanted.quantity)
+  ) {
+    const unitPrice = upsellUnitPrice(hit.variant);
+    if (unitPrice !== null) {
+      lines.push({
+        variantId: wanted.variantId,
+        productId: hit.product.id,
+        sku: hit.variant.sku,
+        name: hit.product.name.value,
+        variantTitle: Object.keys(hit.variant.options).length ? hit.variant.title : "",
+        quantity: wanted.quantity,
+        unitPrice,
+        ...(hit.variant.compareAtPrice ? { compareAtPrice: hit.variant.compareAtPrice } : {}),
+        upsell: true,
+        lineTotal: unitPrice * wanted.quantity,
+      });
+      upsell = { variantId: wanted.variantId, quantity: wanted.quantity };
+    }
+  }
+
   const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
 
   let coupon: Quote["coupon"] = null;
@@ -90,11 +126,11 @@ export function priceCart(input: PricingInput): Quote {
   if (input.fulfillment === "pickup") shipping = { status: "pickup", fee: 0 };
   else {
     shipping = quoteShipping(input.shippingRules, input.provinceCode ?? undefined, subtotal - discount);
-    if (shipping.status === "ok" && coupon?.freeShipping) shipping = { ...shipping, fee: 0, freeApplied: true };
+    if (shipping.status === "ok" && (coupon?.freeShipping || upsell)) shipping = { ...shipping, fee: 0, freeApplied: true };
   }
   const shippingFee = shipping.status === "ok" ? shipping.fee : 0;
   const total = subtotal - discount + shippingFee;
   const orderable = lines.length > 0 && (shipping.status === "ok" || shipping.status === "pickup");
 
-  return { lines, subtotal, coupon, discount, shipping, shippingFee, total, changes, orderable };
+  return { lines, subtotal, coupon, discount, shipping, shippingFee, total, changes, upsell, orderable };
 }

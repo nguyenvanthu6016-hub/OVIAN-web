@@ -71,6 +71,27 @@ Biểu phí vùng (giá bị gạch) và mức đồng giá đều được ghi 
 
 Sanity → "Phí giao hàng" → thêm vùng, chọn mã tỉnh (danh sách trong `docs/SHIPPING.md`), điền phí và mức miễn phí. Có hiệu lực sau khoảng 1 phút. Tỉnh không thuộc vùng nào sẽ **không giao được** trừ khi bật "Giao tới tỉnh không có trong danh sách".
 
+## 6b. Ưu đãi thêm ở trang thanh toán (upsale)
+
+Khi khách đang điền thông tin đặt hàng, website gợi ý thêm **một sản phẩm nữa**. Nếu khách đồng ý:
+
+- sản phẩm đó được **giảm 40%** so với giá gốc, thay vì 30% như bình thường;
+- **cả đơn được miễn phí giao hàng**, kể cả khi chưa đạt 300.000 ₫.
+
+Mỗi đơn chỉ có **một** ưu đãi. Một nửa số lần, website mời lấy **2 cái** cùng sản phẩm đó (cả 2 đều giảm 40%); nửa còn lại mời lấy **1 cái**.
+
+**Sản phẩm nào được gợi ý.** Ưu tiên sản phẩm **cùng danh mục** với món khách đang mua. Phải còn hàng, đang giảm giá, và **giá gốc từ 100.000 ₫ trở lên** — món rẻ hơn không được gợi ý, vì giảm 40% cộng miễn phí ship thì không còn lãi. Nếu danh mục đó không có món nào đủ điều kiện, website mới tìm trong toàn bộ cửa hàng.
+
+**Tiền.** Mỗi đơn có upsale, anh/chị mất thêm 10% giá gốc của món đó cộng tiền ship. Đổi lại là một món bán được mà lẽ ra không bán được. Nên theo dõi vài tuần rồi quyết định giữ hay bỏ.
+
+**Tắt hoàn toàn:** thêm biến môi trường `UPSELL_ENABLED` = `false` trong Hostinger rồi deploy lại. Không cần sửa mã.
+
+**Đổi mức giảm hoặc giá sàn:** sửa `UPSELL_DISCOUNT` và `UPSELL_MIN_COMPARE_AT` trong `src/lib/checkout/upsell.ts`.
+
+**Trong Google Sheet**, dòng hàng của món upsale có ghi `(ưu đãi thêm -40%)` để anh/chị biết vì sao giá dòng đó thấp hơn bình thường. Phần này cần **deploy lại `Code.gs`** mới hiện.
+
+**Giá luôn do máy chủ tính.** Trình duyệt chỉ nói "khách đồng ý lấy ưu đãi này"; số tiền thì máy chủ đọc lại giá Sapo rồi tự tính. Khách không thể sửa giá, không thể tự nhận ưu đãi cho món khác, và ưu đãi hết hạn sau 6 tiếng.
+
 ## 7. Sửa nội dung
 
 Nội dung các trang (Câu chuyện OVIAN, chính sách giao hàng, đổi trả, bảo mật, điều khoản, câu hỏi thường gặp, phí giao hàng theo vùng, số điện thoại, mạng xã hội) nằm trong một file mã nguồn duy nhất: `src/lib/cms/ovian-content.ts`. Muốn sửa, báo người quản trị website; sau khi sửa phải build và khởi động lại.

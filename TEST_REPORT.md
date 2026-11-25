@@ -2,6 +2,19 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Checkout upsell — 2026-11-25
+
+Owner's brief: at checkout, offer one more product at 40% off (instead of the usual 30%) with free delivery, sometimes as two of the same item. Owner's answers: two of the same product (not a bundle), chosen from the same category as the cart, original price at least 100.000 ₫.
+
+- **The server owns the price.** The browser only returns "this offer, accepted" with an HMAC the server issued; the amount is recomputed from the fresh Sapo variant. A tampered variant id, a changed quantity, a forged signature and an offer older than six hours are each refused (7 tests). The pricing itself is pure and tested apart from the network.
+- **It cannot be turned into a discount on anything.** The offer is refused when the cart is empty, when the product is already in the cart at the normal price, when stock cannot cover the quantity, and when the product is below the 100.000 ₫ floor or not on sale. A sold-out offer is dropped silently and the rest of the order still goes through at the normal delivery fee.
+- **Known limit, accepted:** the offer is seeded by the checkout id, which the browser generates, so a determined customer could clear it and reload until a different eligible product appears. Eligibility bounds what that can reach; it is not a way to pick an arbitrary product.
+- **Verified in the browser** against the real Sapo catalogue: a 350.000 ₫ lamp at 245.000 plus an offer of two baskets — normally 168.000, offered at 144.000 — with the 15.000 fee struck through and delivery free; subtotal 389.000, total 389.000. Removing the offer puts the fee back. The summary fits 343 px with no overflow.
+- **Order flow untouched.** The upsell rides beside the cart rather than inside it, so accepting or dropping it cannot disturb what the customer already chose. The idempotency fingerprint now includes the offer, so two otherwise identical carts are not treated as the same order.
+- **Off switch:** `UPSELL_ENABLED=false` in the hosting panel, no code change. Sheet rows mark the line `(ưu đãi thêm -40%)` once `Code.gs` is redeployed.
+
+Vitest **115 / 115** (26 new), Playwright Mock Mode **40 / 40** (2 new, including placing a real mock order with the offer on it), live Sapo 18 / 18, build clean, lint clean.
+
 ## Checkout shows the saving — 2026-11-24
 
 Owner's goal: the customer should see a bargain at checkout.

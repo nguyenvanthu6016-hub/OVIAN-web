@@ -163,6 +163,8 @@ export interface OrderLine {
   unitPrice: number;
   /** Price before the discount, when the product is on sale. Display only. */
   compareAtPrice?: number;
+  /** true when this line came from the checkout upsell, priced at the deeper discount. */
+  upsell?: true;
   lineTotal: number;
 }
 
