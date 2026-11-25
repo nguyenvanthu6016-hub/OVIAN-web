@@ -167,6 +167,35 @@ test("checkout upsell: dropping the offer puts the delivery fee back", async ({ 
   await expect(offer).toBeVisible();
 });
 
+test("Zalo support is reachable from every page", async ({ page }) => {
+  await page.goto("/vi");
+  const fab = page.getByTestId("zalo-fab");
+  await expect(fab).toBeVisible();
+  await expect(fab).toHaveAttribute("href", /^https:\/\/zalo\.me\/\d{10}$/);
+  // Opens the Zalo app in its own context, never replacing the shop the customer is in.
+  await expect(fab).toHaveAttribute("target", "_blank");
+
+  await page.goto("/vi/track");
+  const card = page.getByRole("region", { name: /Cần OVIAN hỗ trợ|Need a hand/ });
+  await expect(card).toBeVisible();
+  await expect(card.getByRole("link", { name: /Nhắn Zalo 0900000000/ })).toBeVisible();
+  await expect(card.getByRole("link", { name: /Gọi 0900000000/ })).toHaveAttribute("href", "tel:0900000000");
+});
+
+test("the support button never covers the sticky buy bar @mobile-only", async ({ page }) => {
+  await page.goto("/vi/products/coc-su-trang-350ml");
+  await page.mouse.wheel(0, 1200);
+  const bar = page.getByTestId("sticky-buy");
+  await expect(bar).toBeVisible();
+  await page.waitForTimeout(400); // the bar slides in
+  const fab = await page.getByTestId("zalo-fab").boundingBox();
+  const buy = await bar.boundingBox();
+  expect(fab).not.toBeNull();
+  expect(buy).not.toBeNull();
+  // The button sits entirely above the bar, so a thumb reaching for "add to cart" cannot hit it.
+  expect(fab!.y + fab!.height).toBeLessThanOrEqual(buy!.y);
+});
+
 test("14-15: only home delivery is offered; the server refuses store pickup", async ({ page }) => {
   await addToCart(page, "ke-go-soi-3-tang");
   await page.goto("/vi/checkout");

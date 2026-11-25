@@ -6,6 +6,8 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { siteUrl } from "@/lib/seo";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-chrome";
 import { FacebookPixel } from "@/components/analytics/facebook-pixel";
+import { ZaloFab } from "@/components/support/zalo-support";
+import { getContent } from "@/lib/cms";
 import "../globals.css";
 
 const beVietnam = Be_Vietnam_Pro({
@@ -43,6 +45,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const d = getDictionary(locale);
+  // Support is a nicety; a content outage must not take the whole site down with it.
+  const settings = await getContent().siteSettings(locale).catch(() => null);
   return (
     <html lang={locale} className={beVietnam.variable}>
       <body className="min-h-dvh">
@@ -52,6 +56,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         <SiteHeader locale={locale} />
         <main id="main" tabIndex={-1} className="outline-none">{children}</main>
         <SiteFooter locale={locale} />
+        {settings?.zaloPhone ? <ZaloFab phone={settings.zaloPhone} dict={{ support: d.support }} /> : null}
         <FacebookPixel />
       </body>
     </html>

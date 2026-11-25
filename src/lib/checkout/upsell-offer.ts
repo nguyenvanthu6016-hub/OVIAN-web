@@ -31,6 +31,20 @@ export interface UpsellOffer {
   signature: string;
 }
 
+/**
+ * Why a checkout got no offer. Returned to the browser so the shop owner can tell an offer that
+ * is switched off from one the catalogue simply cannot fill — the two look identical otherwise,
+ * and guessing between them means a deploy per guess. It names no prices and no customer data.
+ */
+export type UpsellSkipReason = "disabled" | "empty-cart" | "cart-unknown" | "no-candidates";
+
+export interface UpsellResult {
+  offer: UpsellOffer | null;
+  reason?: UpsellSkipReason;
+  /** How many products passed every rule, when the catalogue was searched. */
+  candidates?: number;
+}
+
 /** What comes back from the browser when an offer is accepted. */
 export interface AcceptedUpsell {
   variantId: string;
@@ -85,14 +99,14 @@ export async function buildUpsellOffer(
   cartVariantIds: string[],
   locale: Locale,
   now = Date.now(),
-): Promise<UpsellOffer | null> {
+): Promise<UpsellResult> {
   // One switch the owner can throw from the hosting panel if the margin stops being worth it.
-  if (process.env.UPSELL_ENABLED === "false") return null;
-  if (!cartVariantIds.length) return null;
+  if (process.env.UPSELL_ENABLED === "false") return { offer: null, reason: "disabled" };
+  if (!cartVariantIds.length) return { offer: null, reason: "empty-cart" };
   const commerce = getCommerce();
 
   const inCart = await commerce.getVariantsFresh(cartVariantIds);
-  if (inCart.size === 0) return null;
+  if (inCart.size === 0) return { offer: null, reason: "cart-unknown" };
   const cartProductIds = new Set([...inCart.values()].map((h) => h.product.id));
   const cartCategoryIds = [...new Set([...inCart.values()].flatMap((h) => h.product.categoryIds))].sort();
 
@@ -125,5 +139,6 @@ export async function buildUpsellOffer(
   // Sorted so the same seed always lands on the same product, whatever order the backend returned.
   pool.sort((a, b) => a.variant.id.localeCompare(b.variant.id));
   const chosen = pickBySeed(pool, seed);
-  return chosen ? toOffer(chosen.product, chosen.variant, quantity, now) : null;
+  const offer = chosen ? toOffer(chosen.product, chosen.variant, quantity, now) : null;
+  return offer ? { offer, candidates: pool.length } : { offer: null, reason: "no-candidates", candidates: pool.length };
 }

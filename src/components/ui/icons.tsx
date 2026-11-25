@@ -32,4 +32,5 @@ export const IconTruck = (p: P) => <Base {...p}><path d="M3 6h11v10H3zM14 10h4l3
 export const IconStar = ({ filled, ...p }: P & { filled?: boolean }) => (
   <Base {...p}><path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6z" fill={filled ? "currentColor" : "none"} /></Base>
 );
+export const IconChat = (p: P) => <Base {...p}><path d="M20 12.2c0 3.8-3.6 6.8-8 6.8a9.6 9.6 0 0 1-2.6-.35L5 20l1.1-3.1A6.4 6.4 0 0 1 4 12.2C4 8.4 7.6 5.4 12 5.4s8 3 8 6.8Z" /><path d="M9.2 12.1h.01M12 12.1h.01M14.8 12.1h.01" /></Base>;
 export const IconZoom = (p: P) => <Base {...p}><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.2-4.2M11 8.5v5M8.5 11h5" /></Base>;

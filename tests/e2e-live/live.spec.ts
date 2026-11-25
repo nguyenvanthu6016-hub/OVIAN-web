@@ -116,3 +116,11 @@ for (const path of ["/vi", "/vi/products", `/vi/products/${SALE_PRODUCT.handle}`
     expect(summary, summary.join("\n")).toEqual([]);
   });
 }
+
+test("support: the real OVIAN Zalo number is one tap away @mobile", async ({ page }) => {
+  await page.goto("/vi");
+  await expect(page.getByTestId("zalo-fab")).toHaveAttribute("href", "https://zalo.me/0909651935");
+  await page.goto("/vi/track");
+  const card = page.getByRole("region", { name: /Cần OVIAN hỗ trợ/ });
+  await expect(card.getByRole("link", { name: /Gọi 0909651935/ })).toHaveAttribute("href", "tel:0909651935");
+});

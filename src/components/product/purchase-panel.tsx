@@ -180,7 +180,7 @@ export function ProductPurchase({ product, locale, dict }: { product: Product; l
       </div>
 
       {/* Mobile sticky purchase bar */}
-      <div className={cx("fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur-sm transition-transform duration-200 lg:hidden", showSticky ? "translate-y-0" : "translate-y-full")} aria-hidden={!showSticky}>
+      <div data-testid="sticky-buy" className={cx("fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur-sm transition-transform duration-200 lg:hidden", showSticky ? "translate-y-0" : "translate-y-full")} aria-hidden={!showSticky}>
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-caption text-ink-muted">{product.name.value}{variant && Object.keys(variant.options).length ? `, ${variant.title}` : ""}</p>

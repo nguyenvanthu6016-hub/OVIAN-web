@@ -2,6 +2,20 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Zalo customer support — 2026-11-25
+
+Owner's brief: let customers reach OVIAN on Zalo (0909651935) for help with an order or a return.
+
+- **Three places, chosen for when help is actually wanted:** a small button fixed bottom-right on every page, plus a support card on the order confirmation page and on the order tracking page. Each offers both Zalo and a `tel:` link, because a Zalo link does nothing on a desktop without the app.
+- **It does not cover "add to cart".** On a phone the button sits above the sticky purchase bar; an E2E test measures the two bounding boxes on a Pixel 7 viewport and fails if they ever touch. This caught a real overlap on the first attempt.
+- **No invented facts.** Support hours are not stated anywhere, because the owner has not given any. The card asks the customer to include their order number instead.
+- **Degrades quietly:** no phone in the content, no button — and a content outage cannot take the layout down, since the settings read is caught.
+- Sample content now carries an obviously fake `0900000000` so mock mode exercises the feature; the real number is asserted in the live suite.
+
+Also in this pass: the upsell endpoint now returns *why* a checkout got no offer (`disabled` / `empty-cart` / `cart-unknown` / `no-candidates`, plus a candidate count). Production returned an empty offer after the first deploy and the two possible causes were indistinguishable from outside, which would have meant a deploy per guess.
+
+Vitest 115 / 115, Playwright Mock Mode **42 / 42** (2 new), live Sapo **20 / 20** (1 new), build clean, lint clean. Axe WCAG 2.2 AA still passes on every checked page with the button present.
+
 ## Checkout upsell — 2026-11-25
 
 Owner's brief: at checkout, offer one more product at 40% off (instead of the usual 30%) with free delivery, sometimes as two of the same item. Owner's answers: two of the same product (not a bundle), chosen from the same category as the cart, original price at least 100.000 ₫.

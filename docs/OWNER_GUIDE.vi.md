@@ -86,11 +86,27 @@ Mỗi đơn chỉ có **một** ưu đãi. Một nửa số lần, website mời
 
 **Tắt hoàn toàn:** thêm biến môi trường `UPSELL_ENABLED` = `false` trong Hostinger rồi deploy lại. Không cần sửa mã.
 
+**Nếu ưu đãi không hiện:** mở `ovianvietnam.com/api/checkout/upsell` không xem được bằng tay, nhưng khi báo tôi, tôi đọc được lý do website trả về — `disabled` (đã tắt bằng biến môi trường), `no-candidates` (không sản phẩm nào đủ điều kiện), `cart-unknown` (không đọc được giỏ hàng). Nhờ vậy không phải đoán mò rồi deploy lại nhiều lần.
+
 **Đổi mức giảm hoặc giá sàn:** sửa `UPSELL_DISCOUNT` và `UPSELL_MIN_COMPARE_AT` trong `src/lib/checkout/upsell.ts`.
 
 **Trong Google Sheet**, dòng hàng của món upsale có ghi `(ưu đãi thêm -40%)` để anh/chị biết vì sao giá dòng đó thấp hơn bình thường. Phần này cần **deploy lại `Code.gs`** mới hiện.
 
 **Giá luôn do máy chủ tính.** Trình duyệt chỉ nói "khách đồng ý lấy ưu đãi này"; số tiền thì máy chủ đọc lại giá Sapo rồi tự tính. Khách không thể sửa giá, không thể tự nhận ưu đãi cho món khác, và ưu đãi hết hạn sau 6 tiếng.
+
+## 6c. Chăm sóc khách hàng qua Zalo
+
+Số dùng cho CSKH là **0909651935** — cùng số hotline, lấy từ `zaloPhone` trong `src/lib/cms/ovian-content.ts`. Đổi số ở đó là đổi hết mọi chỗ.
+
+Khách gặp nút hỗ trợ ở ba nơi:
+
+1. **Nút tròn góc dưới bên phải**, có mặt trên mọi trang. Trên điện thoại nút nằm **phía trên** thanh "Thêm vào giỏ", không che nút mua — có test tự động canh khoảng cách này mỗi lần chạy.
+2. **Trang xác nhận đơn hàng**, ngay sau khi khách đặt xong.
+3. **Trang tra cứu đơn hàng**, nơi khách vào khi muốn biết đơn đi tới đâu.
+
+Mỗi khối có hai cách liên hệ: **mở Zalo** và **gọi điện** (bấm là quay số trên điện thoại). Có ghi sẵn câu nhắc khách gửi kèm mã đơn hàng.
+
+**Chưa công bố giờ làm việc.** Tôi không tự đặt ra giờ hỗ trợ. Khi anh/chị cho biết giờ nhận tin (ví dụ 8:00–21:00 hằng ngày), báo tôi thêm vào.
 
 ## 7. Sửa nội dung
 

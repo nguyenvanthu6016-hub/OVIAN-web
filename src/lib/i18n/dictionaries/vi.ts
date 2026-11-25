@@ -217,6 +217,15 @@ export const vi = {
     edit: "Sửa giỏ hàng",
     liveOrdersDisabled: "Đặt hàng trực tuyến đang tạm tắt trong lúc OVIAN kiểm tra kết nối. Vui lòng liên hệ cửa hàng.",
   },
+  support: {
+    fab: "Hỗ trợ",
+    title: "Cần OVIAN hỗ trợ?",
+    body: "Nhắn Zalo cho OVIAN khi cần hỏi về đơn hàng, đổi hàng hoặc trả hàng.",
+    bodyWithRef: "Nhắn Zalo cho OVIAN khi cần hỏi về đơn {ref}, đổi hàng hoặc trả hàng.",
+    openZalo: "Nhắn Zalo {phone}",
+    call: "Gọi {phone}",
+    hint: "Nhắn kèm mã đơn hàng để OVIAN tra cứu nhanh hơn.",
+  },
   order: {
     confirmedTitle: "OVIAN đã nhận đơn của bạn",
     confirmedBody: "Mã đơn hàng {ref}. OVIAN sẽ gọi số {phone} để xác nhận.",

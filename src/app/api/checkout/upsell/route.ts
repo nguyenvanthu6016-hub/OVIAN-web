@@ -10,8 +10,9 @@ export async function POST(req: Request) {
   if (!parsed.success) return validationError(parsed.error);
   try {
     const { checkoutId, lines, locale } = parsed.data;
-    // No offer is a normal answer, not an error: the checkout page simply shows nothing.
-    return json({ offer: await buildUpsellOffer(checkoutId, lines.map((l) => l.variantId), locale) });
+    // No offer is a normal answer, not an error: the checkout page simply shows nothing. The
+    // reason rides along so an empty checkout can be diagnosed without another deploy.
+    return json(await buildUpsellOffer(checkoutId, lines.map((l) => l.variantId), locale));
   } catch (e) {
     return handleError(e, "upsell");
   }

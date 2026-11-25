@@ -219,6 +219,15 @@ export const en: typeof vi = {
     edit: "Edit cart",
     liveOrdersDisabled: "Online ordering is paused while OVIAN checks the connection. Please contact the store.",
   },
+  support: {
+    fab: "Support",
+    title: "Need a hand?",
+    body: "Message OVIAN on Zalo about an order, an exchange or a return.",
+    bodyWithRef: "Message OVIAN on Zalo about order {ref}, an exchange or a return.",
+    openZalo: "Message Zalo {phone}",
+    call: "Call {phone}",
+    hint: "Include your order number so OVIAN can look it up faster.",
+  },
   order: {
     confirmedTitle: "OVIAN has received your order",
     confirmedBody: "Order number {ref}. OVIAN will call {phone} to confirm.",

@@ -25,6 +25,9 @@ export function mockSiteSettings(locale: Locale): SiteSettings {
       sample: true,
     },
     showJournal: true,
+    // Obviously not a real line: sample mode must still exercise the support button.
+    contactPhone: "0900000000",
+    zaloPhone: "0900000000",
     social: [],
   };
 }
