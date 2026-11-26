@@ -24,10 +24,7 @@ export function FloorPlan({ spaces, locale, dict }: { spaces: NavSpace[]; locale
             className="flex min-h-[17rem] flex-col justify-between rounded-[calc(var(--radius-lg)-2px)] bg-surface p-5 transition-colors duration-150 hover:bg-surface-alt focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ink md:p-6"
           >
             <span className="block text-heading font-semibold text-green">{dict.common.allProducts}</span>
-            <span className="flex items-end justify-between gap-4">
-              <span className="max-w-sm text-small text-ink-muted">{dict.home.noRooms}</span>
-              <DoorSwing index={0} />
-            </span>
+            <span className="max-w-sm text-small text-ink-muted">{dict.home.noRooms}</span>
           </Link>
         </div>
       </nav>
@@ -50,10 +47,7 @@ export function FloorPlan({ spaces, locale, dict }: { spaces: NavSpace[]; locale
                 </span>
                 <span className="mt-0.5 block text-caption text-ink-muted">{t(dict.common.items, { count: r.count })}</span>
               </span>
-              <span className="relative flex items-end justify-between gap-2">
-                {r.areaM2 ? <span className="text-caption text-ink-muted">{t(dict.home.area, { area: r.areaM2 })}</span> : <span />}
-                <DoorSwing index={i} />
-              </span>
+              {r.areaM2 ? <span className="relative text-caption text-ink-muted">{t(dict.home.area, { area: r.areaM2 })}</span> : <span />}
               {/* The yellow "you are here" pin appears on hover/focus — accent used as a small point only. */}
               <span aria-hidden="true" className="absolute right-4 top-4 size-2.5 rounded-full bg-yellow opacity-0 ring-2 ring-green transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100" />
             </Link>
@@ -198,13 +192,3 @@ function RoomPhoto({ url, large }: { url: string; large: boolean }) {
   );
 }
 
-/** Quarter-circle door swing, the plan-drawing convention; orientation varies per room. */
-function DoorSwing({ index }: { index: number }) {
-  const rot = [0, 90, 180, 270][index % 4];
-  return (
-    <svg aria-hidden="true" width="34" height="34" viewBox="0 0 34 34" className="text-green/60" style={{ transform: `rotate(${rot}deg)` }}>
-      <path d="M2 32V2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M2 2a30 30 0 0 1 30 30" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="2 3" />
-    </svg>
-  );
-}
