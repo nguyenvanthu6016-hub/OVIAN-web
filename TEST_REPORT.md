@@ -2,6 +2,17 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Six fixes from the owner's phone — 2026-11-26
+
+- **Checkout was unusable on a phone.** The whole page rendered zoomed out and cut off. Cause: the order-summary column is a grid item, which defaults to `min-width: auto`, so a long unbroken product name set the column's minimum at 934 px against a 412 px screen; Chrome then widened the layout viewport to fit it (`innerWidth` 950 while `clientWidth` stayed 412). Found by hiding subtrees one at a time until the viewport snapped back. Fixed with `min-w-0` on both grid children and on the summary rows. Verified 412/412/412 on `/vi`, `/vi/cart`, `/vi/checkout`; an E2E test now asserts `scrollWidth <= clientWidth` at 375 px.
+- **Homepage standfirst removed** at the owner's request; `HomeContent.intro` is now nullable rather than deleted, so a line can be put back without touching the page.
+- **Room icons redrawn side-on.** The plan-view outlines asked the reader to decode a shape; a bed, a steaming pot, a sofa, a desk with a clip lamp and a basin read at a glance. Contrast raised from 30% to 45%.
+- **Product descriptions now split into drawers.** Sapo returns one plain-text blob; a parser (11 unit tests) finds the seller's own headings — a line ending in a colon, or shouted in capitals — and turns each into a closed drawer, with emoji lead-ins in bold. It reorders and drops nothing: a test reconstructs the original line list from the parsed output. A description with no headings still renders as plain text.
+- **Breadcrumb no longer repeats the product name**, which the heading below already carries. The full trail is still in the BreadcrumbList structured data, so search engines lose nothing.
+- Shortening product names in listings was asked for and then withdrawn by the owner; nothing was changed.
+
+Vitest **126 / 126** (11 new), Playwright Mock Mode **44 / 44** (2 new), live Sapo **22 / 22** (1 new), build clean, lint clean, axe WCAG 2.2 AA unchanged.
+
 ## Zalo customer support — 2026-11-25
 
 Owner's brief: let customers reach OVIAN on Zalo (0909651935) for help with an order or a return.

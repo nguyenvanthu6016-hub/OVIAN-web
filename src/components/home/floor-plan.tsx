@@ -65,9 +65,10 @@ export function FloorPlan({ spaces, locale, dict }: { spaces: NavSpace[]; locale
 }
 
 /**
- * Furniture drawn into the room, the way a plan shows it: a bed in the bedroom, a hob in the
- * kitchen. It fills the empty floor without competing with the room name, and needs no photography.
- * Keyed by the Sapo collection handle; an unknown room gets a plain rug outline.
+ * Furniture drawn into the room: a bed in the bedroom, a pot on the hob in the kitchen. Seen from
+ * the side, the way you would see the thing itself — a plan view asks the reader to decode an
+ * outline, and at this size most people simply do not. Needs no photography.
+ * Keyed by the Sapo collection handle; an unknown room gets a plain shelf.
  */
 function RoomFurniture({ handle, large }: { handle: string; large: boolean }) {
   const base = handle.split("--")[0] ?? "";
@@ -79,11 +80,11 @@ function RoomFurniture({ handle, large }: { handle: string; large: boolean }) {
       viewBox="0 0 120 92"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.6"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       className={cx(
-        "pointer-events-none absolute bottom-0 right-0 text-green/30 transition-[color,transform] duration-300 group-hover:text-green/45",
+        "pointer-events-none absolute bottom-0 right-0 text-green/45 transition-[color,transform] duration-300 group-hover:text-green/65",
         large ? "w-[62%] max-w-[22rem]" : "w-[72%] max-w-[11rem]",
       )}
     >
@@ -95,73 +96,83 @@ function RoomFurniture({ handle, large }: { handle: string; large: boolean }) {
 /** Both spellings a room can have: Sapo uses "phong-bep"/"do-dung-ngoai-troi", the sample catalogue "bep"/"ban-cong". */
 const ROOM_ALIASES: Record<string, string> = { bep: "phong-bep", "ban-cong": "do-dung-ngoai-troi" };
 
-/** Top-down outlines, drawn to sit in the bottom-right corner of a 120×92 room. */
+/** Side-on drawings, standing on a floor line, sized to sit in the bottom-right of a 120×92 room. */
 const FURNITURE: Record<string, React.ReactNode> = {
-  // Bed with two pillows and a folded throw.
+  // A bed: headboard, pillow, mattress, legs.
   "phong-ngu": (
     <>
-      <rect x="34" y="20" width="62" height="70" rx="4" />
-      <path d="M34 36h62" />
-      <rect x="39" y="24" width="24" height="9" rx="2.5" />
-      <rect x="67" y="24" width="24" height="9" rx="2.5" />
-      <path d="M34 70h62" strokeDasharray="3 3" />
-      <rect x="18" y="58" width="12" height="16" rx="2" />
+      <path d="M6 86h108" />
+      <rect x="18" y="38" width="11" height="48" rx="3" />
+      <rect x="29" y="58" width="81" height="17" rx="5" />
+      <rect x="36" y="46" width="27" height="12" rx="5" />
+      <path d="M76 58v17" />
+      <path d="M38 75v9M100 75v9" />
     </>
   ),
-  // Sofa facing a low table.
+  // A sofa with two cushions and arms.
   "phong-khach": (
     <>
-      <path d="M28 90V48a5 5 0 0 1 5-5h54a5 5 0 0 1 5 5v42" />
-      <path d="M28 58h64" />
-      <path d="M44 58v32M76 58v32" strokeDasharray="3 3" />
-      <rect x="40" y="16" width="40" height="18" rx="3" />
+      <path d="M6 86h108" />
+      <rect x="20" y="32" width="82" height="27" rx="7" />
+      <rect x="14" y="56" width="94" height="19" rx="7" />
+      <rect x="12" y="44" width="12" height="31" rx="6" />
+      <rect x="98" y="44" width="12" height="31" rx="6" />
+      <path d="M61 34v22" />
+      <path d="M24 75v9M98 75v9" />
     </>
   ),
-  // Counter run with a four-ring hob and a sink.
+  // A covered pot steaming on the counter.
   "phong-bep": (
     <>
-      <rect x="22" y="56" width="76" height="34" rx="3" />
-      <circle cx="42" cy="68" r="5" />
-      <circle cx="58" cy="68" r="5" />
-      <circle cx="42" cy="82" r="5" />
-      <circle cx="58" cy="82" r="5" />
-      <rect x="72" y="63" width="20" height="20" rx="3" />
-      <path d="M82 63v-9" strokeDasharray="3 3" />
+      <rect x="8" y="70" width="104" height="17" rx="3" />
+      <path d="M46 48h30v16a6 6 0 0 1-6 6H52a6 6 0 0 1-6-6z" />
+      <path d="M40 48h42" />
+      <path d="M61 48v-6" />
+      <path d="M40 56h-7M82 56h7" />
+      <path d="M52 36c4-4-3-8 1-12M70 36c4-4-3-8 1-12" />
+      <path d="M20 79h10M92 79h8" />
     </>
   ),
-  // Bath, basin and a shower drain.
+  // A basin with a tap, and a mirror above it.
   "phong-tam": (
     <>
-      <rect x="20" y="58" width="48" height="32" rx="8" />
-      <circle cx="30" cy="74" r="3" />
-      <circle cx="90" cy="76" r="13" />
-      <path d="M90 63v-7" strokeDasharray="3 3" />
-      <rect x="76" y="22" width="28" height="22" rx="3" strokeDasharray="4 3" />
+      <path d="M6 86h108" />
+      <rect x="44" y="10" width="34" height="23" rx="3" />
+      <path d="M30 56h64" />
+      <path d="M36 56h52l-6 17a5 5 0 0 1-5 4H47a5 5 0 0 1-5-4z" />
+      <path d="M61 77v9" />
+      <path d="M56 56v-7a8 8 0 0 1 8-8h7v5" />
     </>
   ),
-  // Desk with a chair pulled up to it.
+  // A desk with a clip lamp over it.
   "goc-lam-viec": (
     <>
-      <rect x="26" y="54" width="72" height="22" rx="3" />
-      <rect x="44" y="58" width="22" height="14" rx="2" strokeDasharray="3 3" />
-      <circle cx="62" cy="86" r="10" />
-      <path d="M26 54V40" strokeDasharray="3 3" />
+      <path d="M6 86h108" />
+      <rect x="16" y="54" width="94" height="9" rx="3" />
+      <path d="M24 63v23M102 63v23" />
+      <rect x="22" y="43" width="9" height="11" rx="2" />
+      <path d="M27 43c0-11 7-17 17-17" />
+      <path d="M36 24h17l-8 12z" />
+      <rect x="70" y="40" width="28" height="14" rx="2" />
     </>
   ),
-  // A bench and two plant pots on a balcony.
+  // A bench with a potted plant beside it.
   "do-dung-ngoai-troi": (
     <>
-      <rect x="24" y="62" width="58" height="16" rx="3" />
-      <path d="M24 70h58" strokeDasharray="3 3" />
-      <circle cx="96" cy="60" r="9" />
-      <circle cx="96" cy="84" r="6" />
-      <path d="M24 90h80" strokeDasharray="4 4" />
+      <path d="M6 86h108" />
+      <path d="M22 58V38h58v20" />
+      <path d="M22 47h58" />
+      <rect x="18" y="58" width="66" height="9" rx="3" />
+      <path d="M26 67v19M76 67v19" />
+      <path d="M92 70h20l-3 16H95z" />
+      <path d="M102 70c0-9-7-11-7-16M102 70c0-9 7-11 7-16" />
     </>
   ),
   default: (
     <>
-      <rect x="28" y="44" width="68" height="46" rx="4" strokeDasharray="5 4" />
-      <path d="M28 66h68" strokeDasharray="3 3" />
+      <path d="M6 86h108" />
+      <rect x="24" y="30" width="72" height="56" rx="3" />
+      <path d="M24 49h72M24 68h72" />
     </>
   ),
 };

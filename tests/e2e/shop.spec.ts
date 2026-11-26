@@ -196,6 +196,25 @@ test("the support button never covers the sticky buy bar @mobile-only", async ({
   expect(fab!.y + fab!.height).toBeLessThanOrEqual(buy!.y);
 });
 
+test("the product page does not repeat its own name in the breadcrumb", async ({ page }) => {
+  await page.goto("/vi/products/ao-thun-cotton-co-tron");
+  const name = (await page.getByRole("heading", { level: 1 }).innerText()).trim();
+  const trail = await page.getByRole("navigation", { name: /Đường dẫn|Breadcrumb/i }).innerText();
+  expect(trail).not.toContain(name);
+  expect(trail).toContain("Trang chủ");
+});
+
+test("checkout fits a phone screen", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto("/vi/checkout");
+  await expect(page.getByTestId("place-order")).toBeVisible();
+  // A long product name in the summary used to set the column's minimum width, pushing the page
+  // wider than the screen; Chrome then zoomed the whole checkout out to fit.
+  const size = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+  expect(size.scroll).toBeLessThanOrEqual(size.client);
+});
+
 test("14-15: only home delivery is offered; the server refuses store pickup", async ({ page }) => {
   await addToCart(page, "ke-go-soi-3-tang");
   await page.goto("/vi/checkout");

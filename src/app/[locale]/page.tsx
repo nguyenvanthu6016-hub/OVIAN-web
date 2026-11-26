@@ -65,7 +65,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         <div className="flex flex-col justify-between gap-8 lg:col-span-4 lg:py-2">
           <div>
             <h1 id="hero-title" className="text-display">{d.meta.slogan}</h1>
-            <p className="mt-4 max-w-md text-body text-ink">{home?.intro.value ?? d.meta.defaultDescription}</p>
+            {home?.intro ? <p className="mt-4 max-w-md text-body text-ink">{home.intro.value}</p> : null}
           </div>
           <div className="space-y-4">
             <div>

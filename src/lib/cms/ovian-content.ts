@@ -39,11 +39,9 @@ export function ovianSiteSettings(locale: Locale): SiteSettings {
 
 export function ovianHome(locale: Locale): HomeContent {
   return {
-    intro: L(
-      "Đồ dùng tiện nghi cho từng không gian trong nhà bạn sống mỗi ngày.",
-      "Everyday essentials for each space in the home you live in.",
-      locale,
-    ),
+    // Dropped at the owner's request on 2026-11-26: the heading already says this, and the
+    // homepage reads better going straight to the rooms. Put a line back here to show one again.
+    intro: null,
     collections: [],
     story: {
       title: L("Ít đồ hơn, mỗi món dùng được lâu hơn", "Fewer things, each one used for longer", locale),

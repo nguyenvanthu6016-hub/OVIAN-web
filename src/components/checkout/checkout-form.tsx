@@ -265,7 +265,7 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
         <input id="co-website" ref={honeypot} type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
       </div>
       <input type="hidden" name="t" value={orderToken} data-testid="order-token" readOnly />
-      <div className="space-y-6 lg:col-span-7">
+      <div className="min-w-0 space-y-6 lg:col-span-7">
         {!ordersEnabled ? <Notice tone="error">{dict.checkout.liveOrdersDisabled}</Notice> : null}
 
         <fieldset className={step} disabled={locked}>
@@ -363,7 +363,7 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
         </section>
       </div>
 
-      <aside className="lg:col-span-5" aria-labelledby="co-summary">
+      <aside className="min-w-0 lg:col-span-5" aria-labelledby="co-summary">
         <div className="space-y-5 rounded-lg bg-surface-alt p-5 md:p-6 lg:sticky lg:top-24">
           <div className="flex items-baseline justify-between">
             <h2 id="co-summary" className="text-subheading">{dict.checkout.summary}</h2>
@@ -371,7 +371,7 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
           </div>
           <ul className="space-y-3">
             {cart.lines.map((l) => (
-              <li key={l.variantId} className="flex gap-3 text-small">
+              <li key={l.variantId} className="flex min-w-0 gap-3 text-small">
                 {l.image ? <Image src={l.image} alt="" width={56} height={56} unoptimized={l.image.endsWith(".svg")} className="size-14 shrink-0 rounded-sm object-cover" /> : null}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{l.name}</span>
@@ -381,7 +381,7 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
               </li>
             ))}
             {upsellLine ? (
-              <li className="flex gap-3 rounded-sm bg-surface p-2 text-small" data-testid="upsell-line">
+              <li className="flex min-w-0 gap-3 rounded-sm bg-surface p-2 text-small" data-testid="upsell-line">
                 {offer?.image ? (
                   <Image src={offer.image.url} alt="" width={56} height={56} unoptimized={offer.image.url.endsWith(".svg")} className="size-14 shrink-0 rounded-sm object-cover" />
                 ) : null}

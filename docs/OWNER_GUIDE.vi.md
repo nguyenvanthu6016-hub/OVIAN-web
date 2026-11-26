@@ -71,6 +71,27 @@ Biểu phí vùng (giá bị gạch) và mức đồng giá đều được ghi 
 
 Sanity → "Phí giao hàng" → thêm vùng, chọn mã tỉnh (danh sách trong `docs/SHIPPING.md`), điền phí và mức miễn phí. Có hiệu lực sau khoảng 1 phút. Tỉnh không thuộc vùng nào sẽ **không giao được** trừ khi bật "Giao tới tỉnh không có trong danh sách".
 
+## 5e. Mô tả sản phẩm tự chia thành mục xổ
+
+Website đọc phần mô tả anh/chị viết trong Sapo và **tự chia thành các mục đóng/mở**, thay vì đổ một khối chữ dài. Khách lướt thấy phần mở đầu, muốn xem chi tiết thì bấm vào mục.
+
+**Cách viết để web chia đúng.** Một dòng được coi là **tên mục** khi:
+
+- kết thúc bằng dấu hai chấm — `Thông số cơ bản:`, `Chính sách sau bán:`; hoặc
+- viết hoa toàn bộ — `✨ ĐẶC ĐIỂM NỔI BẬT`.
+
+Mọi dòng phía dưới thuộc về mục đó, cho tới tên mục tiếp theo. Các dòng trước tên mục đầu tiên luôn hiện sẵn, không cần bấm.
+
+Một dòng ngắn mở đầu bằng biểu tượng cảm xúc, **không có dấu hai chấm giữa dòng và không kết thúc bằng dấu chấm**, sẽ được **in đậm** — ví dụ `🚶 Cảm biến chuyển động thông minh`. Dòng có dạng `📏 Chiều cao: 450mm` thì giữ chữ thường, vì đó là thông số chứ không phải đề mục.
+
+Website **không sửa, không bỏ, không đảo** chữ nào anh/chị viết — chỉ nhóm lại.
+
+Sản phẩm viết liền một đoạn, không có tên mục nào, vẫn hiện bình thường như cũ.
+
+## 5f. Biểu tượng phòng trên sơ đồ trang chủ
+
+Các hình trong ô phòng được vẽ lại ngày 26/11/2026 theo **góc nhìn ngang** (giường, bếp, sofa, bàn làm việc, bồn rửa, ghế băng) thay cho kiểu nhìn từ trên xuống — kiểu cũ bắt người xem phải đoán. Muốn thay bằng ảnh thật: đặt **ảnh đại diện cho nhóm sản phẩm (collection)** trong Sapo, website sẽ tự ưu tiên ảnh đó. Ảnh cần sạch, không có chữ quảng cáo.
+
 ## 6b. Ưu đãi thêm ở trang thanh toán (upsale)
 
 Khi khách đang điền thông tin đặt hàng, website gợi ý thêm **một sản phẩm nữa**. Nếu khách đồng ý:

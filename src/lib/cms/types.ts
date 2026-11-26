@@ -51,7 +51,8 @@ export interface EditorialCollection {
 }
 
 export interface HomeContent {
-  intro: LocalizedText;
+  /** Standfirst under the hero heading. null hides it entirely. */
+  intro: LocalizedText | null;
   collections: EditorialCollection[];
   story: { title: LocalizedText; body: LocalizedText; image?: ProductImage } | null;
 }

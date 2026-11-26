@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCommerce, CommerceUnavailableError, type Product, type Review } from "@/lib/commerce";
+import { parseDescription, type DescriptionLine } from "@/lib/product/description";
 import { isAvailable, minPrice } from "@/lib/commerce/query";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary, t } from "@/lib/i18n/dictionaries";
@@ -87,6 +88,8 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     ...(subCat ? [{ href: routes.space(locale, subCat.handle), label: subCat.name.value }] : []),
     { label: p.name.value },
   ];
+  // The seller's blob becomes an intro plus drawers the shopper opens when they want the detail.
+  const description = parseDescription(p.description?.value);
   const specs = p.attributes.filter((a) => a.key !== "care");
   const care = p.attributes.find((a) => a.key === "care");
   const url = `${siteUrl()}${routes.product(locale, p.handle)}`;
@@ -122,7 +125,9 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
           itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.label, item: c.href ? `${siteUrl()}${c.href}` : url })),
         })}
       />
-      <Breadcrumbs label={d.common.breadcrumb} items={crumbs} />
+      {/* The last crumb is this product's own name, which the heading below already carries, so it
+          is dropped from the visible trail. Search engines still get the full trail above. */}
+      <Breadcrumbs label={d.common.breadcrumb} items={crumbs.slice(0, -1)} />
 
       <div className="mt-6 grid gap-8 lg:grid-cols-12 lg:gap-12">
         <ProductPurchase product={p} locale={locale} dict={d} />
@@ -132,10 +137,21 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
         <h2 id="details-title" className="text-heading lg:col-span-4">{d.product.details}</h2>
         <div className="lg:col-span-8">
           {p.translationMissing && locale === "en" ? <p className="mb-4 text-caption text-ink-muted">{d.product.viCopyNote}</p> : null}
-          {p.description ? <p lang={p.description.lang} className="max-w-prose whitespace-pre-line text-body">{p.description.value}</p> : null}
+          {description.intro.length ? (
+            <div lang={p.description?.lang} className="max-w-prose space-y-2 text-body">
+              <Lines lines={description.intro} />
+            </div>
+          ) : null}
           <div className="mt-8 divide-y divide-line border-y border-line">
+            {description.sections.map((section, i) => (
+              <Disclosure key={`${section.title}-${i}`} title={section.title}>
+                <div lang={p.description?.lang} className="max-w-prose space-y-2 text-small">
+                  <Lines lines={section.lines} />
+                </div>
+              </Disclosure>
+            ))}
             {specs.length ? (
-              <Disclosure title={d.product.specs} open>
+              <Disclosure title={d.product.specs}>
                 <dl className="grid grid-cols-[minmax(0,10rem)_1fr] gap-x-6 gap-y-2 text-small">
                   {specs.map((a) => (
                     <div key={a.key} className="contents">
@@ -175,6 +191,19 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
 
       <RecentlyViewed locale={locale} dict={d} excludeId={p.id} title={d.product.recentlyViewed} />
     </div>
+  );
+}
+
+/** Description lines as the seller wrote them; the ones they meant as sub-headings stand out. */
+function Lines({ lines }: { lines: DescriptionLine[] }) {
+  return (
+    <>
+      {lines.map((l, i) =>
+        l.kind === "label"
+          ? <p key={i} className="pt-1 font-semibold text-ink first:pt-0">{l.text}</p>
+          : <p key={i}>{l.text}</p>,
+      )}
+    </>
   );
 }
 

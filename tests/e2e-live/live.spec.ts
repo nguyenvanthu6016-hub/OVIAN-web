@@ -124,3 +124,21 @@ test("support: the real OVIAN Zalo number is one tap away @mobile", async ({ pag
   const card = page.getByRole("region", { name: /Cần OVIAN hỗ trợ/ });
   await expect(card.getByRole("link", { name: /Gọi 0909651935/ })).toHaveAttribute("href", "tel:0909651935");
 });
+
+test("product description is split into drawers that start closed @mobile", async ({ page }) => {
+  await page.goto("/vi/products/den-cam-bien-chuyen-dong-ovian-2-muc-sang-40-60lm-cong-suat-0-6w-sieu-tiet-kiem-dien");
+  const details = page.locator("section[aria-labelledby='details-title']");
+  const drawers = details.locator("details");
+  expect(await drawers.count()).toBeGreaterThan(2);
+  for (const d of await drawers.all()) expect(await d.evaluate((e) => (e as HTMLDetailsElement).open)).toBe(false);
+
+  // The seller's own headings become the drawer labels, and the detail stays hidden behind them
+  // until the shopper asks for it.
+  const first = drawers.first();
+  const body = first.locator("summary + div");
+  await expect(body).toBeHidden();
+  await expect(first.locator("summary")).not.toHaveText("");
+  await first.locator("summary").click();
+  await expect(body).toBeVisible();
+  expect((await body.innerText()).trim().length).toBeGreaterThan(30);
+});
