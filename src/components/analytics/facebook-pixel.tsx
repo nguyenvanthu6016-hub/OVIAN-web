@@ -20,7 +20,11 @@ export function FacebookPixel() {
   if (!id) return null;
   return (
     <>
-      <Script id="meta-pixel" strategy="afterInteractive" onReady={flushPending}>
+      {/* lazyOnload, not afterInteractive: Meta's fbevents.js is ~70 KB of third-party script
+          that reports nothing the shopper can see, and on afterInteractive it competes with the
+          product photos for the connection while the page is still painting. Waiting for the load
+          event costs a fraction of a second on the PageView and gives that bandwidth to the shop. */}
+      <Script id="meta-pixel" strategy="lazyOnload" onReady={flushPending}>
         {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
 n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ChromeLink as Link } from "@/components/ui/chrome-link";
 import { getCommerce, commerceMode, type Category } from "@/lib/commerce";
 import { getContent } from "@/lib/cms";
 import type { Locale } from "@/lib/i18n/config";

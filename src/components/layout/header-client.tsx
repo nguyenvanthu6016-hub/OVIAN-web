@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ChromeLink as Link } from "@/components/ui/chrome-link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n/config";
