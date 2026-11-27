@@ -118,11 +118,20 @@ export interface Review {
   productId: string;
   author: string;
   rating: number;
-  title: string;
+  /** Shopee reviews have no title, and inventing one would be writing on the customer's behalf. */
+  title?: string;
   body: string;
-  createdAt: string;
-  /** Always "mock" in mock mode — never presented as real testimonials */
-  source: "mock" | "verified";
+  /** null when the source did not show a date. Never guessed. */
+  createdAt: string | null;
+  /** The variant the reviewer bought, as the source labelled it: "Màu tím (C1B), 1m6 x 2m". */
+  variant?: string;
+  /** Per-criterion notes the reviewer filled in: "Chống muỗi" → "hiệu quả". */
+  attributes?: { label: string; value: string }[];
+  /**
+   * Where the review came from, so the page can say so. "mock" is sample data and is always
+   * labelled as such; "shopee" was left on the marketplace listing, not on this site.
+   */
+  source: "mock" | "verified" | "shopee";
 }
 
 export type FulfillmentMethod = "delivery" | "pickup";

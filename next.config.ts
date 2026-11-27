@@ -27,6 +27,14 @@ const csp = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   output: "standalone",
+  /**
+   * The transcribed marketplace reviews are read from disk at runtime, and standalone output only
+   * ships files it can see being imported. Without this the folder is missing on Hostinger and
+   * every product page quietly loses its reviews.
+   */
+  outputFileTracingIncludes: {
+    "/[locale]/products/[handle]": ["./content/reviews/**"],
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 2_592_000,

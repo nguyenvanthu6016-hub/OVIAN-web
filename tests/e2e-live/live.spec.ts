@@ -142,3 +142,41 @@ test("product description is split into drawers that start closed @mobile", asyn
   await expect(body).toBeVisible();
   expect((await body.innerText()).trim().length).toBeGreaterThan(30);
 });
+
+test("reviews transcribed from Shopee show on the product, sourced and unedited @mobile", async ({ page }) => {
+  await page.goto("/vi/products/man-ngu-co-cua-1-be-ovian-vai-tyn52-mat-luoi-sieu-nho-chong-muoi-day-hoa-tiet-tinh-te");
+  const section = page.locator("section[aria-labelledby='reviews-title']");
+
+  // The shopper is told where these came from before reading them.
+  await expect(section.getByText(/gian hàng Shopee của OVIAN/)).toBeVisible();
+  await expect(section.getByText("Sản phẩm chưa có đánh giá.")).toBeHidden();
+  expect(await section.locator("li").count()).toBe(8);
+
+  // Quoted as the customer typed it: the complaint is intact, and so are the typos.
+  await expect(section.getByText(/mới ngắn hơn mặc dù chung kich thước/)).toBeVisible();
+  await expect(section.getByText(/lo nho chong muoi/)).toBeVisible();
+
+  // The variant they bought is on the review, which is the whole point for a product sold by size.
+  await expect(section.getByText(/Màu tím \(C1B\), 1m6 x 2m/)).toBeVisible();
+  await noHorizontalOverflow(page);
+});
+
+test("the star rating is shown to shoppers but not claimed to Google", async ({ page }) => {
+  await page.goto("/vi/products/man-ngu-co-cua-1-be-ovian-vai-tyn52-mat-luoi-sieu-nho-chong-muoi-day-hoa-tiet-tinh-te");
+  await expect(page.locator("section[aria-labelledby='reviews-title']").getByText(/Trung bình 5/)).toBeVisible();
+
+  // These reviews were collected by Shopee, not by this site, so marking them up as the shop's
+  // own aggregate rating would be a claim the shop cannot stand behind.
+  const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+  const product = blocks.map((b) => JSON.parse(b)).find((o) => o["@type"] === "Product");
+  expect(product).toBeTruthy();
+  expect(product.aggregateRating, "aggregateRating must stay out of the Product markup").toBeUndefined();
+  expect(JSON.stringify(blocks)).not.toContain("aggregateRating");
+});
+
+test("a product with no transcribed reviews still says so plainly @mobile", async ({ page }) => {
+  await page.goto("/vi/products/bong-den-led-9w-dui-e27-anh-sang-vang-am-den-trang-tri-noi-ngoai-that");
+  const section = page.locator("section[aria-labelledby='reviews-title']");
+  await expect(section.getByText(/gian hàng Shopee của OVIAN/)).toBeHidden();
+  expect(await section.locator("li").count()).toBe(0);
+});

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCommerce, CommerceUnavailableError, type Product, type Review } from "@/lib/commerce";
 import { parseDescription, type DescriptionLine } from "@/lib/product/description";
+import { importedReviews } from "@/lib/product/reviews";
 import { isAvailable, minPrice } from "@/lib/commerce/query";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary, t } from "@/lib/i18n/dictionaries";
@@ -35,6 +36,10 @@ async function getData(handle: string, locale: Locale) {
     product.relatedIds.length ? commerce.getProductsByIds(product.relatedIds, locale) : Promise.resolve([] as Product[]),
     commerce.listReviews(product.id),
   ]);
+  // Reviews customers left on the Shopee listing. They sit alongside whatever the commerce
+  // provider knows; in live mode the provider has none, so these are all a shopper sees.
+  const imported = importedReviews(product.handle);
+  const allReviews = reviews === null && !imported.length ? null : [...imported, ...(reviews ?? [])];
   let related = relatedById;
   if (!related.length && product.categoryIds[0]) {
     const cat = categories.find((c) => c.id === product.categoryIds[0]);
@@ -42,7 +47,7 @@ async function getData(handle: string, locale: Locale) {
   }
   const primaryCat = categories.find((c) => product.categoryIds.includes(c.id) && !c.parentId);
   const subCat = categories.find((c) => product.categoryIds.includes(c.id) && c.parentId === primaryCat?.id);
-  return { product, related: related.slice(0, 4), reviews, primaryCat, subCat, mode: commerce.mode };
+  return { product, related: related.slice(0, 4), reviews: allReviews, primaryCat, subCat, mode: commerce.mode };
 }
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/products/[handle]">): Promise<Metadata> {
@@ -111,7 +116,10 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
       availability: isAvailable(p) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url,
     },
-    // aggregateRating is intentionally omitted: there is no verified review source.
+    // aggregateRating is intentionally omitted, even now that the page shows reviews. These were
+    // written on OVIAN's Shopee listing, not collected by this site, and Google's structured-data
+    // policy does not accept ratings carried over from a marketplace. The stars still show to
+    // shoppers; only the machine-readable claim is withheld.
   };
 
   return (
@@ -241,6 +249,9 @@ function Reviews({ reviews, locale, dict }: { reviews: Review[] | null; locale: 
           </div>
         ) : null}
         {reviews?.some((r) => r.source === "mock") ? <p className="mt-3 rounded-sm bg-surface-alt px-3 py-2 text-caption text-green">{dict.product.reviewsMockNote}</p> : null}
+        {/* Said once, at the top, rather than stamped on every entry: these were written on the
+            Shopee listing, not here, and a shopper deserves to know that before reading them. */}
+        {reviews?.some((r) => r.source === "shopee") ? <p className="mt-3 rounded-sm bg-surface-alt px-3 py-2 text-caption text-green">{dict.product.reviewsShopeeNote}</p> : null}
       </div>
       <div className="lg:col-span-8">
         {reviews === null ? (
@@ -253,10 +264,23 @@ function Reviews({ reviews, locale, dict }: { reviews: Review[] | null; locale: 
               <li key={r.id} className="py-5 first:pt-0">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <Stars rating={r.rating} label={t(dict.product.rating, { rating: r.rating })} />
-                  <p className="text-small font-semibold text-ink">{r.title}</p>
+                  {r.title ? <p className="text-small font-semibold text-ink">{r.title}</p> : null}
                 </div>
-                <p lang="vi" className="mt-1.5 text-small">{r.body}</p>
-                <p className="mt-1.5 text-caption text-ink-muted">{r.author}, {formatDate(r.createdAt, locale)}</p>
+                {r.attributes?.length ? (
+                  <dl className="mt-2 space-y-0.5 text-small">
+                    {r.attributes.map((a) => (
+                      <div key={a.label} className="flex flex-wrap gap-x-1.5">
+                        <dt className="text-ink-muted">{a.label}:</dt>
+                        <dd lang="vi" className="min-w-0 text-ink">{a.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
+                {/* Preserve the line breaks the customer typed; their paragraphing is theirs. */}
+                <p lang="vi" className="mt-1.5 whitespace-pre-line text-small">{r.body}</p>
+                <p className="mt-1.5 text-caption text-ink-muted">
+                  {[r.author, r.createdAt ? formatDate(r.createdAt, locale) : null, r.variant].filter(Boolean).join(" · ")}
+                </p>
               </li>
             ))}
           </ul>

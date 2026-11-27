@@ -129,6 +129,50 @@ Mỗi khối có hai cách liên hệ: **mở Zalo** và **gọi điện** (bấ
 
 **Chưa công bố giờ làm việc.** Tôi không tự đặt ra giờ hỗ trợ. Khi anh/chị cho biết giờ nhận tin (ví dụ 8:00–21:00 hằng ngày), báo tôi thêm vào.
 
+## 6d. Đánh giá sản phẩm lấy từ Shopee
+
+Sapo không có chỗ chứa đánh giá, và API đánh giá của Shopee thì chưa được duyệt. Nên hiện
+tại đánh giá trên web được **chép tay từ ảnh chụp màn hình Shopee** vào các file trong thư mục
+`content/reviews/`, mỗi sản phẩm một file.
+
+### Thêm đánh giá cho một sản phẩm mới
+
+1. Chụp màn hình phần đánh giá trên Shopee, **phải thấy tên sản phẩm** hoặc nói rõ sản phẩm nào.
+2. Gửi cho người làm web. File mới sẽ được tạo trong `content/reviews/`, đặt tên đúng bằng mã
+   sản phẩm trên web (phần cuối đường dẫn, ví dụ `.../products/man-ngu-co-cua-1-be-...`).
+3. Deploy. Đánh giá hiện ngay trên trang sản phẩm đó.
+
+Sản phẩm không có file thì mục đánh giá vẫn hiện câu "Sản phẩm chưa có đánh giá." như cũ.
+Không cần làm gì thêm.
+
+### Bốn quy tắc, và lý do
+
+**Chép đúng nguyên văn, giữ cả lỗi chính tả.** Khách viết "Vk ck mình mới sinh em bé" thì web
+hiện đúng như vậy. Sửa cho đẹp là tự viết hộ khách, và người đọc nhận ra ngay — một mục đánh giá
+mà câu nào cũng tròn trịa thì ai cũng đoán là shop tự gõ.
+
+**Giữ nguyên tên bị che.** `n*****2` để nguyên. Không bịa tên đầy đủ.
+
+**Không ghi mã đơn hàng.** Ảnh chụp từ trang quản lý người bán có mã đơn; đó là số giao dịch
+của khách.
+
+**Không xoá đánh giá chê.** Một lời chê thật giữa những lời khen làm cả mục đáng tin hơn hẳn.
+
+### Hai điều web cố tình không làm
+
+**Không khai báo số sao với Google.** Sao vẫn hiện cho khách xem, nhưng phần dữ liệu có cấu trúc
+gửi Google thì không có `aggregateRating`. Google có quy định riêng về đánh giá lấy từ sàn khác;
+khai báo vào có thể bị phạt cả website.
+
+**Không hiện ảnh khách chụp.** Ảnh và video khách đính kèm không lấy được từ ảnh chụp màn hình.
+Khi nào Shopee duyệt API thì mới có — đó là lý do đáng chờ, vì ảnh khách chụp thật bán hàng
+tốt hơn mọi câu chữ.
+
+### Nếu một file bị sai
+
+Web không sập. File sai sẽ bị bỏ qua, sản phẩm đó hiện "chưa có đánh giá", và dòng cảnh báo
+ghi vào log máy chủ. Các sản phẩm khác không ảnh hưởng.
+
 ## 7. Sửa nội dung
 
 Nội dung các trang (Câu chuyện OVIAN, chính sách giao hàng, đổi trả, bảo mật, điều khoản, câu hỏi thường gặp, phí giao hàng theo vùng, số điện thoại, mạng xã hội) nằm trong một file mã nguồn duy nhất: `src/lib/cms/ovian-content.ts`. Muốn sửa, báo người quản trị website; sau khi sửa phải build và khởi động lại.

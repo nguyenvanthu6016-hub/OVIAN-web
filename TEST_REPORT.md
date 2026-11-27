@@ -2,6 +2,27 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Shopee reviews on the product page — 2026-11-27
+
+27 reviews across 4 products, transcribed by hand from the owner's Shopee screenshots into
+`content/reviews/*.json` and read by `src/lib/product/reviews.ts`.
+
+- 141 unit tests pass (15 new in `tests/unit/reviews.test.ts`): ordering newest-first with
+  undated last, verbatim bodies, variant and per-criterion notes carried through, and five
+  shapes of malformed file each skipped with a warning instead of taking the page down.
+- One of those tests parses every file actually shipped in `content/reviews/`, so a hand-edited
+  file that breaks turns the suite red before it can reach production.
+- 44 mock E2E and 27 live Sapo E2E pass (3 new live tests).
+- A live test asserts `aggregateRating` is absent from the Product JSON-LD. The stars are shown
+  to shoppers, but these reviews were collected by Shopee, not by this site.
+- Verified in the standalone build that `content/reviews/` is traced into `.next/standalone`;
+  without `outputFileTracingIncludes` it is not, and every product silently loses its reviews.
+- Checked at 375 px: product page scrollWidth 375, no overflow.
+
+Not verified: nothing confirms the transcriptions match Shopee except a second reading of the
+screenshots. 6 entries are flagged `needsCheck` (unreadable emoji, a cut-off media row, one
+ambiguous word) and the owner has not confirmed them yet.
+
 ## Six fixes from the owner's phone — 2026-11-26
 
 - **Checkout was unusable on a phone.** The whole page rendered zoomed out and cut off. Cause: the order-summary column is a grid item, which defaults to `min-width: auto`, so a long unbroken product name set the column's minimum at 934 px against a 412 px screen; Chrome then widened the layout viewport to fit it (`innerWidth` 950 while `clientWidth` stayed 412). Found by hiding subtrees one at a time until the viewport snapped back. Fixed with `min-w-0` on both grid children and on the summary rows. Verified 412/412/412 on `/vi`, `/vi/cart`, `/vi/checkout`; an E2E test now asserts `scrollWidth <= clientWidth` at 375 px.
