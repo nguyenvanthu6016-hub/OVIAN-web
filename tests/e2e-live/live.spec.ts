@@ -180,3 +180,97 @@ test("a product with no transcribed reviews still says so plainly @mobile", asyn
   await expect(section.getByText(/gian hàng Shopee của OVIAN/)).toBeHidden();
   expect(await section.locator("li").count()).toBe(0);
 });
+
+/**
+ * The machine-readable surface: what an agent reads when it wants to answer a question about
+ * OVIAN without downloading and parsing the whole shop.
+ */
+test.describe("agent-readable surface", () => {
+  test("llms.txt names the business, how to reach it, and what it sells", async ({ request }) => {
+    const res = await request.get("/llms.txt");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/plain");
+    const body = await res.text();
+    expect(body).toContain("0909651935");
+    expect(body).toContain("Hộ kinh doanh OVIAN");
+    expect(body).toContain("/vi/policies/doi-tra");
+    // Real prices from the live catalogue, not a static blurb.
+    expect(body).toMatch(/— [\d.]+ đ/);
+    expect(body.split("\n").filter((l) => l.startsWith("- ["))).not.toHaveLength(0);
+  });
+
+  test("the home page advertises its machine-readable copies", async ({ request }) => {
+    const link = (await request.get("/vi")).headers()["link"] ?? "";
+    expect(link).toContain('</llms.txt>; rel="alternate"');
+    expect(link).toContain('rel="alternate"; type="text/markdown"');
+  });
+
+  test("an agent asking for Markdown gets Markdown, far smaller than the HTML", async ({ request }) => {
+    const path = `/vi/products/${SALE_PRODUCT.handle}`;
+    const html = await (await request.get(path)).text();
+    const res = await request.get(path, { headers: { Accept: "text/markdown" } });
+    expect(res.headers()["content-type"]).toContain("text/markdown");
+    const md = await res.text();
+    expect(md).toContain("# ");
+    expect(md).toContain("Giá:");
+    expect(md.length).toBeLessThan(html.length / 5);
+
+    // Never cached: one CDN copy of this URL served to a shopper would show them raw Markdown.
+    expect(res.headers()["cache-control"]).toContain("no-store");
+    expect(res.headers()["x-robots-tag"]).toContain("noindex");
+  });
+
+  test("a browser still gets the shop, not Markdown", async ({ request }) => {
+    for (const accept of [
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "*/*",
+    ]) {
+      const res = await request.get("/vi", { headers: { Accept: accept } });
+      expect(res.headers()["content-type"], accept).toContain("text/html");
+    }
+  });
+
+  test("the sitemap dates product pages from Sapo's own modified_on", async ({ request }) => {
+    const xml = await (await request.get("/sitemap.xml")).text();
+    const lastmods = [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]!);
+    expect(lastmods.length).toBeGreaterThan(10);
+    for (const d of lastmods) expect(Number.isNaN(Date.parse(d)), d).toBe(false);
+    // Dates must be real, not "now" stamped on everything at build time.
+    expect(new Set(lastmods).size).toBeGreaterThan(1);
+    expect(Math.max(...lastmods.map((d) => Date.parse(d)))).toBeLessThanOrEqual(Date.now() + 60_000);
+  });
+
+  test("structured data answers who OVIAN is and what a product costs", async ({ page }) => {
+    await page.goto("/vi");
+    const nodes = (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
+    const types = nodes.map((n) => n["@type"]);
+    expect(types).toContain("Organization");
+    expect(types).toContain("WebSite");
+    expect(types).toContain("ItemList");
+
+    const org = nodes.find((n) => n["@type"] === "Organization");
+    expect(org.telephone).toBe("0909651935");
+    expect(org.address?.streetAddress).toBeTruthy();
+    expect(org.address?.addressCountry).toBe("VN");
+    expect(org.sameAs).toEqual(expect.arrayContaining([expect.stringContaining("facebook.com"), expect.stringContaining("tiktok.com")]));
+
+    // Prices readable without running the page's JavaScript.
+    const list = nodes.find((n) => n["@type"] === "ItemList");
+    expect(list.itemListElement.length).toBeGreaterThan(0);
+    for (const el of list.itemListElement) {
+      expect(el.item.offers.priceCurrency).toBe("VND");
+      expect(typeof el.item.offers.price).toBe("number");
+      expect(el.item.offers.price).toBeGreaterThan(0);
+      expect(el.item.offers.seller["@id"]).toBe(org["@id"]);
+    }
+  });
+
+  test("the legal pages the audit asked for are linked from the home page", async ({ page }) => {
+    await page.goto("/vi");
+    for (const slug of ["dieu-khoan", "bao-mat", "doi-tra", "giao-hang"]) {
+      await expect(page.locator(`a[href="/vi/policies/${slug}"]`).first()).toBeAttached();
+    }
+    await expect(page.locator('a[href="/vi/about"]').first()).toBeAttached();
+    await expect(page.locator('a[href="/vi/contact"]').first()).toBeAttached();
+  });
+});

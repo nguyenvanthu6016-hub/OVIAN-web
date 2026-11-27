@@ -13,7 +13,7 @@ function item(id: string, price: number, stock: number | null, available = true)
   const variant: Variant = { id, sku: id, title: id, options: {}, price, compareAtPrice: null, available, inventoryQuantity: stock };
   const product = {
     id: `p-${id}`, handle: id, name: { value: `Name ${id}`, lang: "vi" }, summary: null, description: null, categoryIds: [], images: [],
-    options: [], variants: [variant], attributes: [], tags: [], createdAt: "2026-01-01", relatedIds: [], isNew: false, translationMissing: false,
+    options: [], variants: [variant], attributes: [], tags: [], createdAt: "2026-01-01", updatedAt: null, relatedIds: [], isNew: false, translationMissing: false,
   } as Product;
   return { product, variant };
 }

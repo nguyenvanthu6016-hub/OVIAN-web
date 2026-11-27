@@ -44,6 +44,7 @@ interface RawProduct {
   tags?: string | null;
   created_on?: string;
   created_at?: string;
+  modified_on?: string;
   published_on?: string | null;
   published_at?: string | null;
   /** "active" seen on OVIAN's store; other values unverified, so anything else is treated as hidden. */
@@ -260,6 +261,7 @@ function mapProduct(p: RawProduct, locale: Locale, membership: Map<number, numbe
     })),
     tags: (p.tags ?? "").split(",").map((t) => t.trim()).filter((t) => t.includes(":")),
     createdAt: p.created_on ?? p.created_at ?? new Date(0).toISOString(),
+    updatedAt: p.modified_on ?? null,
     relatedIds: loc?.relatedSapoIds ?? [],
     isNew: Date.now() - Date.parse(p.created_on ?? p.created_at ?? "") < 45 * 864e5,
     translationMissing,

@@ -9,7 +9,7 @@ import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary, t } from "@/lib/i18n/dictionaries";
 import { formatDate } from "@/lib/i18n/format";
 import { routes } from "@/lib/routes";
-import { jsonLd, localizedAlternates, siteUrl } from "@/lib/seo";
+import { jsonLd, localizedAlternates, ORG_ID, siteUrl } from "@/lib/seo";
 import { ProductGrid } from "@/components/product/product-card";
 import { RecentlyViewed } from "@/components/product/product-list-client";
 import { ProductPurchase } from "@/components/product/purchase-panel";
@@ -115,6 +115,8 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
       offerCount: p.variants.length,
       availability: isAvailable(p) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url,
+      // Points at the Organization node the layout emits, so an agent reads one OVIAN.
+      seller: { "@id": ORG_ID() },
     },
     // aggregateRating is intentionally omitted, even now that the page shows reviews. These were
     // written on OVIAN's Shopee listing, not collected by this site, and Google's structured-data

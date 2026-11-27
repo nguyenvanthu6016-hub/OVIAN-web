@@ -3,7 +3,7 @@ import { Be_Vietnam_Pro } from "next/font/google";
 import { notFound } from "next/navigation";
 import { isLocale, locales } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { siteUrl } from "@/lib/seo";
+import { jsonLd, organizationLd, siteUrl } from "@/lib/seo";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-chrome";
 import { FacebookPixel } from "@/components/analytics/facebook-pixel";
 import { ZaloFab } from "@/components/support/zalo-support";
@@ -50,6 +50,10 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   return (
     <html lang={locale} className={beVietnam.variable}>
       <body className="min-h-dvh">
+        {/* OVIAN as an entity, on every page rather than only the home page: the Offer on a
+            product page names its seller by @id, and that reference has to resolve wherever an
+            agent happens to land. */}
+        {settings ? <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(organizationLd(settings, d.meta.slogan))} /> : null}
         <a href="#main" className="sr-only z-50 rounded-md bg-green px-4 py-3 text-on-green focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
           {d.common.skipToContent}
         </a>

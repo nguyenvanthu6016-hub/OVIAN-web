@@ -7,7 +7,7 @@ import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { formatDate } from "@/lib/i18n/format";
 import { routes } from "@/lib/routes";
-import { jsonLd, localizedAlternates, siteUrl } from "@/lib/seo";
+import { itemListLd, jsonLd, localizedAlternates, webSiteLd } from "@/lib/seo";
 import { FloorPlan } from "@/components/home/floor-plan";
 import { getSpacesSafe } from "@/components/layout/site-chrome";
 import { ProductGrid } from "@/components/product/product-card";
@@ -56,10 +56,16 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
   const totalArea = spaces.reduce((s, x) => s + (x.areaM2 ?? 0), 0);
   const collection = home?.collections[0];
+  // Every product the page actually shows, each listed once.
+  const shown = [...new Map([...collectionProducts, ...newest, ...sale].map((p) => [p.id, p])).values()];
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd({ "@context": "https://schema.org", "@type": "Organization", name: "OVIAN", slogan: d.meta.slogan, url: siteUrl(), logo: `${siteUrl()}/brand/ovian-logo-green-bg.png` })} />
+      {/* Organization is emitted once in the layout; here the site itself and what it sells. */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(webSiteLd(locale, `OVIAN — ${d.meta.slogan}`))} />
+      {shown.length ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(itemListLd(shown, locale, d.meta.slogan))} />
+      ) : null}
 
       <section className="container-page page-x grid gap-8 pb-16 pt-8 md:pt-12 lg:grid-cols-12 lg:gap-12 lg:pb-24" aria-labelledby="hero-title">
         <div className="flex flex-col justify-between gap-8 lg:col-span-4 lg:py-2">

@@ -105,6 +105,8 @@ function toProduct(m: MockProduct, locale: Locale): Product {
     ],
     tags: m.tags,
     createdAt: m.createdAt,
+    // Sample data has no edit history; the sitemap simply omits lastmod for these.
+    updatedAt: null,
     relatedIds: m.related ?? [],
     isNew: Date.now() - Date.parse(m.createdAt) < 45 * 864e5,
     translationMissing: locale === "en" && (!m.en || !m.descEn),

@@ -55,6 +55,8 @@ export interface Product {
   /** Facets for filtering (material, color …) */
   tags: string[];
   createdAt: string;
+  /** Last change at the source, for sitemap lastmod. null when the backend does not report one. */
+  updatedAt: string | null;
   relatedIds: string[];
   /** created within the last 45 days (computed when mapped, not during render) */
   isNew: boolean;

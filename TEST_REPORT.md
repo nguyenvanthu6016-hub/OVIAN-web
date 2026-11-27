@@ -2,6 +2,31 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Agent-readable surface — 2026-11-27
+
+Worked from an external agent-readiness audit of ovianvietnam.com. One of its ten findings was
+wrong and is recorded as such; the rest were real.
+
+- 156 unit tests pass (15 new in `tests/unit/agent-negotiation.test.ts`, all on Accept parsing:
+  every real browser Accept string must not get Markdown).
+- 44 mock E2E and 34 live Sapo E2E pass (7 new, covering llms.txt, the Link header, Markdown
+  negotiation, browser safety, sitemap lastmod, and the Organization/ItemList schema).
+- Measured: a product page is 191,404 bytes as HTML and 5,073 as Markdown — 98% smaller.
+- Homepage structured data went from 1 type (Organization, 5 fields) to 11 types including
+  WebSite, ItemList and five Product/Offer nodes with real prices in VND.
+- Sitemap emits 61 lastmod values, all from Sapo `modified_on`, all distinct and in the past.
+
+Audit finding 5 ("no link found for: terms") is false: `/vi/policies/dieu-khoan` has been linked
+from the footer all along. The scanner looked for an English word in the URL. A live test now
+asserts all four policy pages plus about and contact are linked from the home page.
+
+Audit finding 10 (WebMCP `navigator.modelContext.registerTool`) was NOT implemented — see the
+commit message. No browser ships the API; the proposal is unstable.
+
+Not verified: nothing here has run against production. The Markdown route is marked `no-store`
+precisely because Hostinger's CDN behaviour under `Vary: Accept` is unknown, and that assumption
+is untested against the real CDN.
+
 ## Shopee reviews on the product page — 2026-11-27
 
 27 reviews across 4 products, transcribed by hand from the owner's Shopee screenshots into

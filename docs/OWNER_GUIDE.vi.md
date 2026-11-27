@@ -173,6 +173,43 @@ tốt hơn mọi câu chữ.
 Web không sập. File sai sẽ bị bỏ qua, sản phẩm đó hiện "chưa có đánh giá", và dòng cảnh báo
 ghi vào log máy chủ. Các sản phẩm khác không ảnh hưởng.
 
+## 6e. Web nói chuyện được với trợ lý AI
+
+Ngày càng nhiều người hỏi ChatGPT, Gemini… thay vì tự tìm trên Google. Những trợ lý đó đọc web
+bằng máy, không bằng mắt. Phần này làm cho chúng đọc đúng.
+
+### Web đang cung cấp những gì
+
+- **`ovianvietnam.com/llms.txt`** — toàn bộ shop trong một trang chữ: liên hệ, danh mục, **giá
+  thật của từng sản phẩm**, các trang chính sách. Tự sinh ra từ Sapo nên không bao giờ lỗi thời.
+- **Bản Markdown của mọi trang.** Trợ lý nào xin bản gọn thì nhận được bản chữ. Trang sản phẩm
+  nặng 191 KB ở dạng web, còn bản chữ chỉ 5 KB — nhẹ hơn 98%. Khách dùng trình duyệt vẫn thấy
+  web bình thường, không ảnh hưởng gì.
+- **Thông tin doanh nghiệp dạng máy đọc** trên mọi trang: tên pháp nhân, địa chỉ, số điện thoại,
+  link Facebook và TikTok. Nhờ vậy trợ lý trả lời "OVIAN ở đâu, gọi số nào" mà không đoán bừa.
+- **Giá sản phẩm dạng máy đọc** ngay trên trang chủ, kèm đơn vị tiền và còn hàng hay hết.
+- **Sơ đồ trang có ngày sửa thật** của từng sản phẩm, lấy từ Sapo. Máy tìm kiếm biết sản phẩm nào
+  vừa đổi mà không phải quét lại cả web.
+
+### Chủ shop cần làm gì
+
+Không cần làm gì thường xuyên. Nhưng hai thứ này nếu có thì tốt hơn:
+
+1. **Mã số thuế / số đăng ký hộ kinh doanh.** Hiện chưa có nên web bỏ trống — không bịa. Khi
+   anh/chị đưa, nó sẽ vào cả chân trang lẫn phần máy đọc.
+2. **Đường dẫn gian hàng Shopee và TikTok Shop.** Hiện mới có Facebook và TikTok. Thêm Shopee
+   giúp trợ lý xác nhận shop trên sàn và web này là cùng một OVIAN.
+
+### Những gì cố tình không làm
+
+**Không đóng dấu ngày "hôm nay" cho mọi trang trong sơ đồ.** Các trang chính sách nằm trong mã
+nguồn, không có ngày sửa thật. Khai ngày giả thì máy tìm kiếm quét lại cả web mỗi ngày vô ích,
+và lần sau nó không tin nữa. Trang nào không biết ngày thì bỏ trống.
+
+**Bản Markdown không cho lưu đệm (cache).** Web nằm sau CDN — nếu CDN lỡ lưu bản chữ rồi trả cho
+khách thật thì khách thấy một đống chữ thô thay vì cửa hàng. Có bài test riêng kiểm tra trình
+duyệt luôn nhận đúng bản web.
+
 ## 7. Sửa nội dung
 
 Nội dung các trang (Câu chuyện OVIAN, chính sách giao hàng, đổi trả, bảo mật, điều khoản, câu hỏi thường gặp, phí giao hàng theo vùng, số điện thoại, mạng xã hội) nằm trong một file mã nguồn duy nhất: `src/lib/cms/ovian-content.ts`. Muốn sửa, báo người quản trị website; sau khi sửa phải build và khởi động lại.
