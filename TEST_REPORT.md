@@ -2,6 +2,28 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Checkout voucher — 2026-11-27
+
+10% off, capped at 12.000 đ, on orders from 100.000 đ, shown to every shopper at checkout and
+applied with one tap. Owner's decisions: it stacks with the upsell, minimum 100.000 đ.
+
+- 184 unit tests (17 new on the voucher terms and card states, 3 new in pricing on the money).
+- 47 mock E2E (3 new: offered unasked, removable, and stacking with the upsell — each placing a
+  real mock order so the server re-resolves the code at order time) and 42 live Sapo E2E.
+- Verified in the browser at 375px, all three card states against the real catalogue:
+  112.000 đ cart → "bớt 11.200 ₫" → applied → total 112.000 → 100.800.
+  168.000 đ cart → capped at 12.000. 56.000 đ cart → "Mua thêm 44.000 ₫ nữa".
+- Stacking verified in priceCart: 100.000 cart + 200.000 upsell → subtotal 220.000, discount
+  12.000, shipping free, total 208.000.
+
+The discount is never taken from the browser: the checkout sends at most the code and `priceCart`
+recomputes from the terms in `voucher.ts`, the same path every other coupon takes.
+
+Not verified: nothing has run against production, and no real order has carried the voucher into
+the Google Sheet. The sheet's "Mã giảm giá" / "Giảm giá" columns already existed and the payload
+already carried both fields, so no change was needed there — but that path is untested with this
+voucher.
+
 ## Product page: drawers, review placement, star rating — 2026-11-27 (second pass)
 
 The owner reported the description still rendered as one block. It did, on a quarter of the shop.

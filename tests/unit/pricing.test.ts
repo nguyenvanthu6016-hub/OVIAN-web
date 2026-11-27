@@ -123,3 +123,53 @@ describe("quoteShipping", () => {
   it("uses fallback when configured", () =>
     expect(quoteShipping({ ...rules, fallback: { fee: 60000, freeOver: null } }, "ca-mau", 100)).toMatchObject({ status: "ok", fee: 60000 }));
 });
+
+/**
+ * The house voucher stacks with the checkout upsell by the owner's decision: a shopper who takes
+ * the extra product gets 40% off it, free shipping, AND 10% off the order. Money, so it is
+ * pinned here rather than left to be rediscovered from the UI.
+ */
+describe("the house voucher", () => {
+  const voucher = { code: "GIAM10", kind: "percentage" as const, value: 10, minSubtotal: 100_000, maxDiscount: 12_000 };
+
+  it("takes 10% off, capped at 12.000 đ", () => {
+    const q = priceCart({
+      lines: [{ variantId: "b", quantity: 1 }], variants, coupon: voucher, couponCode: "GIAM10",
+      fulfillment: "delivery", provinceCode: "ha-noi", shippingRules: rules,
+    });
+    expect(q.subtotal).toBe(250_000);
+    expect(q.discount).toBe(12_000); // 25.000 capped
+    expect(q.total).toBe(250_000 - 12_000 + 25_000);
+  });
+
+  it("is refused below the minimum, and the shopper is told why", () => {
+    const q = priceCart({
+      lines: [{ variantId: "a", quantity: 1 }], variants, coupon: { ...voucher, minSubtotal: 200_000 }, couponCode: "GIAM10",
+      fulfillment: "delivery", provinceCode: "ha-noi", shippingRules: rules,
+    });
+    expect(q.discount).toBe(0);
+    expect(q.coupon).toBeNull();
+    expect(q.changes).toContainEqual({ kind: "coupon", code: "GIAM10", reason: "min-subtotal", minSubtotal: 200_000 });
+  });
+
+  it("stacks with the upsell: the extra product is discounted, shipping is free, and 10% comes off on top", () => {
+    const extra = { id: "x", sku: "x", title: "x", options: {}, price: 140_000, compareAtPrice: 200_000, available: true, inventoryQuantity: 5 };
+    const withExtra = new Map(variants);
+    withExtra.set("x", { product: { ...item("x", 140_000, 5).product, variants: [extra] } as Product, variant: extra });
+
+    const q = priceCart({
+      lines: [{ variantId: "a", quantity: 1 }], variants: withExtra, coupon: voucher, couponCode: "GIAM10",
+      upsell: { variantId: "x", quantity: 1 },
+      fulfillment: "delivery", provinceCode: "ha-noi", shippingRules: rules,
+    });
+
+    // 200.000 list → 40% off → 120.000 for the extra, on top of the 100.000 already in the cart.
+    expect(q.upsell).not.toBeNull();
+    expect(q.subtotal).toBe(220_000);
+    // 10% of 220.000 is 22.000, capped at 12.000.
+    expect(q.discount).toBe(12_000);
+    // The upsell carries free shipping, and the voucher does not undo it.
+    expect(q.shippingFee).toBe(0);
+    expect(q.total).toBe(208_000);
+  });
+});

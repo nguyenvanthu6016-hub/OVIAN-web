@@ -8,6 +8,7 @@ import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { noindex } from "@/lib/seo";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
+import { HOUSE_VOUCHER, voucherEnabled } from "@/lib/checkout/voucher";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,9 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
         pickupEnabled={storePickupEnabled()}
         orderToken={issueOrderToken()}
         sampleShipping={!!rules?.sample}
+        // Decided on the server: HOUSE_VOUCHER_ENABLED is not readable in the browser, and a
+        // card the shopper can tap that then fails is worse than no card.
+        voucher={voucherEnabled() ? HOUSE_VOUCHER : null}
       />
     </div>
   );

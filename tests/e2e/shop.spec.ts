@@ -438,3 +438,59 @@ test("the hidden anti-bot field is invisible and unreachable by keyboard @mobile
   await expect(honeypot).not.toBeInViewport();
   expect(await honeypot.evaluate((el) => el.closest("[aria-hidden=true]") !== null && (el as HTMLInputElement).tabIndex === -1)).toBe(true);
 });
+
+test("checkout voucher: offered unasked, and the saving is the server's arithmetic", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml"); // 129.000 đ
+  await page.goto("/vi/checkout");
+  await fillContact(page);
+  await fillDelivery(page, "ha-noi");
+
+  // The shopper did not type a code: the voucher is put in front of them.
+  const card = page.getByTestId("voucher-card");
+  await expect(card).toBeVisible();
+  await expect(card).toContainText("tối đa 12.000");
+  const totalBefore = await page.getByTestId("total").innerText();
+
+  // 10% of 129.000 is 12.900, which the cap takes down to 12.000.
+  await page.getByTestId("voucher-apply").click();
+  await expect(page.getByTestId("voucher-applied")).toContainText("12.000");
+  await expect(page.getByTestId("discount")).toContainText("12.000");
+  await expect(page.getByTestId("total")).not.toHaveText(totalBefore);
+
+  // And it survives the order: the server re-resolves the code and recomputes the money.
+  await placeOrder(page);
+  await expectOrderConfirmed(page);
+});
+
+test("checkout voucher: it can be taken off again", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  await fillContact(page);
+  await fillDelivery(page, "ha-noi");
+  const totalBefore = await page.getByTestId("total").innerText();
+
+  await page.getByTestId("voucher-apply").click();
+  await expect(page.getByTestId("voucher-applied")).toBeVisible();
+
+  await page.getByRole("button", { name: "Bỏ ưu đãi" }).click();
+  await expect(page.getByTestId("voucher-apply")).toBeVisible();
+  await expect(page.getByTestId("total")).toHaveText(totalBefore);
+});
+
+test("checkout voucher: stacks with the upsell, as the owner decided", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  await fillContact(page);
+  await fillDelivery(page, "ha-noi");
+
+  await page.getByTestId("upsell-offer").getByRole("button", { name: /Thêm vào đơn|Lấy 2 món/ }).click();
+  await expect(page.getByTestId("upsell-line")).toBeVisible();
+  await page.getByTestId("voucher-apply").click();
+
+  // Both at once: the extra product at 40% off, free delivery, and the voucher on top.
+  await expect(page.getByTestId("upsell-line")).toContainText("Giảm 40%");
+  await expect(page.getByTestId("shipping")).toHaveText(/Miễn phí/);
+  await expect(page.getByTestId("discount")).toContainText("12.000");
+  await placeOrder(page);
+  await expectOrderConfirmed(page);
+});

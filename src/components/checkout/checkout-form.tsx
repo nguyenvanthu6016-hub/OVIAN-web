@@ -16,6 +16,8 @@ import { routes } from "@/lib/routes";
 import { cartActions, useCart } from "@/lib/client/stores";
 import { describeChange, fetchQuote, fetchUpsellOffer } from "@/lib/client/quote";
 import type { AcceptedUpsell, UpsellOffer } from "@/lib/checkout/upsell-offer";
+import type { Coupon } from "@/lib/commerce/types";
+import { voucherState } from "@/lib/checkout/voucher";
 import { useHydrated } from "@/lib/client/use-hydrated";
 import { track, trackOnce } from "@/lib/analytics/pixel";
 import { TotalsList } from "@/components/cart/summary";
@@ -50,7 +52,7 @@ type Status =
   | { kind: "processing" }
   | { kind: "error"; message: string };
 
-export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled, sampleShipping, orderToken }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; pickupEnabled: boolean; sampleShipping: boolean; orderToken: string }) {
+export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled, sampleShipping, orderToken, voucher }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; pickupEnabled: boolean; sampleShipping: boolean; orderToken: string; voucher: Coupon | null }) {
   const router = useRouter();
   const cart = useCart();
   const hydrated = useHydrated();
@@ -397,6 +399,19 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
             ) : null}
           </ul>
 
+          {voucher && quote ? (
+            <VoucherCard
+              voucher={voucher}
+              subtotal={quote.subtotal}
+              applied={quote.coupon?.code === voucher.code}
+              appliedDiscount={quote.coupon?.discount ?? 0}
+              locale={locale}
+              dict={dict}
+              onApply={() => cartActions.setCoupon(voucher.code)}
+              onRemove={() => cartActions.setCoupon(null)}
+            />
+          ) : null}
+
           {offer && !upsellLine ? (
             <UpsellCard
               offer={offer}
@@ -513,6 +528,55 @@ function SummaryLinePrice({
  * single quiet card rather than a banner — it sits beside an order the customer has already
  * decided on, and should read as a kindness, not a sales pitch.
  */
+/**
+ * OVIAN's standing voucher, put in front of the shopper rather than waiting to be typed.
+ *
+ * Three states, all driven by the server's own subtotal: it is theirs to take, it is already
+ * on, or their basket is a little short — and in that last case the card says by how much,
+ * which is the only one of the three that asks anything of them.
+ */
+function VoucherCard({
+  voucher, subtotal, applied, appliedDiscount, locale, dict, onApply, onRemove,
+}: {
+  voucher: Coupon;
+  subtotal: number;
+  applied: boolean;
+  appliedDiscount: number;
+  locale: Locale;
+  dict: Pick<D, "checkout">;
+  onApply: () => void;
+  onRemove: () => void;
+}) {
+  const state = voucherState(voucher, subtotal, applied, appliedDiscount);
+  return (
+    <section className="rounded-sm border border-yellow bg-surface p-4" aria-labelledby="voucher-title" data-testid="voucher-card">
+      <h3 id="voucher-title" className="text-caption font-semibold uppercase tracking-wide text-green">{dict.checkout.voucherTitle}</h3>
+      <p className="mt-2 text-small">
+        {t(dict.checkout.voucherTerms, { percent: voucher.value, max: formatPrice(voucher.maxDiscount ?? 0, locale) })}
+      </p>
+
+      {state.kind === "applied" ? (
+        <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-small">
+          <span className="font-semibold text-green" data-testid="voucher-applied">
+            {t(dict.checkout.voucherApplied, { amount: formatPrice(state.discount, locale) })}
+          </span>
+          <button type="button" className="text-caption text-ink-muted underline underline-offset-4" onClick={onRemove}>
+            {dict.checkout.voucherRemove}
+          </button>
+        </p>
+      ) : state.kind === "short" ? (
+        <p className="mt-3 text-small text-ink-muted" data-testid="voucher-short">
+          {t(dict.checkout.voucherShort, { amount: formatPrice(state.shortfall, locale) })}
+        </p>
+      ) : (
+        <Button size="sm" variant="secondary" className="mt-3 w-full" onClick={onApply} data-testid="voucher-apply">
+          {t(dict.checkout.voucherApply, { amount: formatPrice(state.estimate, locale) })}
+        </Button>
+      )}
+    </section>
+  );
+}
+
 function UpsellCard({ offer, locale, dict, onAdd }: { offer: UpsellOffer; locale: Locale; dict: Pick<D, "checkout">; onAdd: () => void }) {
   const total = offer.unitPrice * offer.quantity;
   const wouldPay = offer.listPrice * offer.quantity;

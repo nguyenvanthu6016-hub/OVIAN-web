@@ -3,6 +3,7 @@ import { getCommerce } from "@/lib/commerce";
 import { getContent } from "@/lib/cms";
 import { priceCart, type Quote } from "./pricing";
 import { verifyUpsell, type AcceptedUpsell } from "./upsell-offer";
+import { findHouseVoucher } from "./voucher";
 
 export interface QuoteInput {
   lines: { variantId: string; quantity: number; seenPrice?: number }[];
@@ -21,7 +22,9 @@ export async function buildQuote(req: QuoteInput): Promise<Quote> {
   const variantIds = [...new Set([...req.lines.map((l) => l.variantId), ...(upsell ? [upsell.variantId] : [])])];
   const [variants, coupon, shippingRules] = await Promise.all([
     commerce.getVariantsFresh(variantIds),
-    req.couponCode ? commerce.findCoupon(req.couponCode) : Promise.resolve(null),
+    // OVIAN's own voucher is resolved here, not in Sapo: the checkout offers it before the
+    // shopper has heard of it, so the site has to know its terms. Anything else is Sapo's.
+    req.couponCode ? (findHouseVoucher(req.couponCode) ?? commerce.findCoupon(req.couponCode)) : Promise.resolve(null),
     getContent().shippingRules(),
   ]);
   return priceCart({

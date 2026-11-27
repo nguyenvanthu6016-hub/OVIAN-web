@@ -219,6 +219,45 @@ và lần sau nó không tin nữa. Trang nào không biết ngày thì bỏ tr�
 khách thật thì khách thấy một đống chữ thô thay vì cửa hàng. Có bài test riêng kiểm tra trình
 duyệt luôn nhận đúng bản web.
 
+## 6f. Voucher ở trang thanh toán
+
+Khách đến trang thanh toán là thấy ngay một thẻ ưu đãi, không cần biết mã, bấm một cái là áp dụng.
+
+**Điều kiện hiện tại:** giảm **10%** giá trị đơn, **tối đa 12.000 đ**, đơn **từ 100.000 đ**.
+Mã là `GIAM10` — khách không cần gõ, nhưng ai biết mã vẫn gõ được ở trang giỏ hàng.
+
+### Thẻ hiện ba kiểu, tuỳ giỏ hàng
+
+| Giỏ hàng | Khách thấy |
+|---|---|
+| Từ 100.000 đ | "Dùng ngay, bớt 11.200 đ" — bấm là áp dụng |
+| Đã áp dụng | "Đã giảm 11.200 đ" kèm nút bỏ |
+| Dưới 100.000 đ | "Mua thêm 44.000 đ nữa để dùng được ưu đãi này" |
+
+Dòng cuối là cố ý: thay vì ẩn ưu đãi đi, web nói cho khách biết còn thiếu bao nhiêu.
+
+### Cộng dồn với ưu đãi mua thêm
+
+Có. Khách nhận ưu đãi mua thêm sẽ được **cả ba**: sản phẩm thêm giảm 40%, miễn phí giao hàng,
+và 10% trên toàn đơn. Đây là quyết định của chủ shop ngày 2026-11-27.
+
+Ví dụ thật: đơn 100.000 đ + mua thêm sản phẩm 200.000 đ
+→ sản phẩm thêm còn 120.000 đ → tạm tính 220.000 đ
+→ giảm 12.000 đ (10% bị chặn ở mức tối đa) → **miễn ship** → tổng **208.000 đ**.
+
+### Đổi điều kiện hoặc tắt hẳn
+
+- **Tắt ngay, không cần deploy:** thêm biến `HOUSE_VOUCHER_ENABLED=false` trong Hostinger.
+  Thẻ biến mất, và mã `GIAM10` cũng hết hiệu lực luôn.
+- **Đổi phần trăm / mức tối đa / đơn tối thiểu:** sửa trong `src/lib/checkout/voucher.ts`, cần
+  deploy. Báo người làm web.
+
+### Điều quan trọng về tiền
+
+Số tiền giảm **luôn do máy chủ tính lại**, không lấy từ trình duyệt. Khách có sửa gì trong trình
+duyệt cũng không giảm được nhiều hơn mức trên. Mã và số tiền giảm được ghi vào Google Sheet ở
+hai cột **"Mã giảm giá"** và **"Giảm giá"** như mọi mã khác.
+
 ## 7. Sửa nội dung
 
 Nội dung các trang (Câu chuyện OVIAN, chính sách giao hàng, đổi trả, bảo mật, điều khoản, câu hỏi thường gặp, phí giao hàng theo vùng, số điện thoại, mạng xã hội) nằm trong một file mã nguồn duy nhất: `src/lib/cms/ovian-content.ts`. Muốn sửa, báo người quản trị website; sau khi sửa phải build và khởi động lại.
