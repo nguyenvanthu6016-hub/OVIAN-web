@@ -118,7 +118,7 @@ export const vi = {
     reviewsCount: "{count} đánh giá",
     reviewsAverage: "Trung bình {rating} / 5",
     reviewsMockNote: "Đánh giá mẫu cho chế độ thử nghiệm, không phải ý kiến khách hàng thật.",
-    reviewsShopeeNote: "Đánh giá của khách đã mua trên gian hàng Shopee của OVIAN, giữ nguyên văn.",
+    reviewsShopeeNote: "Từ gian hàng Shopee của OVIAN, giữ nguyên văn khách viết.",
     reviewsNone: "Sản phẩm chưa có đánh giá.",
     reviewsUnavailable: "Đánh giá sẽ hiển thị khi OVIAN kết nối nguồn đánh giá đã xác thực.",
     rating: "{rating} trên 5 sao",

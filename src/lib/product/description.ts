@@ -36,12 +36,47 @@ function isAllCaps(text: string): boolean {
   return letters.every((c) => c === c.toLocaleUpperCase("vi") && c !== c.toLocaleLowerCase("vi"));
 }
 
-/** A line that opens a section: "Thông số cơ bản:" or "✨ ĐẶC ĐIỂM NỔI BẬT". */
+/**
+ * Title Case across the line — "Thiết Kế Hoàn Hảo", "Lợi Ích Tuyệt Vời". Vietnamese prose
+ * capitalises only the first word, so a seller who capitalises most of them is writing a heading.
+ */
+function isTitleCase(text: string): boolean {
+  if (text.includes(":")) return false; // "Kích thước: 35x100cm" is a fact, not a heading
+  const words = text.split(/[\s–—-]+/).filter((w) => [...w].some((c) => /\p{L}/u.test(c)));
+  if (words.length < 2) return false;
+  const capitalised = words.filter((w) => {
+    const first = [...w].find((c) => /\p{L}/u.test(c));
+    return first !== undefined && first === first.toLocaleUpperCase("vi");
+  });
+  return capitalised.length / words.length >= 0.7;
+}
+
+/**
+ * A line that opens a section. Three ways sellers write one, all present in OVIAN's catalogue:
+ * "Thông số cơ bản:", "✨ ĐẶC ĐIỂM NỔI BẬT", and "💤 Thiết Kế Hoàn Hảo".
+ */
 export function isSectionHeading(line: string): boolean {
   const core = stripLead(line);
   if (core.length < 3 || core.length > 70) return false;
   if (core.endsWith(":")) return true;
-  return isAllCaps(core);
+  return isAllCaps(core) || isTitleCase(core);
+}
+
+/**
+ * The weaker shape, used only when a description has no real headings at all: a short
+ * emoji-led noun phrase like "🌳 Chất liệu" or "📏 Kích thước" with the detail underneath.
+ *
+ * These are only promoted to headings as a fallback. In a description that already has proper
+ * headings the same shape is a lead-in inside a section — promoting it there would flatten
+ * eight named sections into thirty unnamed ones.
+ */
+function isFallbackHeading(line: string): boolean {
+  const trimmed = line.trim();
+  if (!LEADING_SYMBOLS.test(trimmed)) return false;
+  const core = stripLead(trimmed);
+  if (core.length < 3 || core.length > 40) return false;
+  if (core.includes(":") || /[.!?,;]$/.test(core)) return false;
+  return core.split(/\s+/).length <= 5;
 }
 
 /**
@@ -67,8 +102,13 @@ export function parseDescription(raw: string | null | undefined): ParsedDescript
   const intro: DescriptionLine[] = [];
   const sections: DescriptionSection[] = [];
 
+  // Use the strongest structure the seller actually used. Only a description with no real
+  // headings falls back to treating its emoji lead-ins as the structure.
+  const useFallback = lines.filter(isSectionHeading).length < 2;
+  const opensSection = (l: string) => isSectionHeading(l) || (useFallback && isFallbackHeading(l));
+
   for (const line of lines) {
-    if (isSectionHeading(line)) {
+    if (opensSection(line)) {
       sections.push({ title: titleOf(line), lines: [] });
       continue;
     }
@@ -77,6 +117,22 @@ export function parseDescription(raw: string | null | undefined): ParsedDescript
     else intro.push(parsed);
   }
 
-  // Headings with nothing under them would render as empty drawers.
-  return { intro, sections: sections.filter((s) => s.lines.length > 0) };
+  // A heading with nothing under it would render as an empty drawer — but dropping it would
+  // delete words the seller wrote. "📜 Thông Tin Chi Tiết" followed straight by "📍 Chất liệu:"
+  // is a parent heading, so it becomes a bold lead-in on the section that follows instead.
+  const kept: DescriptionSection[] = [];
+  let orphans: DescriptionLine[] = [];
+  for (const section of sections) {
+    if (!section.lines.length) {
+      orphans.push({ kind: "label", text: section.title });
+      continue;
+    }
+    section.lines.unshift(...orphans);
+    orphans = [];
+    kept.push(section);
+  }
+  // Headings at the very end with nothing after them keep their place in document order.
+  if (orphans.length) (kept.at(-1)?.lines ?? intro).push(...orphans);
+
+  return { intro, sections: kept };
 }

@@ -2,6 +2,28 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Product page: drawers, review placement, star rating — 2026-11-27 (second pass)
+
+The owner reported the description still rendered as one block. It did, on a quarter of the shop.
+
+- Measured against all 51 real Sapo descriptions: 8 of 51 produced no sections at all. The
+  heading rule only knew trailing colons and ALL CAPS, but 13 products head their sections with
+  emoji + Title Case ("🌟 Đặc Điểm Nổi Bật"). After adding Title Case and a fallback for
+  descriptions with no headings at all, 2 of 51 remain — one whose Sapo description is a single
+  phrase repeated, one that is a flat key/value list. Both are content, not code.
+- Found and fixed a pre-existing content loss: a heading with nothing underneath was dropped
+  entirely, deleting the seller's words ("📜 Thông Tin Chi Tiết" vanished). It now survives as a
+  lead-in on the next section. Verified across all 51 descriptions: 0 lines lose a word.
+- 164 unit tests (8 new on the heading styles), 44 mock E2E, 42 live Sapo E2E (4 new).
+- The 1W night light now renders 7 closed drawers where it rendered 2.
+
+`scroll-behavior: smooth` was added for the new star-rating jump and then removed: measured in
+the browser, the animated scroll was cancelled part way and the shopper landed nowhere, while an
+instant jump lands the heading at exactly the 80px scroll-padding. A live test asserts the
+heading ends up clear of the sticky header.
+
+Not verified: none of this has run against production.
+
 ## Agent-readable surface — 2026-11-27
 
 Worked from an external agent-readiness audit of ovianvietnam.com. One of its ten findings was

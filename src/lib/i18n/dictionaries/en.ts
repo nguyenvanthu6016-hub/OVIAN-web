@@ -120,7 +120,7 @@ export const en: typeof vi = {
     reviewsCount: "{count} reviews",
     reviewsAverage: "Average {rating} / 5",
     reviewsMockNote: "Sample reviews for demo mode, not real customer opinions.",
-    reviewsShopeeNote: "Left by customers who bought on OVIAN's Shopee shop, quoted as written.",
+    reviewsShopeeNote: "From OVIAN's Shopee shop, quoted as written.",
     reviewsNone: "No reviews yet.",
     reviewsUnavailable: "Reviews will appear once OVIAN connects a verified review source.",
     rating: "{rating} out of 5 stars",

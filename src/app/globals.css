@@ -43,6 +43,10 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-padding-top: 5rem;
+    /* No scroll-behavior: smooth. The star rating by the price links down to the reviews, and
+       on a page this long with images still arriving the animated scroll gets cancelled part way
+       and the shopper lands nowhere. An instant jump always arrives; scroll-padding-top above
+       keeps the heading clear of the sticky header. */
   }
   body {
     background: var(--color-surface);

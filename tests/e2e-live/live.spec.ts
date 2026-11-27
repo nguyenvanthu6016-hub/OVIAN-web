@@ -274,3 +274,61 @@ test.describe("agent-readable surface", () => {
     await expect(page.locator('a[href="/vi/contact"]').first()).toBeAttached();
   });
 });
+
+const NIGHT_LIGHT = "den-cam-ngu-mini-ovian-den-cam-bien-1w-den-mini-dieu-chinh-do-sang-80lm-an-toan-chay-no-ul94";
+
+test.describe("the product page a shopper actually reads", () => {
+  test("a description written with emoji Title Case headings still splits into drawers @mobile", async ({ page }) => {
+    // This product is why: its headings are "🌟 Đặc Điểm Nổi Bật", with no colon and not in
+    // capitals, so it rendered as one unbroken wall of text while other products split fine.
+    await page.goto(`/vi/products/${NIGHT_LIGHT}`);
+    const drawers = page.locator("section[aria-labelledby='details-title'] details");
+    expect(await drawers.count()).toBeGreaterThanOrEqual(5);
+    for (const d of await drawers.all()) expect(await d.evaluate((e) => (e as HTMLDetailsElement).open)).toBe(false);
+
+    const titles = await drawers.locator("summary").allInnerTexts();
+    expect(titles).toContain("Đặc Điểm Nổi Bật");
+    expect(titles).toContain("Ứng Dụng");
+
+    const body = drawers.first().locator("summary + div");
+    await expect(body).toBeHidden();
+    await drawers.first().locator("summary").click();
+    await expect(body).toBeVisible();
+  });
+
+  test("the star rating sits by the price and jumps to the reviews @mobile", async ({ page }) => {
+    await page.goto(`/vi/products/${NIGHT_LIGHT}`);
+    const jump = page.getByTestId("rating-jump");
+    await expect(jump).toBeVisible();
+    await expect(jump).toHaveAttribute("href", "#reviews-title");
+    await expect(jump).toContainText("10 đánh giá");
+
+    // It must land clear of the sticky header, not behind it.
+    await jump.click();
+    const heading = page.locator("#reviews-title");
+    await expect(heading).toBeInViewport();
+    const [top, headerHeight] = await page.evaluate(() => [
+      document.getElementById("reviews-title")!.getBoundingClientRect().top,
+      document.querySelector("header")!.getBoundingClientRect().height,
+    ]);
+    expect(top).toBeGreaterThanOrEqual(headerHeight - 1);
+  });
+
+  test("reviews come before the other products, not after them @mobile", async ({ page }) => {
+    await page.goto(`/vi/products/${NIGHT_LIGHT}`);
+    const order = await page.evaluate(() =>
+      [...document.querySelectorAll("section[aria-labelledby]")].map((s) => s.getAttribute("aria-labelledby")),
+    );
+    expect(order.indexOf("reviews-title")).toBeGreaterThan(-1);
+    expect(order.indexOf("related-title")).toBeGreaterThan(-1);
+    expect(order.indexOf("reviews-title")).toBeLessThan(order.indexOf("related-title"));
+  });
+
+  test("the source note is a quiet caption, not a tinted banner @mobile", async ({ page }) => {
+    await page.goto(`/vi/products/${NIGHT_LIGHT}`);
+    const note = page.locator("section[aria-labelledby='reviews-title']").getByText(/gian hàng Shopee của OVIAN/);
+    await expect(note).toBeVisible();
+    const bg = await note.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(bg === "rgba(0, 0, 0, 0)" || bg === "transparent", `note still has a background: ${bg}`).toBe(true);
+  });
+});

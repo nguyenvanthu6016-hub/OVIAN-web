@@ -77,3 +77,73 @@ describe("parseDescription", () => {
     expect(parseDescription("   \n  \n")).toEqual({ intro: [], sections: [] });
   });
 });
+
+/**
+ * OVIAN's sellers write headings three different ways, all of them present in the live
+ * catalogue. Before these, a quarter of the shop rendered as one unbroken wall of text.
+ */
+describe("the heading styles the real catalogue actually uses", () => {
+  it("reads Title Case as a heading, the way a seller means it", () => {
+    expect(isSectionHeading("💤 Thiết Kế Hoàn Hảo")).toBe(true);
+    expect(isSectionHeading("🌟 Đặc Điểm Nổi Bật")).toBe(true);
+    expect(isSectionHeading("Vì Sao Nên Chọn Đèn Ngủ OVIAN?")).toBe(true);
+  });
+
+  it("reads Vietnamese shouted in capitals as a heading", () => {
+    expect(isSectionHeading("✨ ĐẶC ĐIỂM NỔI BẬT")).toBe(true);
+    expect(isSectionHeading("🏠 ỨNG DỤNG")).toBe(true);
+  });
+
+  it("does not mistake an ordinary sentence for a heading", () => {
+    expect(isSectionHeading("Gỗ cao su tự nhiên, bền đẹp, thân thiện với môi trường.")).toBe(false);
+    expect(isSectionHeading("🔹 Cảm biến ánh sáng quang học thông minh")).toBe(false);
+  });
+
+  it("does not mistake a fact written as key and value for a heading", () => {
+    expect(isSectionHeading("✔ Kích thước: 35x100cm – lý tưởng cho mọi tư thế ngủ")).toBe(false);
+    expect(isSectionHeading("✨ Thương hiệu: OVIAN")).toBe(false);
+  });
+});
+
+describe("a description with no headings at all", () => {
+  const PLAIN = [
+    "Đặc điểm sản phẩm",
+    "🌳 Chất liệu",
+    "Gỗ cao su tự nhiên, bền đẹp.",
+    "📏 Kích thước",
+    "Chiều cao: 1m80.",
+    "🎨 Màu sắc",
+    "3 lựa chọn: màu gỗ tự nhiên, màu cánh gián.",
+  ].join("\n");
+
+  it("falls back to the seller's emoji lead-ins so it still opens and closes", () => {
+    const d = parseDescription(PLAIN);
+    expect(d.sections.map((s) => s.title)).toEqual(["Chất liệu", "Kích thước", "Màu sắc"]);
+    expect(d.intro.map((l) => l.text)).toEqual(["Đặc điểm sản phẩm"]);
+  });
+
+  it("does not flatten a description that already has real headings", () => {
+    const d = parseDescription(
+      ["🌟 Đặc Điểm Nổi Bật", "🔹 Cảm biến thông minh", "Tự động bật khi trời tối.", "🔹 Tiết kiệm điện", "Công suất thấp.", "🏠 Ứng Dụng", "🏡 Phòng ngủ"].join("\n"),
+    );
+    // Two named sections, not four nameless ones.
+    expect(d.sections.map((s) => s.title)).toEqual(["Đặc Điểm Nổi Bật", "Ứng Dụng"]);
+    expect(d.sections[0]?.lines).toHaveLength(4);
+  });
+});
+
+describe("a heading with nothing under it", () => {
+  it("keeps its words instead of being deleted", () => {
+    const d = parseDescription(["📜 Thông Tin Chi Tiết", "📍 Chất liệu:", "Cao su non", "Vải lưới"].join("\n"));
+    expect(d.sections).toHaveLength(1);
+    expect(d.sections[0]?.title).toBe("Chất liệu");
+    // The parent heading survives as a lead-in rather than vanishing from the page.
+    expect(d.sections[0]?.lines[0]).toEqual({ kind: "label", text: "Thông Tin Chi Tiết" });
+  });
+
+  it("keeps a trailing heading that has nothing after it", () => {
+    const d = parseDescription(["Thông số:", "Cao 450mm", "Cam Kết Từ OVIAN"].join("\n"));
+    const all = d.sections.flatMap((s) => s.lines.map((l) => l.text)).concat(d.intro.map((l) => l.text));
+    expect(all).toContain("Cam Kết Từ OVIAN");
+  });
+});

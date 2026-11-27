@@ -73,20 +73,29 @@ Sanity → "Phí giao hàng" → thêm vùng, chọn mã tỉnh (danh sách tron
 
 ## 5e. Mô tả sản phẩm tự chia thành mục xổ
 
-Website đọc phần mô tả anh/chị viết trong Sapo và **tự chia thành các mục đóng/mở**, thay vì đổ một khối chữ dài. Khách lướt thấy phần mở đầu, muốn xem chi tiết thì bấm vào mục.
+Mô tả dài được web tự chia thành các mục đóng/mở. Khách thấy đoạn mở đầu, muốn xem chi tiết thì
+bấm vào từng mục.
 
-**Cách viết để web chia đúng.** Một dòng được coi là **tên mục** khi:
+**Web nhận ra đề mục theo ba cách, không cần anh/chị đổi cách viết:**
 
-- kết thúc bằng dấu hai chấm — `Thông số cơ bản:`, `Chính sách sau bán:`; hoặc
-- viết hoa toàn bộ — `✨ ĐẶC ĐIỂM NỔI BẬT`.
+1. Dòng kết thúc bằng dấu hai chấm — `Thông số cơ bản:`
+2. Dòng VIẾT HOA TOÀN BỘ — `✨ ĐẶC ĐIỂM NỔI BẬT`
+3. Dòng Viết Hoa Đầu Mỗi Từ — `💤 Thiết Kế Hoàn Hảo`
 
-Mọi dòng phía dưới thuộc về mục đó, cho tới tên mục tiếp theo. Các dòng trước tên mục đầu tiên luôn hiện sẵn, không cần bấm.
+Emoji đứng trước không ảnh hưởng gì.
 
-Một dòng ngắn mở đầu bằng biểu tượng cảm xúc, **không có dấu hai chấm giữa dòng và không kết thúc bằng dấu chấm**, sẽ được **in đậm** — ví dụ `🚶 Cảm biến chuyển động thông minh`. Dòng có dạng `📏 Chiều cao: 450mm` thì giữ chữ thường, vì đó là thông số chứ không phải đề mục.
+Nếu một mô tả **không có đề mục nào** trong ba kiểu trên, web lấy các dòng ngắn có emoji làm đề
+mục — `🌳 Chất liệu`, `📏 Kích thước`. Nhờ vậy gần như mọi sản phẩm đều chia được.
 
-Website **không sửa, không bỏ, không đảo** chữ nào anh/chị viết — chỉ nhóm lại.
+**Web không sửa, không bỏ, không đảo chữ nào anh/chị viết** — chỉ nhóm lại. Có bài test kiểm tra
+điều này trên toàn bộ mô tả thật của 51 sản phẩm.
 
-Sản phẩm viết liền một đoạn, không có tên mục nào, vẫn hiện bình thường như cũ.
+### Hai sản phẩm hiện chưa chia được
+
+- **Đèn ngủ chất liệu Acrylic** — mô tả trong Sapo chỉ là dòng chữ "Điều chỉnh mức sáng" lặp lại
+  rất nhiều lần. Đây là lỗi nội dung trong Sapo, cần viết lại mô tả.
+- **Máy xông tinh dầu** — mô tả là một danh sách `- Thương hiệu: ...`, `- Model: ...` phẳng,
+  không có đề mục nào. Vẫn hiện bình thường, chỉ là không chia mục.
 
 ## 5f. Biểu tượng phòng trên sơ đồ trang chủ
 

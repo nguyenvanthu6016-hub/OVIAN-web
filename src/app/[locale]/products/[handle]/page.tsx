@@ -95,6 +95,11 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
   ];
   // The seller's blob becomes an intro plus drawers the shopper opens when they want the detail.
   const description = parseDescription(p.description?.value);
+  // Formatted here, not in the client panel: the panel would otherwise need the locale's rules.
+  const ratingAvg = reviews?.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
+  const reviewSummary = reviews?.length
+    ? { count: reviews.length, average: ratingAvg, averageText: ratingAvg.toLocaleString(locale === "vi" ? "vi-VN" : "en-US", { maximumFractionDigits: 1 }) }
+    : null;
   const specs = p.attributes.filter((a) => a.key !== "care");
   const care = p.attributes.find((a) => a.key === "care");
   const url = `${siteUrl()}${routes.product(locale, p.handle)}`;
@@ -140,7 +145,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
       <Breadcrumbs label={d.common.breadcrumb} items={crumbs.slice(0, -1)} />
 
       <div className="mt-6 grid gap-8 lg:grid-cols-12 lg:gap-12">
-        <ProductPurchase product={p} locale={locale} dict={d} />
+        <ProductPurchase product={p} locale={locale} dict={d} reviews={reviewSummary} />
       </div>
 
       <section className="mt-16 grid gap-10 border-t border-line pt-10 lg:grid-cols-12" aria-labelledby="details-title">
@@ -190,14 +195,16 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
         </div>
       </section>
 
+      {/* Reviews come before the suggestions: a shopper deciding on THIS product should not have
+          to scroll past four other products to find out what buyers thought of it. */}
+      <Reviews reviews={reviews} locale={locale} dict={d} />
+
       {related.length ? (
         <section className="mt-20" aria-labelledby="related-title">
           <h2 id="related-title" className="mb-6 text-heading">{d.product.related}</h2>
           <ProductGrid products={related} locale={locale} dict={d} />
         </section>
       ) : null}
-
-      <Reviews reviews={reviews} locale={locale} dict={d} />
 
       <RecentlyViewed locale={locale} dict={d} excludeId={p.id} title={d.product.recentlyViewed} />
     </div>
@@ -251,9 +258,10 @@ function Reviews({ reviews, locale, dict }: { reviews: Review[] | null; locale: 
           </div>
         ) : null}
         {reviews?.some((r) => r.source === "mock") ? <p className="mt-3 rounded-sm bg-surface-alt px-3 py-2 text-caption text-green">{dict.product.reviewsMockNote}</p> : null}
-        {/* Said once, at the top, rather than stamped on every entry: these were written on the
-            Shopee listing, not here, and a shopper deserves to know that before reading them. */}
-        {reviews?.some((r) => r.source === "shopee") ? <p className="mt-3 rounded-sm bg-surface-alt px-3 py-2 text-caption text-green">{dict.product.reviewsShopeeNote}</p> : null}
+        {/* Where these came from, said once and quietly. It was a tinted panel; at the top of the
+            section that read as a banner the eye bounced off, so it is now a caption under the
+            count — still the first thing read, no longer shouting. */}
+        {reviews?.some((r) => r.source === "shopee") ? <p className="mt-2 text-caption text-ink-muted">{dict.product.reviewsShopeeNote}</p> : null}
       </div>
       <div className="lg:col-span-8">
         {reviews === null ? (

@@ -9,7 +9,7 @@ import { formatPrice } from "@/lib/i18n/format";
 import { cartActions, cartDrawer, pushRecent } from "@/lib/client/stores";
 import { track } from "@/lib/analytics/pixel";
 import { QuantityStepper } from "@/components/cart/quantity";
-import { IconCheck } from "@/components/ui/icons";
+import { IconCheck, IconStar } from "@/components/ui/icons";
 import { Badge, Button, Price, cx } from "@/components/ui/primitives";
 import { Gallery } from "./gallery";
 import { WishlistButton } from "./wishlist-button";
@@ -26,7 +26,15 @@ function findVariant(p: Product, sel: Record<string, string>): Variant | undefin
 }
 
 /** Gallery + purchase controls share the selected variant (for variant images). */
-export function ProductPurchase({ product, locale, dict }: { product: Product; locale: Locale; dict: D }) {
+/** Star summary shown beside the price, so a shopper sees there are reviews before scrolling. */
+export interface ReviewSummary {
+  count: number;
+  average: number;
+  /** Pre-formatted on the server: the locale's own decimal mark. */
+  averageText: string;
+}
+
+export function ProductPurchase({ product, locale, dict, reviews }: { product: Product; locale: Locale; dict: D; reviews?: ReviewSummary | null }) {
   const [sel, setSel] = useState<Record<string, string>>(() => initialSelection(product));
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -175,6 +183,19 @@ export function ProductPurchase({ product, locale, dict }: { product: Product; l
           <div className="mt-3">
             <WishlistButton variant="full" productId={product.id} name={product.name.value} labels={{ save: dict.product.save, saved: dict.product.saved }} />
           </div>
+          {reviews ? (
+            <a
+              href="#reviews-title"
+              data-testid="rating-jump"
+              className="mt-4 inline-flex items-center gap-2 rounded-md py-1 text-small text-ink hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              <span className="inline-flex items-center gap-0.5 text-green" aria-hidden="true">
+                {[1, 2, 3, 4, 5].map((i) => <IconStar key={i} size={16} filled={i <= Math.round(reviews.average)} />)}
+              </span>
+              <span className="font-semibold">{reviews.averageText}</span>
+              <span className="text-ink-muted">({t(dict.product.reviewsCount, { count: reviews.count })})</span>
+            </a>
+          ) : null}
           {variant?.sku ? <p className="mt-4 text-caption text-ink-muted">{dict.product.sku}: {variant.sku}</p> : null}
         </div>
       </div>
