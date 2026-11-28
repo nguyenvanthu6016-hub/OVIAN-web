@@ -38,6 +38,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
         // card the shopper can tap that then fails is worse than no card.
         voucher={voucherEnabled() ? HOUSE_VOUCHER : null}
         zaloPhone={settings?.zaloPhone ?? null}
+        messengerPageId={settings?.messengerPageId ?? null}
       />
     </div>
   );

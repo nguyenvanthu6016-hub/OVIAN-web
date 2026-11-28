@@ -4,7 +4,7 @@ import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { noindex } from "@/lib/seo";
 import { TrackOrderForm } from "@/components/checkout/order-views";
-import { SupportCard } from "@/components/support/zalo-support";
+import { SupportCard } from "@/components/support/support";
 import { getContent } from "@/lib/cms";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/track">): Promise<Metadata> {
@@ -23,7 +23,7 @@ export default async function TrackPage({ params }: PageProps<"/[locale]/track">
       <TrackOrderForm locale={locale} dict={{ order: d.order, checkout: d.checkout, cart: d.cart, common: d.common }} />
       {settings?.zaloPhone ? (
         <div className="mt-12 max-w-2xl">
-          <SupportCard phone={settings.zaloPhone} dict={{ support: d.support }} />
+          <SupportCard channels={{ zaloPhone: settings.zaloPhone, messengerPageId: settings.messengerPageId }} dict={{ support: d.support }} />
         </div>
       ) : null}
     </div>

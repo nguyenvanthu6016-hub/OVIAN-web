@@ -29,6 +29,8 @@ export function ovianSiteSettings(locale: Locale): SiteSettings {
     showJournal: false,
     contactPhone: OVIAN_PHONE,
     zaloPhone: OVIAN_PHONE,
+    // The id in OVIAN's own Facebook link below; m.me/<id> opens the Page's Messenger inbox.
+    messengerPageId: "61558891335204",
     legal: { name: L("Hộ kinh doanh OVIAN", "OVIAN household business", locale), address: ADDRESS },
     social: [
       { label: "Facebook", url: "https://www.facebook.com/profile.php?id=61558891335204" },

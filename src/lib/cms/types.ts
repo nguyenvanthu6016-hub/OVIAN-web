@@ -38,6 +38,11 @@ export interface SiteSettings {
   contactPhone?: string;
   /** Phone number behind the Zalo link; usually the same as contactPhone. */
   zaloPhone?: string;
+  /**
+   * The Facebook Page's id, used to build an m.me link to its Messenger inbox. Meta shut the
+   * embeddable chat bubble down in May 2024, so a link out is the only supported route left.
+   */
+  messengerPageId?: string;
   /** Business details shown in the footer. */
   legal?: { name: LocalizedText; address?: string; taxId?: string };
   social: { label: string; url: string }[];

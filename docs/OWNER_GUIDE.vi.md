@@ -124,19 +124,40 @@ Mỗi đơn chỉ có **một** ưu đãi. Một nửa số lần, website mời
 
 **Giá luôn do máy chủ tính.** Trình duyệt chỉ nói "khách đồng ý lấy ưu đãi này"; số tiền thì máy chủ đọc lại giá Sapo rồi tự tính. Khách không thể sửa giá, không thể tự nhận ưu đãi cho món khác, và ưu đãi hết hạn sau 6 tiếng.
 
-## 6c. Chăm sóc khách hàng qua Zalo
+## 6c. Chăm sóc khách hàng: Zalo và Messenger
 
-Số dùng cho CSKH là **0909651935** — cùng số hotline, lấy từ `zaloPhone` trong `src/lib/cms/ovian-content.ts`. Đổi số ở đó là đổi hết mọi chỗ.
+Nút "Hỗ trợ" nổi ở góc phải dưới, trên mọi trang. Bấm vào xổ ra hai lựa chọn: **Nhắn qua
+Messenger** và **Nhắn Zalo 0909651935**. Trang thanh toán, trang tra cứu đơn và trang sau khi
+đặt hàng cũng có cả hai.
 
-Khách gặp nút hỗ trợ ở ba nơi:
+### Vì sao không nhúng khung chat thẳng vào web
 
-1. **Nút tròn góc dưới bên phải**, có mặt trên mọi trang. Trên điện thoại nút nằm **phía trên** thanh "Thêm vào giỏ", không che nút mua — có test tự động canh khoảng cách này mỗi lần chạy.
-2. **Trang xác nhận đơn hàng**, ngay sau khi khách đặt xong.
-3. **Trang tra cứu đơn hàng**, nơi khách vào khi muốn biết đơn đi tới đâu.
+Khung chat Messenger nhúng trong trang (**Customer Chat Plugin**) đã bị **Meta tắt từ 9/5/2024**.
+Tài liệu chính thức của Meta giờ không còn mô tả nó nữa, chỉ còn liên kết `m.me`. Code cũ kiểu
+`customerchat.js` dán vào web cũng không hiện gì. Nếu ai đó chỉ anh/chị dán đoạn code như vậy,
+hãy xem ngày của bài hướng dẫn đó.
 
-Mỗi khối có hai cách liên hệ: **mở Zalo** và **gọi điện** (bấm là quay số trên điện thoại). Có ghi sẵn câu nhắc khách gửi kèm mã đơn hàng.
+Vậy nên khách bấm Messenger sẽ mở **app Messenger** (trên điện thoại) hoặc **messenger.com**
+(trên máy tính), vào thẳng hộp thư fanpage.
 
-**Chưa công bố giờ làm việc.** Tôi không tự đặt ra giờ hỗ trợ. Khi anh/chị cho biết giờ nhận tin (ví dụ 8:00–21:00 hằng ngày), báo tôi thêm vào.
+### Đổi fanpage
+
+Mã trang nằm ở `messengerPageId` trong `src/lib/cms/ovian-content.ts`, hiện là
+`61558891335204` — chính là con số trong link Facebook của OVIAN. Đổi mã là đổi fanpage nhận tin.
+
+### Hai điều nên biết
+
+**Nút này không thêm JavaScript nào.** Nó chỉ là một liên kết, không nạp mã của Facebook, không
+ảnh hưởng tốc độ và không ảnh hưởng Meta Pixel.
+
+**Bảng xổ không tự đóng khi bấm ra chỗ khác** — phải bấm lại vào nút "Hỗ trợ". Đây là cái giá
+của việc không dùng JavaScript. Bảng nhỏ, nằm sát góc, che rất ít. Muốn nó tự đóng thì phải thêm
+JavaScript, báo người làm web.
+
+### Giờ hỗ trợ
+
+Web **không** ghi giờ làm việc vì chủ shop chưa cho biết. Khách nhắn lúc nửa đêm vẫn tưởng được
+trả lời ngay. Nếu anh/chị cho giờ cụ thể, nên ghi vào.
 
 ## 6d. Đánh giá sản phẩm lấy từ Shopee
 

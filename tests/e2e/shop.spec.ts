@@ -167,19 +167,42 @@ test("checkout upsell: dropping the offer puts the delivery fee back", async ({ 
   await expect(offer).toBeVisible();
 });
 
-test("Zalo support is reachable from every page", async ({ page }) => {
+test("support is reachable from every page, by Zalo or Messenger", async ({ page }) => {
   await page.goto("/vi");
-  const fab = page.getByTestId("zalo-fab");
+  const fab = page.getByTestId("support-fab");
   await expect(fab).toBeVisible();
-  await expect(fab).toHaveAttribute("href", /^https:\/\/zalo\.me\/\d{10}$/);
-  // Opens the Zalo app in its own context, never replacing the shop the customer is in.
-  await expect(fab).toHaveAttribute("target", "_blank");
+
+  // The panel is shut until asked for, and opens with no JavaScript: it is a <details>.
+  const messenger = page.getByTestId("support-messenger");
+  await expect(messenger).toBeHidden();
+  await fab.getByRole("group").or(fab.locator("summary")).first().click();
+  await expect(messenger).toBeVisible();
+  await expect(messenger).toHaveAttribute("href", /^https:\/\/m\.me\/\d+$/);
+  await expect(page.getByTestId("support-zalo")).toHaveAttribute("href", /^https:\/\/zalo\.me\/\d{10}$/);
+  // Both open in their own context, never replacing the shop the customer is in.
+  await expect(messenger).toHaveAttribute("target", "_blank");
 
   await page.goto("/vi/track");
   const card = page.getByRole("region", { name: /Cần OVIAN hỗ trợ|Need a hand/ });
   await expect(card).toBeVisible();
   await expect(card.getByRole("link", { name: /Nhắn Zalo 0900000000/ })).toBeVisible();
+  await expect(card.getByRole("link", { name: /Messenger/ })).toHaveAttribute("href", /m\.me/);
   await expect(card.getByRole("link", { name: /Gọi 0900000000/ })).toHaveAttribute("href", "tel:0900000000");
+});
+
+test("the support panel does not cover the buy button when it is open @mobile-only", async ({ page }) => {
+  await page.goto("/vi/products/coc-su-trang-350ml");
+  await page.mouse.wheel(0, 1200);
+  const bar = page.getByTestId("sticky-buy");
+  await expect(bar).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.getByTestId("support-fab").locator("summary").click();
+  await expect(page.getByTestId("support-messenger")).toBeVisible();
+
+  // The panel opens upwards, so an open panel still leaves "add to cart" reachable.
+  const panel = await page.getByTestId("support-messenger").boundingBox();
+  const buy = await bar.boundingBox();
+  expect(panel!.y + panel!.height).toBeLessThanOrEqual(buy!.y);
 });
 
 test("the support button never covers the sticky buy bar @mobile-only", async ({ page }) => {
@@ -188,7 +211,7 @@ test("the support button never covers the sticky buy bar @mobile-only", async ({
   const bar = page.getByTestId("sticky-buy");
   await expect(bar).toBeVisible();
   await page.waitForTimeout(400); // the bar slides in
-  const fab = await page.getByTestId("zalo-fab").boundingBox();
+  const fab = await page.getByTestId("support-fab").boundingBox();
   const buy = await bar.boundingBox();
   expect(fab).not.toBeNull();
   expect(buy).not.toBeNull();
@@ -576,4 +599,12 @@ test("the delivery and voucher promises are stated before the shopper commits @m
   await addToCart(page, "coc-su-trang-350ml");
   await page.goto("/vi/cart");
   await expect(page.getByTestId("cart-promises")).toContainText("Miễn ship từ 2 sản phẩm");
+});
+
+test("the checkout offers both ways to ask a question @mobile", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  const trust = page.getByTestId("trust-block");
+  await expect(trust.getByTestId("trust-zalo")).toHaveAttribute("href", /zalo\.me/);
+  await expect(trust.getByTestId("trust-messenger")).toHaveAttribute("href", /^https:\/\/m\.me\/\d+$/);
 });

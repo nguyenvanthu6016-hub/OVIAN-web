@@ -28,6 +28,7 @@ export function mockSiteSettings(locale: Locale): SiteSettings {
     // Obviously not a real line: sample mode must still exercise the support button.
     contactPhone: "0900000000",
     zaloPhone: "0900000000",
+    messengerPageId: "100000000000000",
     social: [],
   };
 }

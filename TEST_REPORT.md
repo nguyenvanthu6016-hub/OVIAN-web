@@ -2,6 +2,31 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Messenger support — 2026-11-28
+
+The owner asked for Messenger chat connected to the OVIAN fanpage.
+
+Checked before building: Meta's embeddable Customer Chat Plugin was shut off on 9 May 2024, and
+Meta's own current docs no longer describe it — they document m.me links and a "Message Us"
+button. So in-page Messenger chat is not available from Meta at all. Verified by fetching
+developers.facebook.com directly rather than taking vendor blogs at their word.
+
+Verified `https://m.me/61558891335204` returns 302 to a real Messenger conversation target.
+`m.me/ovianvietnam` does not exist, so the numeric Page id is the right form here. The owner
+still has to confirm that inbox is OVIAN's fanpage; that cannot be checked without their login.
+
+- 190 unit tests, 60 mock E2E (2 new, 2 rewritten), 42 live Sapo E2E (1 rewritten).
+- A new test opens the panel on a phone with the sticky buy bar showing and asserts the open
+  panel still sits entirely above it — the overlap this shop has hit once before.
+- The pixel funnel test still passes: nothing here loads Facebook script or touches the CSP.
+- axe WCAG 2.2 AA unchanged; the launcher is a native `<details>`, so its expanded state is
+  announced without any ARIA of our own.
+
+Known limitation, accepted: a `<details>` panel does not close on an outside click. Closing it
+needs client JavaScript on every page, which was not worth it for a 60px panel in the corner.
+
+Not verified: no real customer message has gone through the link, and production is untouched.
+
 ## Checkout conversion: delivery, voucher visibility, trust — 2026-11-28
 
 Four promises surfaced from the configuration that already charges for them: 5.000 đ flat

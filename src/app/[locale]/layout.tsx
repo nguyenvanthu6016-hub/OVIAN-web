@@ -6,7 +6,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { jsonLd, organizationLd, siteUrl } from "@/lib/seo";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-chrome";
 import { FacebookPixel } from "@/components/analytics/facebook-pixel";
-import { ZaloFab } from "@/components/support/zalo-support";
+import { SupportFab } from "@/components/support/support";
 import { getContent } from "@/lib/cms";
 import { shopPromises } from "@/lib/checkout/promises";
 import { PromoBar } from "@/components/layout/promo-bar";
@@ -68,7 +68,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         <SiteHeader locale={locale} />
         <main id="main" tabIndex={-1} className="outline-none">{children}</main>
         <SiteFooter locale={locale} />
-        {settings?.zaloPhone ? <ZaloFab phone={settings.zaloPhone} dict={{ support: d.support }} /> : null}
+        <SupportFab channels={{ zaloPhone: settings?.zaloPhone, messengerPageId: settings?.messengerPageId }} dict={{ support: d.support }} />
         <FacebookPixel />
       </body>
     </html>

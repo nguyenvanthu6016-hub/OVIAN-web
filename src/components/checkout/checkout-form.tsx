@@ -18,7 +18,7 @@ import { describeChange, fetchQuote, fetchUpsellOffer } from "@/lib/client/quote
 import type { AcceptedUpsell, UpsellOffer } from "@/lib/checkout/upsell-offer";
 import type { Coupon } from "@/lib/commerce/types";
 import { voucherState } from "@/lib/checkout/voucher";
-import { zaloHref } from "@/components/support/zalo-support";
+import { messengerHref, zaloHref } from "@/components/support/support";
 import { useHydrated } from "@/lib/client/use-hydrated";
 import { track, trackOnce } from "@/lib/analytics/pixel";
 import { TotalsList } from "@/components/cart/summary";
@@ -53,7 +53,7 @@ type Status =
   | { kind: "processing" }
   | { kind: "error"; message: string };
 
-export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled, sampleShipping, orderToken, voucher, zaloPhone }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; pickupEnabled: boolean; sampleShipping: boolean; orderToken: string; voucher: Coupon | null; zaloPhone: string | null }) {
+export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled, sampleShipping, orderToken, voucher, zaloPhone, messengerPageId }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; pickupEnabled: boolean; sampleShipping: boolean; orderToken: string; voucher: Coupon | null; zaloPhone: string | null; messengerPageId: string | null }) {
   const router = useRouter();
   const cart = useCart();
   const hydrated = useHydrated();
@@ -511,12 +511,21 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
                   {dict.product.returnsLink}
                 </Link>
               </li>
-              {zaloPhone ? (
+              {zaloPhone || messengerPageId ? (
                 <li>
-                  {t(dict.promo.trustSupport, { phone: zaloPhone })}{" "}
-                  <a href={zaloHref(zaloPhone)} className="font-semibold text-green underline underline-offset-4" target="_blank" rel="noopener noreferrer">
-                    Zalo
-                  </a>
+                  {zaloPhone ? t(dict.promo.trustSupport, { phone: zaloPhone }) : dict.promo.trustSupportChat}{" "}
+                  <span className="inline-flex flex-wrap gap-x-3">
+                    {zaloPhone ? (
+                      <a href={zaloHref(zaloPhone)} data-testid="trust-zalo" className="font-semibold text-green underline underline-offset-4" target="_blank" rel="noopener noreferrer">
+                        Zalo
+                      </a>
+                    ) : null}
+                    {messengerPageId ? (
+                      <a href={messengerHref(messengerPageId)} data-testid="trust-messenger" className="font-semibold text-green underline underline-offset-4" target="_blank" rel="noopener noreferrer">
+                        Messenger
+                      </a>
+                    ) : null}
+                  </span>
                 </li>
               ) : null}
             </ul>
