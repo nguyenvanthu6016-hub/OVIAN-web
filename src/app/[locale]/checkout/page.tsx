@@ -28,7 +28,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
       <h1 className="mb-8 text-display">{d.checkout.title}</h1>
       <CheckoutForm
         locale={locale}
-        dict={{ checkout: d.checkout, cart: d.cart, errors: d.errors, common: d.common, order: d.order }}
+        dict={{ checkout: d.checkout, cart: d.cart, errors: d.errors, common: d.common, order: d.order, promo: d.promo, product: d.product }}
         store={settings?.store ?? null}
         ordersEnabled={ordersEnabled()}
         pickupEnabled={storePickupEnabled()}
@@ -37,6 +37,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
         // Decided on the server: HOUSE_VOUCHER_ENABLED is not readable in the browser, and a
         // card the shopper can tap that then fails is worse than no card.
         voucher={voucherEnabled() ? HOUSE_VOUCHER : null}
+        zaloPhone={settings?.zaloPhone ?? null}
       />
     </div>
   );

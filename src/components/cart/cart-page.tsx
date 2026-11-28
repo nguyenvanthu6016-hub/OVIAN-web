@@ -15,7 +15,7 @@ import { TotalsList } from "./summary";
 
 type D = Pick<Dictionary, "cart" | "product" | "checkout" | "errors" | "common">;
 
-export function CartPageClient({ locale, dict }: { locale: Locale; dict: D }) {
+export function CartPageClient({ locale, dict, promises = [] }: { locale: Locale; dict: D; promises?: string[] }) {
   const cart = useCart();
   const hydrated = useHydrated();
   const [quote, setQuote] = useState<Quote | null>(null);
@@ -113,6 +113,11 @@ export function CartPageClient({ locale, dict }: { locale: Locale; dict: D }) {
           />
           {error ? <Notice tone="error" className="mt-4">{error}</Notice> : null}
           <ButtonLink href={routes.checkout(locale)} size="lg" className="mt-5 w-full" aria-disabled={!!error}>{dict.cart.checkout}</ButtonLink>
+          {promises.length ? (
+            <ul className="mt-4 space-y-1" data-testid="cart-promises">
+              {promises.map((line) => <li key={line} className="text-caption text-ink-muted">{line}</li>)}
+            </ul>
+          ) : null}
           <p className="mt-3 text-caption text-ink-muted">{dict.checkout.paymentNote}</p>
         </div>
       </aside>

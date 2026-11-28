@@ -24,6 +24,17 @@ export default defineConfig({
     port,
     reuseExistingServer: true,
     timeout: 120_000,
-    env: { COMMERCE_MODE: "mock", CONTENT_MODE: "sample", MOCK_CONTROL: "true" },
+    env: {
+      COMMERCE_MODE: "mock",
+      CONTENT_MODE: "sample",
+      MOCK_CONTROL: "true",
+      // A throwaway id so the Meta Pixel actually renders under test. The shop buys its traffic
+      // with that pixel: without this the funnel test would pass on a page that never loads it.
+      // Outbound requests to Meta are aborted inside the test.
+      NEXT_PUBLIC_FACEBOOK_PIXEL_ID: "1234567890123456",
+      // A throwaway id so the Meta Pixel actually renders under test. The shop's ad account is
+      // its livelihood: without this the funnel test below would pass on a page that never
+      // loads the pixel at all. Outbound requests to Meta are blocked in the test itself.
+    },
   },
 });

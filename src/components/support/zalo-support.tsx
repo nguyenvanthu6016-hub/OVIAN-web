@@ -5,7 +5,8 @@ import { t } from "@/lib/i18n/dictionaries";
 type D = Pick<Dictionary, "support">;
 
 /** Zalo opens by phone number; the link wants digits only. */
-const zaloHref = (phone: string) => `https://zalo.me/${phone.replace(/\D/g, "")}`;
+/** One place builds the Zalo link, so the checkout and the support card cannot disagree. */
+export const zaloHref = (phone: string) => `https://zalo.me/${phone.replace(/\D/g, "")}`;
 
 /**
  * A quiet way to reach a person. OVIAN takes cash on delivery and handles returns by hand, so a

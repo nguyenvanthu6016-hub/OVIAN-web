@@ -34,7 +34,7 @@ export interface ReviewSummary {
   averageText: string;
 }
 
-export function ProductPurchase({ product, locale, dict, reviews }: { product: Product; locale: Locale; dict: D; reviews?: ReviewSummary | null }) {
+export function ProductPurchase({ product, locale, dict, reviews, promises = [] }: { product: Product; locale: Locale; dict: D; reviews?: ReviewSummary | null; promises?: string[] }) {
   const [sel, setSel] = useState<Record<string, string>>(() => initialSelection(product));
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -173,6 +173,17 @@ export function ProductPurchase({ product, locale, dict, reviews }: { product: P
             <span aria-hidden="true" className={cx("size-2 rounded-full", available ? "bg-green" : "bg-danger")} />
             {!available ? dict.product.soldOut : low ? t(dict.product.lowStock, { count: max! }) : dict.product.inStock}
           </p>
+
+          {promises.length ? (
+            <ul className="mt-4 space-y-1" data-testid="product-promises">
+              {promises.map((line) => (
+                <li key={line} className="flex items-start gap-2 text-small text-ink">
+                  <IconCheck size={16} className="mt-0.5 shrink-0 text-green" />
+                  {line}
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
           <div ref={mainBtn} className="mt-4 flex flex-wrap items-center gap-3">
             <QuantityStepper id="pdp-qty" value={qty} onChange={setQty} max={max} labels={{ quantity: dict.product.quantity, decrease: dict.product.decrease, increase: dict.product.increase }} />

@@ -203,11 +203,13 @@ export function mockFaqs(locale: Locale): Faq[] {
 /** SAMPLE shipping fees for mock mode only — not OVIAN's real prices. */
 export const mockShippingRules: ShippingRuleSet = {
   sample: true,
+  // Mirrors the real shop: two items in the basket ship free, whatever they cost.
+  freeFromItems: 2,
   rules: [
-    { id: "zone-hn", label: "Hà Nội (mẫu)", provinceCodes: ["ha-noi"], fee: 25000, freeOver: 800000 },
-    { id: "zone-north", label: "Miền Bắc (mẫu)", provinceCodes: ["hai-phong", "bac-ninh", "hung-yen", "ninh-binh", "quang-ninh", "phu-tho", "thai-nguyen", "tuyen-quang", "lang-son", "cao-bang", "lao-cai", "lai-chau", "dien-bien", "son-la"], fee: 35000, freeOver: 1200000 },
-    { id: "zone-central", label: "Miền Trung (mẫu)", provinceCodes: ["thanh-hoa", "nghe-an", "ha-tinh", "quang-tri", "hue", "da-nang", "quang-ngai", "gia-lai", "khanh-hoa", "dak-lak", "lam-dong"], fee: 45000, freeOver: 1500000 },
-    { id: "zone-south", label: "Miền Nam (mẫu)", provinceCodes: ["ho-chi-minh", "dong-nai", "tay-ninh", "vinh-long", "dong-thap", "an-giang", "can-tho"], fee: 45000, freeOver: 1500000 },
+    { id: "zone-hn", label: "Hà Nội (mẫu)", provinceCodes: ["ha-noi"], fee: 25000, freeOver: 800000 , deliveryDays: [2, 3] },
+    { id: "zone-north", label: "Miền Bắc (mẫu)", provinceCodes: ["hai-phong", "bac-ninh", "hung-yen", "ninh-binh", "quang-ninh", "phu-tho", "thai-nguyen", "tuyen-quang", "lang-son", "cao-bang", "lao-cai", "lai-chau", "dien-bien", "son-la"], fee: 35000, freeOver: 1200000 , deliveryDays: [2, 3] },
+    { id: "zone-central", label: "Miền Trung (mẫu)", provinceCodes: ["thanh-hoa", "nghe-an", "ha-tinh", "quang-tri", "hue", "da-nang", "quang-ngai", "gia-lai", "khanh-hoa", "dak-lak", "lam-dong"], fee: 45000, freeOver: 1500000 , deliveryDays: [2, 3] },
+    { id: "zone-south", label: "Miền Nam (mẫu)", provinceCodes: ["ho-chi-minh", "dong-nai", "tay-ninh", "vinh-long", "dong-thap", "an-giang", "can-tho"], fee: 45000, freeOver: 1500000 , deliveryDays: [1, 2] },
   ],
   // Cà Mau intentionally unmatched with no fallback → exercises the "delivery unavailable" path.
   fallback: null,

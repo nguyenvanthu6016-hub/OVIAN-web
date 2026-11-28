@@ -8,6 +8,8 @@ import { SiteFooter, SiteHeader } from "@/components/layout/site-chrome";
 import { FacebookPixel } from "@/components/analytics/facebook-pixel";
 import { ZaloFab } from "@/components/support/zalo-support";
 import { getContent } from "@/lib/cms";
+import { shopPromises } from "@/lib/checkout/promises";
+import { PromoBar } from "@/components/layout/promo-bar";
 import "../globals.css";
 
 const beVietnam = Be_Vietnam_Pro({
@@ -46,7 +48,12 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   if (!isLocale(locale)) notFound();
   const d = getDictionary(locale);
   // Support is a nicety; a content outage must not take the whole site down with it.
-  const settings = await getContent().siteSettings(locale).catch(() => null);
+  const content = getContent();
+  const [settings, shippingRules] = await Promise.all([
+    content.siteSettings(locale).catch(() => null),
+    content.shippingRules().catch(() => null),
+  ]);
+  const promises = shopPromises(shippingRules);
   return (
     <html lang={locale} className={beVietnam.variable}>
       <body className="min-h-dvh">
@@ -57,6 +64,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         <a href="#main" className="sr-only z-50 rounded-md bg-green px-4 py-3 text-on-green focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
           {d.common.skipToContent}
         </a>
+        <PromoBar promises={promises} locale={locale} dict={{ promo: d.promo }} />
         <SiteHeader locale={locale} />
         <main id="main" tabIndex={-1} className="outline-none">{children}</main>
         <SiteFooter locale={locale} />

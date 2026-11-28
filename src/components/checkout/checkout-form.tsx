@@ -18,13 +18,14 @@ import { describeChange, fetchQuote, fetchUpsellOffer } from "@/lib/client/quote
 import type { AcceptedUpsell, UpsellOffer } from "@/lib/checkout/upsell-offer";
 import type { Coupon } from "@/lib/commerce/types";
 import { voucherState } from "@/lib/checkout/voucher";
+import { zaloHref } from "@/components/support/zalo-support";
 import { useHydrated } from "@/lib/client/use-hydrated";
 import { track, trackOnce } from "@/lib/analytics/pixel";
 import { TotalsList } from "@/components/cart/summary";
 import { IconStore, IconTruck } from "@/components/ui/icons";
 import { Button, ButtonLink, EmptyState, Field, Notice, cx, inputClass } from "@/components/ui/primitives";
 
-type D = Pick<Dictionary, "checkout" | "cart" | "errors" | "common" | "order">;
+type D = Pick<Dictionary, "checkout" | "cart" | "errors" | "common" | "order" | "promo" | "product">;
 
 const CHECKOUT_KEY = "ovian.checkoutId";
 export const LAST_ORDER_KEY = "ovian.lastOrder";
@@ -52,7 +53,7 @@ type Status =
   | { kind: "processing" }
   | { kind: "error"; message: string };
 
-export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled, sampleShipping, orderToken, voucher }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; pickupEnabled: boolean; sampleShipping: boolean; orderToken: string; voucher: Coupon | null }) {
+export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled, sampleShipping, orderToken, voucher, zaloPhone }: { locale: Locale; dict: D; store: StoreInfo | null; ordersEnabled: boolean; pickupEnabled: boolean; sampleShipping: boolean; orderToken: string; voucher: Coupon | null; zaloPhone: string | null }) {
   const router = useRouter();
   const cart = useCart();
   const hydrated = useHydrated();
@@ -462,6 +463,13 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
           ) : (
             <p className="text-small text-ink-muted" aria-live="polite">{quoteError ?? dict.common.loading}</p>
           )}
+          {/* When it arrives, named for the zone the order was actually charged in — before the
+              province is chosen it is the honest nationwide range, not a promise. */}
+          <p className="text-small text-ink" data-testid="delivery-estimate">
+            <IconTruck size={16} className="mr-1.5 inline-block align-[-2px] text-green" />
+            {deliveryEstimate(ship?.status === "ok" ? ship.deliveryDays : null, dict)}
+          </p>
+
           {quoteError && quote ? <Notice tone="error">{quoteError}</Notice> : null}
 
           <div ref={errorRef} tabIndex={-1} className="outline-none" aria-live="assertive">
@@ -490,10 +498,44 @@ export function CheckoutForm({ locale, dict, store, ordersEnabled, pickupEnabled
             {busy ? dict.checkout.placing : `${dict.checkout.placeOrder}${quote ? `, ${formatPrice(quote.total, locale)}` : ""}`}
           </Button>
           <p className="text-caption text-ink-muted">{dict.checkout.agree}</p>
+
+          {/* The three worries that stop a first-time COD buyer: paying before seeing the goods,
+              being stuck with the wrong thing, and having nobody to ask. */}
+          <section className="rounded-sm border border-line bg-surface-alt p-4" aria-labelledby="trust-title" data-testid="trust-block">
+            <h3 id="trust-title" className="text-caption font-semibold uppercase tracking-wide text-green">{dict.promo.trustTitle}</h3>
+            <ul className="mt-2 space-y-1.5 text-small">
+              <li>{dict.promo.trustCod}</li>
+              <li>
+                {dict.promo.trustReturns}{" "}
+                <Link href={routes.policy(locale, "doi-tra")} className="font-semibold text-green underline underline-offset-4">
+                  {dict.product.returnsLink}
+                </Link>
+              </li>
+              {zaloPhone ? (
+                <li>
+                  {t(dict.promo.trustSupport, { phone: zaloPhone })}{" "}
+                  <a href={zaloHref(zaloPhone)} className="font-semibold text-green underline underline-offset-4" target="_blank" rel="noopener noreferrer">
+                    Zalo
+                  </a>
+                </li>
+              ) : null}
+            </ul>
+          </section>
         </div>
       </aside>
     </form>
   );
+}
+
+/**
+ * How long delivery takes in the zone this order falls in, stated by that zone. Until a province
+ * is chosen there is no zone, so the shopper gets the honest nationwide range instead of a
+ * promise the shop has not worked out yet.
+ */
+function deliveryEstimate(days: [number, number] | null, dict: Pick<D, "promo">): string {
+  if (!days) return dict.promo.deliveryGeneric;
+  const [min, max] = days;
+  return min === max ? t(dict.promo.deliveryOneDay, { days: min }) : t(dict.promo.deliveryDays, { min, max });
 }
 
 /** A cart line in the order summary: struck original price, the price paid, and the saving. */

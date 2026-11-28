@@ -74,10 +74,13 @@ export const ovianShippingRules: ShippingRuleSet = {
   // Ongoing promotion agreed with the owner on 2026-11-24: every order pays 5.000 đ, and the
   // zone fee below is shown struck through. Both are stated on the delivery policy page.
   promoFee: 5_000,
+  // Agreed with the owner on 2026-11-28: two items in the basket ship free, however cheap they
+  // are. Counted on quantity, because that is how the shop says it and how a customer reads it.
+  freeFromItems: 2,
   sample: false,
   rules: [
-    { id: "zone-south", label: "Phía Nam", provinceCodes: SOUTH, fee: 10_000, freeOver: FREE_OVER },
-    { id: "zone-north", label: "Phía Bắc", provinceCodes: REST, fee: 15_000, freeOver: FREE_OVER },
+    { id: "zone-south", label: "Phía Nam", provinceCodes: SOUTH, fee: 10_000, freeOver: FREE_OVER, deliveryDays: [1, 2] },
+    { id: "zone-north", label: "Phía Bắc", provinceCodes: REST, fee: 15_000, freeOver: FREE_OVER, deliveryDays: [2, 3] },
   ],
   fallback: null,
 };

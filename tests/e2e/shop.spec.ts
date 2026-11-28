@@ -494,3 +494,86 @@ test("checkout voucher: stacks with the upsell, as the owner decided", async ({ 
   await placeOrder(page);
   await expectOrderConfirmed(page);
 });
+
+/**
+ * The Meta Pixel is how this shop buys its traffic, and a render error anywhere on the checkout
+ * would stop InitiateCheckout firing without anything else looking broken. This walks the whole
+ * funnel and checks every event still goes out.
+ *
+ * Nothing reaches Meta: requests to facebook are aborted in the test and only counted.
+ */
+test("the Meta Pixel reports the whole funnel @mobile", async ({ page }) => {
+  const attempted: string[] = [];
+  await page.route("**://*.facebook.{net,com}/**", (r) => { attempted.push(r.request().url()); return r.abort(); });
+  const queued = () => page.evaluate(() => (window as unknown as { fbq?: { queue?: unknown[][] } }).fbq?.queue?.map((a) => String(a[1])) ?? []);
+
+  await page.goto("/vi/products/coc-su-trang-350ml");
+  await expect.poll(queued).toContain("ViewContent");
+
+  await page.getByTestId("add-to-cart").first().click();
+  await expect.poll(queued).toContain("AddToCart");
+
+  await page.goto("/vi/checkout");
+  await expect.poll(queued).toContain("InitiateCheckout");
+
+  await fillContact(page);
+  await fillDelivery(page, "ha-noi");
+  await placeOrder(page);
+  await expectOrderConfirmed(page);
+  await expect.poll(queued).toContain("Purchase");
+
+  // The pixel script itself must have been asked for; a blocked CSP would show up as zero.
+  expect(attempted.some((u) => u.includes("connect.facebook.net"))).toBe(true);
+});
+
+test("two items in the basket ship free @mobile", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  await fillContact(page);
+  await fillDelivery(page, "ha-noi");
+  await expect(page.getByTestId("shipping")).toHaveText(/25\.000/);
+
+  // A second of the same product counts: the shop promises "from 2 items", not "2 products".
+  await page.goto("/vi/cart");
+  await page.getByRole("button", { name: "Tăng số lượng" }).first().click();
+  await page.goto("/vi/checkout");
+  await fillDelivery(page, "ha-noi");
+  await expect(page.getByTestId("shipping")).toHaveText(/Miễn phí/);
+});
+
+test("checkout says when the order will arrive, by region @mobile", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  const estimate = page.getByTestId("delivery-estimate");
+
+  // Before a province is chosen it is the nationwide range, not a promise it cannot keep.
+  await expect(estimate).toContainText("1–3 ngày");
+  await fillContact(page);
+  await fillDelivery(page, "ho-chi-minh");
+  await expect(estimate).toContainText("1–2 ngày");
+  await fillDelivery(page, "ha-noi");
+  await expect(estimate).toContainText("2–3 ngày");
+});
+
+test("checkout answers the three COD worries @mobile", async ({ page }) => {
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/checkout");
+  const trust = page.getByTestId("trust-block");
+  await expect(trust).toContainText("Nhận hàng rồi mới trả tiền");
+  await expect(trust).toContainText("60 ngày");
+  await expect(trust.getByRole("link", { name: "Chính sách đổi trả" })).toHaveAttribute("href", "/vi/policies/doi-tra");
+  await expect(trust.getByRole("link", { name: "Zalo" })).toHaveAttribute("href", /zalo\.me\/\d+/);
+});
+
+test("the delivery and voucher promises are stated before the shopper commits @mobile", async ({ page }) => {
+  // On every page, so a visitor who lands on a product from an ad sees them without scrolling.
+  await page.goto("/vi");
+  await expect(page.getByTestId("promo-bar")).toContainText("thanh toán");
+
+  await page.goto("/vi/products/coc-su-trang-350ml");
+  await expect(page.getByTestId("product-promises")).toContainText("Miễn ship từ 2 sản phẩm");
+
+  await addToCart(page, "coc-su-trang-350ml");
+  await page.goto("/vi/cart");
+  await expect(page.getByTestId("cart-promises")).toContainText("Miễn ship từ 2 sản phẩm");
+});

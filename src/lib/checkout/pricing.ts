@@ -125,7 +125,9 @@ export function priceCart(input: PricingInput): Quote {
   let shipping: Quote["shipping"];
   if (input.fulfillment === "pickup") shipping = { status: "pickup", fee: 0 };
   else {
-    shipping = quoteShipping(input.shippingRules, input.provinceCode ?? undefined, subtotal - discount);
+    // The upsell line counts: a shopper who took the second product has two items in the box.
+    const itemCount = lines.reduce((n, l) => n + l.quantity, 0);
+    shipping = quoteShipping(input.shippingRules, input.provinceCode ?? undefined, subtotal - discount, itemCount);
     if (shipping.status === "ok" && (coupon?.freeShipping || upsell)) shipping = { ...shipping, fee: 0, freeApplied: true };
   }
   const shippingFee = shipping.status === "ok" ? shipping.fee : 0;

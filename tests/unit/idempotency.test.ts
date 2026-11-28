@@ -102,7 +102,9 @@ describe("store pickup switch", () => {
     const r = await placeOrder(req({
       fulfillment: "delivery",
       address: { provinceCode: "ha-noi", ward: "Phường Mẫu", street: "12 Đường Mẫu" },
-      confirmedTotal: 258000 + 25000,
+      // Two items, so delivery is free under the rule added 2026-11-28 — the zone fee is not
+      // added, and the customer confirms the same total the quote showed them.
+      confirmedTotal: 258000,
     }));
     expect(r.kind).toBe("created");
     if (r.kind === "created") expect(r.order.payment).toBe("cod");

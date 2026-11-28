@@ -88,6 +88,18 @@ export const en: typeof vi = {
     spaces: "Spaces",
     prompt: "Type a product name to search.",
   },
+  promo: {
+    shipFlat: "{fee} delivery nationwide",
+    shipFree: "Free delivery from {count} items",
+    voucher: "Another {percent}% off at checkout",
+    deliveryDays: "Arrives in {min}–{max} days",
+    deliveryOneDay: "Arrives in {days} day(s)",
+    deliveryGeneric: "1–3 days nationwide",
+    trustTitle: "Buying from OVIAN",
+    trustCod: "Pay the courier on delivery; nothing up front.",
+    trustReturns: "60 days to return it, no reason needed.",
+    trustSupport: "Questions about an order or a return: Zalo {phone}.",
+  },
   product: {
     addToCart: "Add to cart",
     added: "Added to cart",

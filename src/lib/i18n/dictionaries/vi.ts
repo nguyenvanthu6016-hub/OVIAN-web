@@ -86,6 +86,18 @@ export const vi = {
     spaces: "Không gian",
     prompt: "Nhập tên sản phẩm để tìm.",
   },
+  promo: {
+    shipFlat: "Ship {fee} toàn quốc",
+    shipFree: "Miễn ship từ {count} sản phẩm",
+    voucher: "Giảm thêm {percent}% ở bước thanh toán",
+    deliveryDays: "Giao trong {min}–{max} ngày",
+    deliveryOneDay: "Giao trong {days} ngày",
+    deliveryGeneric: "Giao toàn quốc trong 1–3 ngày",
+    trustTitle: "Mua ở OVIAN yên tâm",
+    trustCod: "Nhận hàng rồi mới trả tiền, không cần chuyển khoản trước.",
+    trustReturns: "Đổi trả trong 60 ngày, không cần nêu lý do.",
+    trustSupport: "Cần hỗ trợ đơn hàng hay đổi trả, nhắn Zalo {phone}.",
+  },
   product: {
     addToCart: "Thêm vào giỏ",
     added: "Đã thêm vào giỏ",

@@ -173,3 +173,49 @@ describe("the house voucher", () => {
     expect(q.total).toBe(208_000);
   });
 });
+
+/**
+ * Free delivery from two items, agreed 2026-11-28. Counted on quantity, so two of the same
+ * thing qualifies — that is how the shop states it and the only reading a customer will check.
+ */
+describe("free delivery from two items", () => {
+  const twoFree = { ...rules, promoFee: 5000, freeFromItems: 2 };
+
+  it("charges the promotional fee for a single item", () => {
+    const q = priceCart({ lines: [{ variantId: "a", quantity: 1 }], variants, coupon: null, fulfillment: "delivery", provinceCode: "ha-noi", shippingRules: twoFree });
+    expect(q.shippingFee).toBe(5000);
+    expect(q.shipping).toMatchObject({ freeApplied: false });
+  });
+
+  it("is free for two of the same product", () => {
+    const q = priceCart({ lines: [{ variantId: "a", quantity: 2 }], variants, coupon: null, fulfillment: "delivery", provinceCode: "ha-noi", shippingRules: twoFree });
+    expect(q.shippingFee).toBe(0);
+    expect(q.shipping).toMatchObject({ freeApplied: true });
+  });
+
+  it("is free for two different products", () => {
+    const q = priceCart({ lines: [{ variantId: "a", quantity: 1 }, { variantId: "b", quantity: 1 }], variants, coupon: null, fulfillment: "delivery", provinceCode: "ha-noi", shippingRules: twoFree });
+    expect(q.shippingFee).toBe(0);
+  });
+
+  it("counts the upsell line, because that product is in the same box", () => {
+    const extra = { id: "x", sku: "x", title: "x", options: {}, price: 140_000, compareAtPrice: 200_000, available: true, inventoryQuantity: 5 };
+    const withExtra = new Map(variants);
+    withExtra.set("x", { product: { ...item("x", 140_000, 5).product, variants: [extra] } as Product, variant: extra });
+    const q = priceCart({
+      lines: [{ variantId: "a", quantity: 1 }], variants: withExtra, coupon: null,
+      upsell: { variantId: "x", quantity: 1 }, fulfillment: "delivery", provinceCode: "ha-noi", shippingRules: twoFree,
+    });
+    expect(q.shippingFee).toBe(0);
+  });
+
+  it("does not make a one-item order free just because it is expensive enough to beat the fee", () => {
+    const q = priceCart({ lines: [{ variantId: "b", quantity: 1 }], variants, coupon: null, fulfillment: "delivery", provinceCode: "ha-noi", shippingRules: { ...twoFree, freeOver: null } as never });
+    expect(q.shippingFee).toBe(5000);
+  });
+
+  it("leaves pickup alone", () => {
+    const q = priceCart({ lines: [{ variantId: "a", quantity: 2 }], variants, coupon: null, fulfillment: "pickup", shippingRules: twoFree });
+    expect(q.shipping).toMatchObject({ status: "pickup", fee: 0 });
+  });
+});

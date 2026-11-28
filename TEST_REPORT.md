@@ -2,6 +2,42 @@
 
 Run date: 2026-11-04. Environment: Windows 11, Node 26.13, Chromium (Playwright 1.64.1), Next.js 16.4.2. **All results are Mock Mode.** Nothing has run against a real Sapo store or Sanity project (no credentials yet).
 
+## Checkout conversion: delivery, voucher visibility, trust — 2026-11-28
+
+Four promises surfaced from the configuration that already charges for them: 5.000 đ flat
+delivery, free from two items, 10% more off at checkout, and when the parcel arrives.
+Owner's decisions: free shipping counts total quantity (two of one product qualifies), shown
+both in a site-wide bar and on the product and cart pages.
+
+- 190 unit tests (6 new on free delivery by item count, including that the upsell line counts).
+- 57 mock E2E (5 new) and 42 live Sapo E2E.
+- Verified in the browser at 375px against the real catalogue: 2 items to Hồ Chí Minh →
+  "Giao trong 1–2 ngày", fee 10.000 struck through, Miễn phí; to Hà Nội → "2–3 ngày", 15.000
+  struck through, Miễn phí; before a province is chosen → "Giao toàn quốc trong 1–3 ngày".
+
+### Meta Pixel
+
+The owner's precondition was that nothing may disturb the running pixel. A new mock E2E test
+walks product → add to cart → checkout → order and asserts ViewContent, AddToCart,
+InitiateCheckout and Purchase all fire, with every outbound request to Meta aborted inside the
+test. `NEXT_PUBLIC_FACEBOOK_PIXEL_ID` was added to the Playwright web server env; without it the
+pixel renders nothing and such a test would pass against a page that never loads it.
+
+Known and accepted, not a defect: `Purchase` sends the real amount paid, so free delivery
+removes a further 5.000 đ from the value reported to Meta, on top of the voucher's 12.000 đ.
+Reported revenue and ROAS per order fall accordingly. Sending a pre-discount value was rejected:
+it would misreport revenue and mislead Meta's optimisation.
+
+### A design fault found by a test
+
+The delivery estimate was first keyed on shipping-zone ids (`zone-south` / `zone-north`). The
+mock catalogue uses different ids, so its Hà Nội orders fell through to the nationwide range —
+and the real config would have done the same the day a zone was renamed. Each zone now states
+its own `deliveryDays` beside its fee, so the estimate cannot drift from the zone that charged.
+
+Not verified: nothing has run against production, and no real COD order has been placed with
+free delivery.
+
 ## Checkout voucher — 2026-11-27
 
 10% off, capped at 12.000 đ, on orders from 100.000 đ, shown to every shopper at checkout and

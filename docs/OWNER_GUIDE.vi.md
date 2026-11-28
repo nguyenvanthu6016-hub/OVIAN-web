@@ -258,6 +258,48 @@ Số tiền giảm **luôn do máy chủ tính lại**, không lấy từ trình
 duyệt cũng không giảm được nhiều hơn mức trên. Mã và số tiền giảm được ghi vào Google Sheet ở
 hai cột **"Mã giảm giá"** và **"Giảm giá"** như mọi mã khác.
 
+## 6g. Bốn lời hứa hiện khắp web
+
+Mục tiêu: khách vào tới trang thanh toán rồi thì phải chốt đơn, đừng bỏ giữa chừng.
+
+### Hiện ở đâu
+
+| Nơi | Nội dung |
+|---|---|
+| Thanh xanh trên cùng **mọi trang** | Ship 5.000 đ toàn quốc · Miễn ship từ 2 sản phẩm · Giảm thêm 10% ở bước thanh toán |
+| Dưới nút mua ở **trang sản phẩm** | Ba dòng trên, có dấu tích |
+| **Giỏ hàng**, dưới nút thanh toán | Ba dòng trên, chữ nhỏ |
+| **Trang thanh toán** | Thời gian giao theo miền + khối "Mua ở OVIAN yên tâm" |
+
+Tất cả đọc từ **cùng một chỗ cấu hình** mà máy chủ dùng để tính tiền. Tắt voucher thì dòng
+voucher tự biến mất, đổi phí ship thì mọi nơi đổi theo. Không thể quảng cáo một đằng tính một nẻo.
+
+### Miễn ship từ 2 sản phẩm
+
+Tính theo **tổng số lượng**, không phải số món khác nhau. Mua 2 cái cùng một món vẫn được miễn.
+Sản phẩm mua thêm (upsale) cũng được tính, vì nó nằm cùng một kiện hàng.
+
+### Thời gian giao
+
+Mỗi vùng giao hàng tự khai số ngày của mình, ngay cạnh mức phí của vùng đó:
+
+- **Phía Nam** (TP.HCM, Đồng Nai, Cần Thơ…): 1–2 ngày
+- **Phía Bắc và miền Trung**: 2–3 ngày
+
+Khi khách **chưa chọn tỉnh**, web ghi "Giao toàn quốc trong 1–3 ngày" — không hứa con số cụ thể
+khi chưa biết giao đi đâu.
+
+Muốn đổi số ngày: sửa `deliveryDays` của vùng tương ứng trong `src/lib/cms/ovian-content.ts`.
+
+### Khối "Mua ở OVIAN yên tâm"
+
+Ba lo lắng khiến khách mua COD lần đầu bỏ giỏ: trả tiền trước khi thấy hàng, lỡ mua sai, và
+không biết hỏi ai. Khối này trả lời cả ba: COD, đổi trả 60 ngày (dẫn tới trang chính sách),
+và nút nhắn Zalo.
+
+**Chính sách 60 ngày không phải mới** — nó đã có trên trang chính sách từ trước, chỉ là khách
+không bao giờ đọc tới. Giờ nó nằm ngay cạnh nút đặt hàng.
+
 ## 7. Sửa nội dung
 
 Nội dung các trang (Câu chuyện OVIAN, chính sách giao hàng, đổi trả, bảo mật, điều khoản, câu hỏi thường gặp, phí giao hàng theo vùng, số điện thoại, mạng xã hội) nằm trong một file mã nguồn duy nhất: `src/lib/cms/ovian-content.ts`. Muốn sửa, báo người quản trị website; sau khi sửa phải build và khởi động lại.

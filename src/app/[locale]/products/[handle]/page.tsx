@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { getCommerce, CommerceUnavailableError, type Product, type Review } from "@/lib/commerce";
 import { parseDescription, type DescriptionLine } from "@/lib/product/description";
 import { importedReviews } from "@/lib/product/reviews";
+import { getContent } from "@/lib/cms";
+import { shopPromises } from "@/lib/checkout/promises";
+import { promiseLines } from "@/components/layout/promo-bar";
 import { isAvailable, minPrice } from "@/lib/commerce/query";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary, t } from "@/lib/i18n/dictionaries";
@@ -95,6 +98,9 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
   ];
   // The seller's blob becomes an intro plus drawers the shopper opens when they want the detail.
   const description = parseDescription(p.description?.value);
+  // What delivery costs and what the voucher takes off, said where the shopper decides rather
+  // than two pages later. Read from the same config the checkout charges from.
+  const promises = promiseLines(shopPromises(await getContent().shippingRules().catch(() => null)), locale, d);
   // Formatted here, not in the client panel: the panel would otherwise need the locale's rules.
   const ratingAvg = reviews?.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
   const reviewSummary = reviews?.length
@@ -145,7 +151,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
       <Breadcrumbs label={d.common.breadcrumb} items={crumbs.slice(0, -1)} />
 
       <div className="mt-6 grid gap-8 lg:grid-cols-12 lg:gap-12">
-        <ProductPurchase product={p} locale={locale} dict={d} reviews={reviewSummary} />
+        <ProductPurchase product={p} locale={locale} dict={d} reviews={reviewSummary} promises={promises} />
       </div>
 
       <section className="mt-16 grid gap-10 border-t border-line pt-10 lg:grid-cols-12" aria-labelledby="details-title">
